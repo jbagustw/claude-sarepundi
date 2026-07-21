@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/bookings', [BookingController::class, 'store']);
         Route::get('/bookings/{booking}', [BookingController::class, 'show']);
         Route::post('/bookings/{booking}/pay', [PaymentController::class, 'store']);
+        Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
     });
 
     Route::middleware('role:mitra')->prefix('mitra')->group(function () {

@@ -31,4 +31,17 @@ class BookingPolicy
         return $user->hasRole('mitra')
             && $booking->villa->mitraProfile?->user_id === $user->id;
     }
+
+    /**
+     * A booking is only cancellable by its owner while it's still awaiting
+     * a mitra decision or already confirmed — not before payment (nothing
+     * to cancel yet) and not once it's already resolved, checked in, or
+     * finished.
+     */
+    public function cancel(User $user, Booking $booking): bool
+    {
+        return $user->hasRole('user')
+            && $booking->user_id === $user->id
+            && in_array($booking->status, ['menunggu_konfirmasi', 'dikonfirmasi'], true);
+    }
 }

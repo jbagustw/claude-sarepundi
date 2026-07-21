@@ -6,6 +6,7 @@ use App\Http\Requests\StoreBookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Models\Villa;
+use App\Services\BookingCancellationService;
 use App\Services\VillaAvailabilityService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -64,6 +65,15 @@ class BookingController extends Controller
         return (new BookingResource($booking->load('villa.images')))
             ->response()
             ->setStatusCode(201);
+    }
+
+    public function cancel(Booking $booking, BookingCancellationService $cancellationService)
+    {
+        $this->authorize('cancel', $booking);
+
+        $cancellationService->cancelByUser($booking);
+
+        return new BookingResource($booking->fresh()->load(['villa.images', 'latestPayment']));
     }
 
     private function generateBookingCode(): string
