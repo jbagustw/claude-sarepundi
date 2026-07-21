@@ -31,8 +31,15 @@ const statusColor: Record<string, string> = {
     </span>
 
     <p v-if="mitraStatus === 'pending'" class="mt-4 text-gray-600">
-      Akun mitra kamu masih menunggu persetujuan admin. Listing villa belum bisa
-      ditampilkan ke publik sebelum akun disetujui.
+      Akun mitra kamu masih menunggu persetujuan admin. Kamu tetap bisa menyiapkan
+      draft villa, tapi belum bisa dikirim untuk direview sampai akun disetujui.
     </p>
+
+    <NuxtLink
+      to="/mitra/villas"
+      class="mt-6 inline-block rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
+    >
+      Kelola Villa
+    </NuxtLink>
   </div>
 </template>

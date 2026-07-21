@@ -10,13 +10,18 @@ const authStore = useAuthStore()
       atau kelola platform sebagai admin.
     </p>
 
-    <div v-if="!authStore.isAuthenticated" class="mt-8 flex justify-center gap-4">
-      <NuxtLink to="/register" class="rounded bg-gray-900 px-5 py-2.5 text-white hover:bg-gray-700">
-        Daftar Sekarang
+    <div class="mt-8 flex justify-center gap-4">
+      <NuxtLink to="/villas" class="rounded bg-gray-900 px-5 py-2.5 text-white hover:bg-gray-700">
+        Cari Villa
       </NuxtLink>
-      <NuxtLink to="/login" class="rounded border border-gray-300 px-5 py-2.5 text-gray-700 hover:bg-gray-100">
-        Masuk
-      </NuxtLink>
+      <template v-if="!authStore.isAuthenticated">
+        <NuxtLink to="/register" class="rounded border border-gray-300 px-5 py-2.5 text-gray-700 hover:bg-gray-100">
+          Daftar Sekarang
+        </NuxtLink>
+        <NuxtLink to="/login" class="rounded border border-gray-300 px-5 py-2.5 text-gray-700 hover:bg-gray-100">
+          Masuk
+        </NuxtLink>
+      </template>
     </div>
   </div>
 </template>

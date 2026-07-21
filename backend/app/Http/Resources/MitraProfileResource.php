@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class MitraProfileResource extends JsonResource
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'business_name' => $this->business_name,
+            'business_address' => $this->business_address,
+            'legal_document_url' => $this->legal_document_url,
+            'status' => $this->status,
+            'approved_at' => $this->approved_at?->toIso8601String(),
+            'user' => [
+                'id' => $this->user->id,
+                'name' => $this->user->name,
+                'email' => $this->user->email,
+                'phone' => $this->user->phone,
+            ],
+        ];
+    }
+}

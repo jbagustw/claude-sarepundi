@@ -12,9 +12,14 @@ async function handleLogout() {
   <div class="min-h-screen bg-gray-50">
     <header class="border-b bg-white">
       <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <NuxtLink to="/" class="font-semibold text-gray-900">
-          Platform Booking Villa
-        </NuxtLink>
+        <div class="flex items-center gap-6">
+          <NuxtLink to="/" class="font-semibold text-gray-900">
+            Platform Booking Villa
+          </NuxtLink>
+          <NuxtLink to="/villas" class="text-sm text-gray-600 hover:text-gray-900">
+            Cari Villa
+          </NuxtLink>
+        </div>
 
         <div v-if="authStore.isAuthenticated" class="flex items-center gap-4 text-sm">
           <span class="text-gray-600">

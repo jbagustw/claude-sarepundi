@@ -1,10 +1,12 @@
 import type { UserRole } from '~/types/auth'
 
 const PUBLIC_ROUTES = ['/', '/login', '/register']
+const PUBLIC_PREFIXES = ['/villas']
 
 export default defineNuxtRouteMiddleware((to) => {
   const authStore = useAuthStore()
   const isPublicRoute = PUBLIC_ROUTES.includes(to.path)
+    || PUBLIC_PREFIXES.some((prefix) => to.path.startsWith(prefix))
 
   if (!authStore.isAuthenticated) {
     if (!isPublicRoute) {
