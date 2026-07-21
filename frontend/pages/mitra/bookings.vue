@@ -7,12 +7,25 @@ const api = useApi()
 const bookings = ref<MitraBooking[]>([])
 const loading = ref(true)
 const actingOn = ref<number | null>(null)
+const statusFilter = ref('')
+
+const statusOptions = [
+  { value: '', label: 'Semua Status' },
+  { value: 'pending_payment', label: 'Menunggu Pembayaran' },
+  { value: 'menunggu_konfirmasi', label: 'Menunggu Konfirmasi' },
+  { value: 'dikonfirmasi', label: 'Dikonfirmasi' },
+  { value: 'dibatalkan_mitra', label: 'Dibatalkan Mitra' },
+  { value: 'dibatalkan_user', label: 'Dibatalkan User' },
+  { value: 'checked_in', label: 'Check-in' },
+  { value: 'selesai', label: 'Selesai' },
+]
 
 async function loadBookings() {
   loading.value = true
-  const response = await api<{ data: MitraBooking[] }>('/api/mitra/bookings', {
-    query: { status: 'menunggu_konfirmasi' },
-  })
+  const query: Record<string, string> = {}
+  if (statusFilter.value) query.status = statusFilter.value
+
+  const response = await api<{ data: MitraBooking[] }>('/api/mitra/bookings', { query })
   bookings.value = response.data
   loading.value = false
 }
@@ -48,14 +61,20 @@ onMounted(loadBookings)
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">Konfirmasi Booking</h1>
+    <h1 class="text-2xl font-bold text-gray-900">Kelola Booking</h1>
     <p class="mt-1 text-sm text-gray-600">
-      Booking yang sudah dibayar dan menunggu konfirmasi kamu. Wajib direspon dalam 24 jam,
-      jika tidak booking otomatis dibatalkan dan user direfund 100%.
+      Semua booking untuk villa kamu. Booking yang menunggu konfirmasi wajib direspon dalam
+      24 jam, jika tidak booking otomatis dibatalkan dan user direfund 100%.
     </p>
 
+    <form class="mt-4 flex gap-3" @submit.prevent="loadBookings">
+      <select v-model="statusFilter" class="rounded border border-gray-300 px-3 py-2 text-sm" @change="loadBookings">
+        <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+      </select>
+    </form>
+
     <p v-if="loading" class="mt-6 text-gray-600">Memuat...</p>
-    <p v-else-if="bookings.length === 0" class="mt-6 text-gray-600">Tidak ada booking yang menunggu konfirmasi.</p>
+    <p v-else-if="bookings.length === 0" class="mt-6 text-gray-600">Tidak ada booking yang cocok.</p>
 
     <div v-else class="mt-6 space-y-4">
       <div v-for="booking in bookings" :key="booking.id" class="rounded border border-gray-200 bg-white p-4">
@@ -65,9 +84,12 @@ onMounted(loadBookings)
             <p class="text-sm text-gray-600">{{ booking.guest.name }} &middot; {{ booking.guest.email }}</p>
             <p class="text-xs text-gray-500">{{ booking.booking_code }}</p>
           </div>
-          <div class="text-right text-sm">
-            <p class="font-medium text-gray-900">{{ formatRupiah(booking.mitra_payout_amount) }}</p>
-            <p class="text-gray-500">setelah komisi</p>
+          <div class="text-right">
+            <span class="rounded px-2 py-0.5 text-xs font-medium" :class="BOOKING_STATUS_COLOR[booking.status]">
+              {{ BOOKING_STATUS_LABEL[booking.status] }}
+            </span>
+            <p class="mt-1 text-sm font-medium text-gray-900">{{ formatRupiah(booking.mitra_payout_amount) }}</p>
+            <p class="text-xs text-gray-500">setelah komisi</p>
           </div>
         </div>
 
@@ -80,11 +102,11 @@ onMounted(loadBookings)
           <dd class="col-span-2 text-gray-900">{{ booking.guest_count }}</dd>
         </dl>
 
-        <p v-if="booking.mitra_confirmation_deadline" class="mt-2 text-xs text-yellow-700">
+        <p v-if="booking.status === 'menunggu_konfirmasi' && booking.mitra_confirmation_deadline" class="mt-2 text-xs text-yellow-700">
           Batas konfirmasi: {{ new Date(booking.mitra_confirmation_deadline).toLocaleString('id-ID') }}
         </p>
 
-        <div class="mt-3 flex gap-2">
+        <div v-if="booking.status === 'menunggu_konfirmasi'" class="mt-3 flex gap-2">
           <button
             class="rounded bg-green-700 px-3 py-1.5 text-sm text-white hover:bg-green-800 disabled:opacity-50"
             :disabled="actingOn === booking.id"

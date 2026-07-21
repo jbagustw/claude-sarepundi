@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import type { MitraStats } from '~/types/mitraStats'
+
 definePageMeta({ role: 'mitra' })
 
 const authStore = useAuthStore()
+const api = useApi()
 const mitraStatus = computed(() => authStore.user?.mitra_profile?.status ?? 'pending')
 
 const statusLabel: Record<string, string> = {
@@ -15,6 +18,18 @@ const statusColor: Record<string, string> = {
   approved: 'bg-green-100 text-green-800',
   rejected: 'bg-red-100 text-red-800',
 }
+
+const stats = ref<MitraStats | null>(null)
+const loading = ref(true)
+
+async function loadStats() {
+  loading.value = true
+  const response = await api<{ data: MitraStats }>('/api/mitra/stats')
+  stats.value = response.data
+  loading.value = false
+}
+
+onMounted(loadStats)
 </script>
 
 <template>
@@ -35,6 +50,29 @@ const statusColor: Record<string, string> = {
       draft villa, tapi belum bisa dikirim untuk direview sampai akun disetujui.
     </p>
 
+    <p v-if="loading" class="mt-6 text-gray-600">Memuat statistik...</p>
+
+    <div v-else-if="stats" class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div class="rounded border border-gray-200 bg-white p-4">
+        <p class="text-xs text-gray-500">Pendapatan (setelah komisi)</p>
+        <p class="mt-1 text-xl font-semibold text-gray-900">{{ formatRupiah(stats.total_pendapatan) }}</p>
+        <p class="text-xs text-gray-400">dari booking selesai</p>
+      </div>
+      <div class="rounded border border-gray-200 bg-white p-4">
+        <p class="text-xs text-gray-500">Menunggu Konfirmasi</p>
+        <p class="mt-1 text-xl font-semibold text-gray-900">{{ stats.booking_counts.menunggu_konfirmasi ?? 0 }}</p>
+      </div>
+      <div class="rounded border border-gray-200 bg-white p-4">
+        <p class="text-xs text-gray-500">Villa Dipublikasikan</p>
+        <p class="mt-1 text-xl font-semibold text-gray-900">{{ stats.published_villas }}</p>
+        <p class="text-xs text-gray-400">dari {{ stats.total_villas }} total</p>
+      </div>
+      <div class="rounded border border-gray-200 bg-white p-4">
+        <p class="text-xs text-gray-500">Occupancy Rate (bulan ini)</p>
+        <p class="mt-1 text-xl font-semibold text-gray-900">{{ stats.occupancy_rate }}%</p>
+      </div>
+    </div>
+
     <div class="mt-6 flex gap-3">
       <NuxtLink
         to="/mitra/villas"
@@ -46,7 +84,7 @@ const statusColor: Record<string, string> = {
         to="/mitra/bookings"
         class="inline-block rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
       >
-        Konfirmasi Booking
+        Kelola Booking
       </NuxtLink>
     </div>
   </div>
