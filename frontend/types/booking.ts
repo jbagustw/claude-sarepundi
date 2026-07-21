@@ -22,6 +22,11 @@ export interface Booking {
   cancelled_at: string | null
   refund_amount: number | null
   refund_percentage: number | null
+  payment: {
+    status: 'pending' | 'success' | 'failed' | 'refunded' | 'partial_refunded'
+    invoice_url: string | null
+    paid_at: string | null
+  } | null
   villa: {
     id: number
     name: string

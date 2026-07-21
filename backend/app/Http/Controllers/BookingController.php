@@ -19,7 +19,7 @@ class BookingController extends Controller
         $this->authorize('viewAny', Booking::class);
 
         $bookings = $request->user()->bookings()
-            ->with(['villa.images'])
+            ->with(['villa.images', 'latestPayment'])
             ->latest()
             ->get();
 
@@ -30,7 +30,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        return new BookingResource($booking->load('villa.images'));
+        return new BookingResource($booking->load(['villa.images', 'latestPayment']));
     }
 
     public function store(StoreBookingRequest $request, VillaAvailabilityService $service)

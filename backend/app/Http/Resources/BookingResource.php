@@ -28,6 +28,11 @@ class BookingResource extends JsonResource
             'cancelled_at' => $this->cancelled_at?->toIso8601String(),
             'refund_amount' => $this->refund_amount,
             'refund_percentage' => $this->refund_percentage,
+            'payment' => $this->whenLoaded('latestPayment', fn () => $this->latestPayment ? [
+                'status' => $this->latestPayment->status,
+                'invoice_url' => $this->latestPayment->status === 'pending' ? $this->latestPayment->invoice_url : null,
+                'paid_at' => $this->latestPayment->paid_at?->toIso8601String(),
+            ] : null),
             'villa' => [
                 'id' => $this->villa->id,
                 'name' => $this->villa->name,

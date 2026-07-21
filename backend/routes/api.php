@@ -8,8 +8,10 @@ use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\Mitra\VillaAvailabilityController as MitraVillaAvailabilityController;
 use App\Http\Controllers\Mitra\VillaController as MitraVillaController;
 use App\Http\Controllers\Mitra\VillaImageController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Public\VillaAvailabilityController as PublicVillaAvailabilityController;
 use App\Http\Controllers\Public\VillaController as PublicVillaController;
+use App\Http\Controllers\XenditWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -19,6 +21,8 @@ Route::get('/facilities', [FacilityController::class, 'index']);
 Route::get('/villas', [PublicVillaController::class, 'index']);
 Route::get('/villas/{slug}', [PublicVillaController::class, 'show']);
 Route::get('/villas/{slug}/availability', PublicVillaAvailabilityController::class);
+
+Route::post('/webhooks/xendit', [XenditWebhookController::class, 'handle']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -30,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/bookings', [BookingController::class, 'index']);
         Route::post('/bookings', [BookingController::class, 'store']);
         Route::get('/bookings/{booking}', [BookingController::class, 'show']);
+        Route::post('/bookings/{booking}/pay', [PaymentController::class, 'store']);
     });
 
     Route::middleware('role:mitra')->prefix('mitra')->group(function () {

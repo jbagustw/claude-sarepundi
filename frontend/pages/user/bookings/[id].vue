@@ -8,15 +8,37 @@ const api = useApi()
 
 const booking = ref<Booking | null>(null)
 const notFound = ref(false)
+const paying = ref(false)
+const payError = ref('')
 
-onMounted(async () => {
+const paymentReturnStatus = typeof route.query.payment === 'string' ? route.query.payment : null
+
+async function loadBooking() {
   try {
     const response = await api<{ data: Booking }>(`/api/bookings/${route.params.id}`)
     booking.value = response.data
   } catch {
     notFound.value = true
   }
-})
+}
+
+async function payNow() {
+  payError.value = ''
+  paying.value = true
+
+  try {
+    const response = await api<{ data: { invoice_url: string } }>(`/api/bookings/${route.params.id}/pay`, {
+      method: 'POST',
+    })
+    window.location.href = response.data.invoice_url
+  } catch (error: any) {
+    payError.value = error?.data?.message || 'Gagal memulai pembayaran. Silakan coba lagi.'
+  } finally {
+    paying.value = false
+  }
+}
+
+onMounted(loadBooking)
 </script>
 
 <template>
@@ -30,6 +52,13 @@ onMounted(async () => {
           {{ BOOKING_STATUS_LABEL[booking.status] }}
         </span>
       </div>
+
+      <p v-if="paymentReturnStatus === 'success' && booking.status === 'pending_payment'" class="mt-4 rounded bg-blue-50 p-3 text-sm text-blue-800">
+        Pembayaran sedang diproses. Halaman ini akan memperbarui status begitu konfirmasi diterima dari Xendit.
+      </p>
+      <p v-else-if="paymentReturnStatus === 'failed'" class="mt-4 rounded bg-red-50 p-3 text-sm text-red-700">
+        Pembayaran belum berhasil. Kamu bisa mencoba lagi di bawah.
+      </p>
 
       <div class="mt-6 rounded border border-gray-200 bg-white p-4">
         <div class="flex gap-4">
@@ -63,8 +92,22 @@ onMounted(async () => {
           </div>
         </div>
 
-        <p v-if="booking.status === 'pending_payment'" class="mt-4 rounded bg-yellow-50 p-3 text-sm text-yellow-800">
-          Booking ini menunggu pembayaran. Integrasi pembayaran akan tersedia setelah modul Xendit selesai.
+        <template v-if="booking.status === 'pending_payment'">
+          <button
+            class="mt-4 w-full rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+            :disabled="paying"
+            @click="payNow"
+          >
+            {{ paying ? 'Memproses...' : 'Bayar Sekarang' }}
+          </button>
+          <p v-if="payError" class="mt-2 text-sm text-red-600">{{ payError }}</p>
+        </template>
+
+        <p v-if="booking.status === 'menunggu_konfirmasi'" class="mt-4 rounded bg-blue-50 p-3 text-sm text-blue-800">
+          Pembayaran berhasil. Booking menunggu konfirmasi dari mitra
+          <span v-if="booking.mitra_confirmation_deadline">
+            (batas waktu {{ new Date(booking.mitra_confirmation_deadline).toLocaleString('id-ID') }}).
+          </span>
         </p>
       </div>
     </div>
