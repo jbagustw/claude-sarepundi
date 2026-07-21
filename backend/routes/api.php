@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\MitraModerationController;
+use App\Http\Controllers\Admin\PayoutController as AdminPayoutController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VillaModerationController;
 use App\Http\Controllers\Auth\AuthController;
@@ -10,6 +11,8 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\Mitra\BookingController as MitraBookingController;
 use App\Http\Controllers\Mitra\DashboardController as MitraDashboardController;
+use App\Http\Controllers\Mitra\PayoutController as MitraPayoutController;
+use App\Http\Controllers\Mitra\ProfileController as MitraProfileController;
 use App\Http\Controllers\Mitra\VillaAvailabilityController as MitraVillaAvailabilityController;
 use App\Http\Controllers\Mitra\VillaController as MitraVillaController;
 use App\Http\Controllers\Mitra\VillaImageController;
@@ -48,6 +51,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
         Route::get('/stats', [MitraDashboardController::class, 'stats']);
 
+        Route::get('/profile', [MitraProfileController::class, 'show']);
+        Route::patch('/profile', [MitraProfileController::class, 'update']);
+
+        Route::get('/payouts', [MitraPayoutController::class, 'index']);
+
         Route::apiResource('villas', MitraVillaController::class);
         Route::post('/villas/{villa}/submit', [MitraVillaController::class, 'submit']);
         Route::post('/villas/{villa}/images', [VillaImageController::class, 'store']);
@@ -79,5 +87,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/users', [AdminUserController::class, 'index']);
         Route::post('/users/{user}/suspend', [AdminUserController::class, 'suspend']);
         Route::post('/users/{user}/activate', [AdminUserController::class, 'activate']);
+
+        Route::get('/payouts', [AdminPayoutController::class, 'index']);
+        Route::post('/payouts/run', [AdminPayoutController::class, 'run']);
+        Route::post('/payouts/{payout}/retry', [AdminPayoutController::class, 'retry']);
     });
 });

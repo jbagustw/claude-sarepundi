@@ -4,6 +4,7 @@ namespace App\Services\Xendit;
 
 use App\Exceptions\XenditRequestException;
 use App\Models\Booking;
+use App\Models\MitraProfile;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -97,6 +98,51 @@ class XenditService
 
         return [
             'refund_id' => $response->json('id'),
+            'status' => strtolower($response->json('status', 'pending')),
+        ];
+    }
+
+    /**
+     * Disburse a mitra's accumulated payout to their bank account.
+     * CLAUDE.md: never let a failed disbursement fail silently — the
+     * caller (PayoutService) is responsible for recording a failed Payout
+     * an admin can see and retry, this method just surfaces the error.
+     *
+     * @return array{disbursement_id: ?string, status: string}
+     */
+    public function createDisbursement(MitraProfile $mitra, int $amount, string $externalId): array
+    {
+        $this->assertConfigured();
+
+        if (empty($mitra->bank_account) || empty($mitra->bank_name)) {
+            throw new XenditRequestException(
+                'Data rekening mitra belum lengkap. Mitra perlu melengkapi data bank di profil.'
+            );
+        }
+
+        $response = Http::withBasicAuth($this->secretKey, '')
+            ->acceptJson()
+            ->post("{$this->baseUrl}/disbursements", [
+                'external_id' => $externalId,
+                'bank_code' => $mitra->bank_name,
+                'account_holder_name' => $mitra->business_name,
+                'account_number' => $mitra->bank_account,
+                'description' => "Payout platform booking villa - {$externalId}",
+                'amount' => $amount,
+            ]);
+
+        if ($response->failed()) {
+            Log::error('Xendit create disbursement failed', [
+                'mitra_id' => $mitra->id,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            throw new XenditRequestException('Gagal memproses payout ke rekening mitra.');
+        }
+
+        return [
+            'disbursement_id' => $response->json('id'),
             'status' => strtolower($response->json('status', 'pending')),
         ];
     }

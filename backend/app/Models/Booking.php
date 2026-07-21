@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'cancelled_at',
     'refund_amount',
     'refund_percentage',
+    'payout_id',
 ])]
 class Booking extends Model
 {
@@ -57,6 +58,11 @@ class Booking extends Model
     public function latestPayment(): HasOne
     {
         return $this->hasOne(Payment::class)->latestOfMany();
+    }
+
+    public function payout(): BelongsTo
+    {
+        return $this->belongsTo(Payout::class);
     }
 
     public function nights(): int

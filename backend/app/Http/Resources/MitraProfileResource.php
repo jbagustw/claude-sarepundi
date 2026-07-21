@@ -17,6 +17,8 @@ class MitraProfileResource extends JsonResource
             'business_name' => $this->business_name,
             'business_address' => $this->business_address,
             'legal_document_url' => $this->legal_document_url,
+            'bank_name' => $this->bank_name,
+            'bank_account' => $this->bank_account,
             'status' => $this->status,
             'commission_rate' => $this->commission_rate,
             'effective_commission_rate' => $this->effectiveCommissionRate(),

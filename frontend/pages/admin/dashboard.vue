@@ -79,6 +79,9 @@ onMounted(loadStats)
       <NuxtLink to="/admin/users" class="inline-block rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
         Kelola User & Mitra
       </NuxtLink>
+      <NuxtLink to="/admin/payouts" class="inline-block rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        Payout Mitra
+      </NuxtLink>
     </div>
   </div>
 </template>
