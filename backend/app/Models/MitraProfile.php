@@ -17,14 +17,26 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'status',
     'approved_by',
     'approved_at',
+    'commission_rate',
 ])]
 class MitraProfile extends Model
 {
+    /**
+     * Platform-wide default commission percentage (CLAUDE.md), used
+     * whenever a mitra doesn't have a commission_rate override set.
+     */
+    public const DEFAULT_COMMISSION_RATE = 10;
+
     protected function casts(): array
     {
         return [
             'approved_at' => 'datetime',
         ];
+    }
+
+    public function effectiveCommissionRate(): int
+    {
+        return $this->commission_rate ?? self::DEFAULT_COMMISSION_RATE;
     }
 
     public function user(): BelongsTo

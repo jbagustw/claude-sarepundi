@@ -67,7 +67,10 @@ class VillaAvailabilityService
             return $this->unavailable('Tanggal yang dipilih sudah dipesan.');
         }
 
-        $commissionAmount = (int) round($totalPrice * 0.10);
+        // Platform commission defaults to 10% (CLAUDE.md) but an admin may
+        // override it per mitra from the dashboard.
+        $commissionRate = $villa->mitraProfile->effectiveCommissionRate();
+        $commissionAmount = (int) round($totalPrice * $commissionRate / 100);
 
         return [
             'available' => true,

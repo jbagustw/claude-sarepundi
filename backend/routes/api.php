@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\BookingController as AdminBookingController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\MitraModerationController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VillaModerationController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BookingController;
@@ -25,7 +28,7 @@ Route::get('/villas/{slug}/availability', PublicVillaAvailabilityController::cla
 
 Route::post('/webhooks/xendit', [XenditWebhookController::class, 'handle']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
@@ -65,5 +68,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/mitras', [MitraModerationController::class, 'index']);
         Route::post('/mitras/{mitra}/approve', [MitraModerationController::class, 'approve']);
         Route::post('/mitras/{mitra}/reject', [MitraModerationController::class, 'reject']);
+        Route::patch('/mitras/{mitra}/commission', [MitraModerationController::class, 'updateCommission']);
+
+        Route::get('/stats', [AdminDashboardController::class, 'stats']);
+        Route::get('/bookings', [AdminBookingController::class, 'index']);
+
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::post('/users/{user}/suspend', [AdminUserController::class, 'suspend']);
+        Route::post('/users/{user}/activate', [AdminUserController::class, 'activate']);
     });
 });

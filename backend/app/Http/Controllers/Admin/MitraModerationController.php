@@ -51,4 +51,20 @@ class MitraModerationController extends Controller
 
         return new MitraProfileResource($mitra->load('user'));
     }
+
+    /**
+     * Override this mitra's commission rate. PRD: default 10%, admin may
+     * override per mitra when needed. Passing null resets to the
+     * platform default.
+     */
+    public function updateCommission(Request $request, MitraProfile $mitra)
+    {
+        $data = $request->validate([
+            'commission_rate' => ['nullable', 'integer', 'min:0', 'max:100'],
+        ]);
+
+        $mitra->update(['commission_rate' => $data['commission_rate']]);
+
+        return new MitraProfileResource($mitra->load('user'));
+    }
 }

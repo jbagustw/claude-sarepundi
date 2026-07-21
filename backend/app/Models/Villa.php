@@ -73,11 +73,13 @@ class Villa extends Model
      * Villas that are safe to show in public search/detail pages: the
      * listing itself must be published AND the owning mitra must still be
      * an approved partner (see CLAUDE.md — never show listings from a
-     * mitra that isn't approved, even if the villa was published earlier).
+     * mitra that isn't approved, even if the villa was published earlier)
+     * AND that mitra's account must not have been suspended by an admin.
      */
     public function scopePubliclyVisible(Builder $query): Builder
     {
         return $query->where('status', 'published')
-            ->whereHas('mitraProfile', fn (Builder $q) => $q->where('status', 'approved'));
+            ->whereHas('mitraProfile', fn (Builder $q) => $q->where('status', 'approved')
+                ->whereHas('user', fn (Builder $uq) => $uq->where('status', 'active')));
     }
 }
