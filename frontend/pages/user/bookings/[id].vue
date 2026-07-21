@@ -13,6 +13,13 @@ const payError = ref('')
 
 const paymentReturnStatus = typeof route.query.payment === 'string' ? route.query.payment : null
 
+const cancellationReasonLabel: Record<string, string> = {
+  mitra_reject: 'Mitra menolak booking ini',
+  mitra_timeout: 'Mitra tidak merespon dalam 24 jam',
+  user_cancel_pending: 'Dibatalkan olehmu sebelum dikonfirmasi mitra',
+  user_cancel_confirmed: 'Dibatalkan olehmu setelah dikonfirmasi mitra',
+}
+
 async function loadBooking() {
   try {
     const response = await api<{ data: Booking }>(`/api/bookings/${route.params.id}`)
@@ -109,6 +116,17 @@ onMounted(loadBooking)
             (batas waktu {{ new Date(booking.mitra_confirmation_deadline).toLocaleString('id-ID') }}).
           </span>
         </p>
+
+        <p v-if="booking.status === 'dikonfirmasi'" class="mt-4 rounded bg-green-50 p-3 text-sm text-green-800">
+          Booking dikonfirmasi oleh mitra. Sampai jumpa di tanggal check-in!
+        </p>
+
+        <div v-if="booking.status === 'dibatalkan_mitra'" class="mt-4 rounded bg-red-50 p-3 text-sm text-red-700">
+          <p>{{ cancellationReasonLabel[booking.cancellation_reason ?? ''] ?? 'Booking dibatalkan oleh mitra.' }}.</p>
+          <p v-if="booking.refund_amount" class="mt-1 font-medium">
+            Refund {{ booking.refund_percentage }}% ({{ formatRupiah(booking.refund_amount) }}) sedang diproses ke metode pembayaranmu.
+          </p>
+        </div>
       </div>
     </div>
   </div>

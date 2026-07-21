@@ -21,4 +21,14 @@ class BookingPolicy
     {
         return $user->hasRole('user');
     }
+
+    /**
+     * Whether this mitra owns the villa the booking is for, and so may
+     * accept/reject it.
+     */
+    public function respondAsMitra(User $user, Booking $booking): bool
+    {
+        return $user->hasRole('mitra')
+            && $booking->villa->mitraProfile?->user_id === $user->id;
+    }
 }

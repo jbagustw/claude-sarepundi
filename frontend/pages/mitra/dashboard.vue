@@ -35,11 +35,19 @@ const statusColor: Record<string, string> = {
       draft villa, tapi belum bisa dikirim untuk direview sampai akun disetujui.
     </p>
 
-    <NuxtLink
-      to="/mitra/villas"
-      class="mt-6 inline-block rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
-    >
-      Kelola Villa
-    </NuxtLink>
+    <div class="mt-6 flex gap-3">
+      <NuxtLink
+        to="/mitra/villas"
+        class="inline-block rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
+      >
+        Kelola Villa
+      </NuxtLink>
+      <NuxtLink
+        to="/mitra/bookings"
+        class="inline-block rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+      >
+        Konfirmasi Booking
+      </NuxtLink>
+    </div>
   </div>
 </template>

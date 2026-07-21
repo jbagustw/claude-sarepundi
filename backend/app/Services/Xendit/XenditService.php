@@ -4,6 +4,7 @@ namespace App\Services\Xendit;
 
 use App\Exceptions\XenditRequestException;
 use App\Models\Booking;
+use App\Models\Payment;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -61,6 +62,42 @@ class XenditService
         return [
             'invoice_id' => $response->json('id'),
             'invoice_url' => $response->json('invoice_url'),
+        ];
+    }
+
+    /**
+     * Refund a payment. Used for the always-100% refund owed when a mitra
+     * rejects/times out on a booking (CLAUDE.md), and later for the
+     * partial user-initiated refunds in the cancellation module.
+     *
+     * @return array{refund_id: ?string, status: string}
+     */
+    public function createRefund(Payment $payment, int $amount, string $reason): array
+    {
+        $this->assertConfigured();
+
+        $response = Http::withBasicAuth($this->secretKey, '')
+            ->acceptJson()
+            ->post("{$this->baseUrl}/refunds", [
+                'invoice_id' => $payment->xendit_invoice_id,
+                'amount' => $amount,
+                'reason' => 'REQUESTED_BY_CUSTOMER',
+                'metadata' => ['internal_reason' => $reason],
+            ]);
+
+        if ($response->failed()) {
+            Log::error('Xendit create refund failed', [
+                'payment_id' => $payment->id,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            throw new XenditRequestException('Gagal memproses refund.');
+        }
+
+        return [
+            'refund_id' => $response->json('id'),
+            'status' => strtolower($response->json('status', 'pending')),
         ];
     }
 

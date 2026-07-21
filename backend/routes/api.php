@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\VillaModerationController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FacilityController;
+use App\Http\Controllers\Mitra\BookingController as MitraBookingController;
 use App\Http\Controllers\Mitra\VillaAvailabilityController as MitraVillaAvailabilityController;
 use App\Http\Controllers\Mitra\VillaController as MitraVillaController;
 use App\Http\Controllers\Mitra\VillaImageController;
@@ -47,6 +48,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/villas/{villa}/availability', [MitraVillaAvailabilityController::class, 'index']);
         Route::put('/villas/{villa}/availability', [MitraVillaAvailabilityController::class, 'update']);
+
+        Route::get('/bookings', [MitraBookingController::class, 'index']);
+        Route::post('/bookings/{booking}/accept', [MitraBookingController::class, 'accept']);
+        Route::post('/bookings/{booking}/reject', [MitraBookingController::class, 'reject']);
     });
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {
