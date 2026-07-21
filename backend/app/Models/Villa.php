@@ -59,6 +59,16 @@ class Villa extends Model
         return $this->belongsTo(User::class, 'reviewed_by');
     }
 
+    public function availability(): HasMany
+    {
+        return $this->hasMany(VillaAvailability::class);
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
     /**
      * Villas that are safe to show in public search/detail pages: the
      * listing itself must be published AND the owning mitra must still be

@@ -159,6 +159,10 @@ onMounted(loadData)
           @submit="handleSubmit"
         />
       </div>
+
+      <div class="mt-10">
+        <VillaAvailabilityManager :villa-id="villa.id" />
+      </div>
     </template>
   </div>
 </template>

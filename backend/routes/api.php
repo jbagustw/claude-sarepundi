@@ -3,9 +3,12 @@
 use App\Http\Controllers\Admin\MitraModerationController;
 use App\Http\Controllers\Admin\VillaModerationController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FacilityController;
+use App\Http\Controllers\Mitra\VillaAvailabilityController as MitraVillaAvailabilityController;
 use App\Http\Controllers\Mitra\VillaController as MitraVillaController;
 use App\Http\Controllers\Mitra\VillaImageController;
+use App\Http\Controllers\Public\VillaAvailabilityController as PublicVillaAvailabilityController;
 use App\Http\Controllers\Public\VillaController as PublicVillaController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,13 +18,19 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/facilities', [FacilityController::class, 'index']);
 Route::get('/villas', [PublicVillaController::class, 'index']);
 Route::get('/villas/{slug}', [PublicVillaController::class, 'show']);
+Route::get('/villas/{slug}/availability', PublicVillaAvailabilityController::class);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
-    Route::get('/user/ping', fn () => response()->json(['message' => 'pong from user area']))
-        ->middleware('role:user');
+    Route::middleware('role:user')->group(function () {
+        Route::get('/user/ping', fn () => response()->json(['message' => 'pong from user area']));
+
+        Route::get('/bookings', [BookingController::class, 'index']);
+        Route::post('/bookings', [BookingController::class, 'store']);
+        Route::get('/bookings/{booking}', [BookingController::class, 'show']);
+    });
 
     Route::middleware('role:mitra')->prefix('mitra')->group(function () {
         Route::get('/ping', fn () => response()->json(['message' => 'pong from mitra area']));
@@ -30,6 +39,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/villas/{villa}/submit', [MitraVillaController::class, 'submit']);
         Route::post('/villas/{villa}/images', [VillaImageController::class, 'store']);
         Route::delete('/villas/{villa}/images/{image}', [VillaImageController::class, 'destroy']);
+
+        Route::get('/villas/{villa}/availability', [MitraVillaAvailabilityController::class, 'index']);
+        Route::put('/villas/{villa}/availability', [MitraVillaAvailabilityController::class, 'update']);
     });
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {
