@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use App\Services\NotificationService;
 use App\Services\Xendit\XenditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class XenditWebhookController extends Controller
 {
-    public function handle(Request $request, XenditService $xendit)
+    public function handle(Request $request, XenditService $xendit, NotificationService $notifications)
     {
         if (! $xendit->isValidCallbackToken($request->header('x-callback-token'))) {
             return response()->json(['message' => 'Invalid callback token.'], 401);
@@ -46,6 +47,21 @@ class XenditWebhookController extends Controller
                     'mitra_confirmation_deadline' => now()->addHours(24),
                 ]);
             });
+
+            $booking = $payment->booking()->with(['user', 'villa.mitraProfile.user'])->first();
+
+            $notifications->notify(
+                $booking->user,
+                'payment_success',
+                'Pembayaran berhasil',
+                "Pembayaran untuk booking {$booking->booking_code} berhasil. Menunggu konfirmasi dari mitra dalam 24 jam."
+            );
+            $notifications->notify(
+                $booking->villa->mitraProfile->user,
+                'booking_awaiting_confirmation',
+                'Booking baru menunggu konfirmasi',
+                "Booking {$booking->booking_code} untuk {$booking->villa->name} sudah dibayar dan menunggu konfirmasi kamu dalam 24 jam."
+            );
         } elseif (in_array($status, ['EXPIRED', 'FAILED'], true)) {
             $payment->update(['status' => 'failed']);
         }

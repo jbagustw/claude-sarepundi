@@ -93,6 +93,12 @@ onMounted(loadStats)
         Laporan Payout
       </NuxtLink>
       <NuxtLink
+        to="/mitra/reviews"
+        class="inline-block rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+      >
+        Ulasan
+      </NuxtLink>
+      <NuxtLink
         to="/mitra/profile"
         class="inline-block rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
       >

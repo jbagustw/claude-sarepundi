@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Villa\RejectVillaRequest;
 use App\Http\Resources\VillaResource;
 use App\Models\Villa;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -27,7 +28,7 @@ class VillaModerationController extends Controller
         return VillaResource::collection($villas);
     }
 
-    public function approve(Request $request, Villa $villa)
+    public function approve(Request $request, Villa $villa, NotificationService $notifications)
     {
         abort_unless($villa->status === 'pending_review', 422, 'Villa ini tidak sedang menunggu review.');
 
@@ -38,10 +39,17 @@ class VillaModerationController extends Controller
             'reviewed_at' => now(),
         ]);
 
+        $notifications->notify(
+            $villa->mitraProfile->user,
+            'villa_approved',
+            'Villa disetujui',
+            "Villa \"{$villa->name}\" sudah disetujui dan tampil di pencarian publik."
+        );
+
         return new VillaResource($villa->load(['images', 'facilities']));
     }
 
-    public function reject(RejectVillaRequest $request, Villa $villa)
+    public function reject(RejectVillaRequest $request, Villa $villa, NotificationService $notifications)
     {
         abort_unless($villa->status === 'pending_review', 422, 'Villa ini tidak sedang menunggu review.');
 
@@ -51,6 +59,13 @@ class VillaModerationController extends Controller
             'reviewed_by' => $request->user()->id,
             'reviewed_at' => now(),
         ]);
+
+        $notifications->notify(
+            $villa->mitraProfile->user,
+            'villa_rejected',
+            'Villa ditolak',
+            "Villa \"{$villa->name}\" ditolak. Alasan: {$villa->rejection_reason}"
+        );
 
         return new VillaResource($villa->load(['images', 'facilities']));
     }

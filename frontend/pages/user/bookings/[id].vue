@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Booking } from '~/types/booking'
+import type { Review } from '~/types/review'
 
 definePageMeta({ role: 'user' })
 
@@ -77,6 +78,10 @@ async function cancelBooking() {
   } finally {
     cancelling.value = false
   }
+}
+
+function onReviewSubmitted(review: Review) {
+  if (booking.value) booking.value.review = review
 }
 
 onMounted(loadBooking)
@@ -175,6 +180,23 @@ onMounted(loadBooking)
           </button>
           <p v-if="cancelError" class="mt-2 text-sm text-red-600">{{ cancelError }}</p>
         </template>
+      </div>
+
+      <div v-if="booking.status === 'selesai'" class="mt-6">
+        <ReviewForm v-if="!booking.review" :booking-id="booking.id" @submitted="onReviewSubmitted" />
+
+        <div v-else class="rounded border border-gray-200 bg-white p-4">
+          <p class="font-medium text-gray-900">Ulasanmu</p>
+          <div class="mt-2">
+            <ReviewStars :rating="booking.review.rating" />
+          </div>
+          <p v-if="booking.review.comment" class="mt-2 text-sm text-gray-700">{{ booking.review.comment }}</p>
+
+          <div v-if="booking.review.mitra_reply" class="mt-3 rounded bg-gray-50 p-3 text-sm">
+            <p class="font-medium text-gray-900">Balasan dari mitra</p>
+            <p class="mt-1 text-gray-700">{{ booking.review.mitra_reply }}</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>

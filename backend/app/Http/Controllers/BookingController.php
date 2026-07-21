@@ -31,7 +31,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        return new BookingResource($booking->load(['villa.images', 'latestPayment']));
+        return new BookingResource($booking->load(['villa.images', 'latestPayment', 'review']));
     }
 
     public function store(StoreBookingRequest $request, VillaAvailabilityService $service)

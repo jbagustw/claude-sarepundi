@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MitraProfileResource;
 use App\Models\MitraProfile;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -26,7 +27,7 @@ class MitraModerationController extends Controller
         return MitraProfileResource::collection($mitras);
     }
 
-    public function approve(Request $request, MitraProfile $mitra)
+    public function approve(Request $request, MitraProfile $mitra, NotificationService $notifications)
     {
         abort_unless($mitra->status === 'pending', 422, 'Mitra ini tidak sedang menunggu approval.');
 
@@ -36,10 +37,17 @@ class MitraModerationController extends Controller
             'approved_at' => now(),
         ]);
 
+        $notifications->notify(
+            $mitra->user,
+            'mitra_approved',
+            'Akun mitra disetujui',
+            "Selamat! Akun mitra \"{$mitra->business_name}\" sudah disetujui. Kamu sekarang bisa mengirim villa untuk direview."
+        );
+
         return new MitraProfileResource($mitra->load('user'));
     }
 
-    public function reject(Request $request, MitraProfile $mitra)
+    public function reject(Request $request, MitraProfile $mitra, NotificationService $notifications)
     {
         abort_unless($mitra->status === 'pending', 422, 'Mitra ini tidak sedang menunggu approval.');
 
@@ -48,6 +56,13 @@ class MitraModerationController extends Controller
             'approved_by' => $request->user()->id,
             'approved_at' => now(),
         ]);
+
+        $notifications->notify(
+            $mitra->user,
+            'mitra_rejected',
+            'Akun mitra ditolak',
+            "Pendaftaran mitra \"{$mitra->business_name}\" ditolak. Hubungi admin platform untuk info lebih lanjut."
+        );
 
         return new MitraProfileResource($mitra->load('user'));
     }

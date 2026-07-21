@@ -43,4 +43,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(Booking::class);
     }
+
+    /**
+     * Our own in-app notifications table (App\Models\Notification), not
+     * Laravel's built-in Notifiable database channel — this class method
+     * intentionally shadows the trait's notifications() so the two never
+     * get confused with each other's schema.
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class)->latest();
+    }
 }

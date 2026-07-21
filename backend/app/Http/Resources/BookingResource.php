@@ -33,6 +33,7 @@ class BookingResource extends JsonResource
                 'invoice_url' => $this->latestPayment->status === 'pending' ? $this->latestPayment->invoice_url : null,
                 'paid_at' => $this->latestPayment->paid_at?->toIso8601String(),
             ] : null),
+            'review' => $this->whenLoaded('review', fn () => $this->review ? new ReviewResource($this->review) : null),
             'villa' => [
                 'id' => $this->villa->id,
                 'name' => $this->villa->name,

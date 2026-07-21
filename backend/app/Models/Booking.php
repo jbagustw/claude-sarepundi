@@ -65,6 +65,11 @@ class Booking extends Model
         return $this->belongsTo(Payout::class);
     }
 
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
+    }
+
     public function nights(): int
     {
         return $this->check_in_date->diffInDays($this->check_out_date);

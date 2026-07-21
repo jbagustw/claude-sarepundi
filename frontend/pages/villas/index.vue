@@ -100,6 +100,10 @@ onMounted(async () => {
         <div class="p-3">
           <h2 class="font-semibold text-gray-900">{{ villa.name }}</h2>
           <p class="text-sm text-gray-600">{{ villa.city }}</p>
+          <div v-if="villa.reviews_count > 0" class="mt-1 flex items-center gap-1 text-xs">
+            <ReviewStars :rating="villa.reviews_avg_rating ?? 0" />
+            <span class="text-gray-600">({{ villa.reviews_count }})</span>
+          </div>
           <p class="mt-1 text-sm font-medium text-gray-900">{{ formatRupiah(villa.base_price) }} / malam</p>
         </div>
       </NuxtLink>

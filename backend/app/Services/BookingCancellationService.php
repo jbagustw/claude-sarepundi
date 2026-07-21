@@ -10,8 +10,10 @@ use Illuminate\Support\Facades\Log;
 
 class BookingCancellationService
 {
-    public function __construct(private readonly XenditService $xendit)
-    {
+    public function __construct(
+        private readonly XenditService $xendit,
+        private readonly NotificationService $notifications,
+    ) {
     }
 
     /**
@@ -32,6 +34,17 @@ class BookingCancellationService
         ]);
 
         $this->refundIfOwed($booking, $booking->total_price, $reason);
+
+        $reasonLabel = $reason === 'mitra_timeout'
+            ? 'mitra tidak merespon dalam 24 jam'
+            : 'mitra menolak booking';
+
+        $this->notifications->notify(
+            $booking->user,
+            'booking_cancelled_by_mitra',
+            'Booking dibatalkan',
+            "Booking {$booking->booking_code} dibatalkan karena {$reasonLabel}. Refund 100% sedang diproses."
+        );
     }
 
     /**
@@ -62,6 +75,14 @@ class BookingCancellationService
         ]);
 
         $this->refundIfOwed($booking, $amount, $reason);
+
+        $mitraUser = $booking->villa->mitraProfile->user;
+        $this->notifications->notify(
+            $mitraUser,
+            'booking_cancelled_by_user',
+            'Booking dibatalkan user',
+            "Booking {$booking->booking_code} untuk {$booking->villa->name} dibatalkan oleh user (refund {$percentage}%)."
+        );
     }
 
     /**

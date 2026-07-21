@@ -1,3 +1,5 @@
+import type { Review } from '~/types/review'
+
 export type BookingStatus =
   | 'pending_payment'
   | 'menunggu_konfirmasi'
@@ -34,6 +36,7 @@ export interface Booking {
     city: string
     primary_image: string | null
   }
+  review: Review | null
   created_at: string
 }
 

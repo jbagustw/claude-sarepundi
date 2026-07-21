@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\MitraBookingResource;
 use App\Models\Booking;
 use App\Services\BookingCancellationService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -32,7 +33,7 @@ class BookingController extends Controller
         return MitraBookingResource::collection($bookings);
     }
 
-    public function accept(Booking $booking)
+    public function accept(Booking $booking, NotificationService $notifications)
     {
         $this->authorize('respondAsMitra', $booking);
 
@@ -42,6 +43,13 @@ class BookingController extends Controller
             'status' => 'dikonfirmasi',
             'mitra_confirmed_at' => now(),
         ]);
+
+        $notifications->notify(
+            $booking->user,
+            'booking_confirmed',
+            'Booking dikonfirmasi',
+            "Booking {$booking->booking_code} untuk {$booking->villa->name} telah dikonfirmasi oleh mitra."
+        );
 
         return new MitraBookingResource($booking->load(['villa', 'user']));
     }

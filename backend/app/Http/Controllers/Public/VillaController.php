@@ -23,6 +23,8 @@ class VillaController extends Controller
 
         $villas = Villa::publiclyVisible()
             ->with(['images', 'facilities'])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
             ->when($request->filled('q'), fn ($q) => $q->where('name', 'like', '%'.$request->query('q').'%'))
             ->when($request->filled('city'), fn ($q) => $q->where('city', 'like', '%'.$request->query('city').'%'))
             ->when($request->filled('guests'), fn ($q) => $q->where('capacity_guest', '>=', $request->integer('guests')))
@@ -42,6 +44,8 @@ class VillaController extends Controller
     {
         $villa = Villa::publiclyVisible()
             ->with(['images', 'facilities'])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
             ->where('slug', $slug)
             ->firstOrFail();
 

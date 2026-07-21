@@ -37,6 +37,8 @@ export interface Villa {
   }
   images: VillaImage[]
   facilities: Facility[]
+  reviews_avg_rating: number | null
+  reviews_count: number
   created_at: string
 }
 

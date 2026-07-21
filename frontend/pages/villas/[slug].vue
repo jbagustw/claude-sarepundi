@@ -26,6 +26,11 @@ onMounted(async () => {
         <h1 class="text-2xl font-bold text-gray-900">{{ villa.name }}</h1>
         <p class="text-gray-600">{{ villa.address ? `${villa.address}, ` : '' }}{{ villa.city }}{{ villa.province ? `, ${villa.province}` : '' }}</p>
 
+        <div v-if="villa.reviews_count > 0" class="mt-1 flex items-center gap-2 text-sm">
+          <ReviewStars :rating="villa.reviews_avg_rating ?? 0" />
+          <span class="text-gray-700">{{ villa.reviews_avg_rating }} ({{ villa.reviews_count }} ulasan)</span>
+        </div>
+
         <div v-if="villa.images.length" class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <img
             v-for="image in villa.images"
@@ -58,6 +63,13 @@ onMounted(async () => {
         </div>
 
         <p class="mt-4 text-sm text-gray-500">Dikelola oleh {{ villa.mitra.business_name }}</p>
+
+        <div class="mt-6">
+          <h2 class="font-semibold text-gray-900">Ulasan</h2>
+          <div class="mt-3">
+            <ReviewList :villa-slug="villa.slug" />
+          </div>
+        </div>
       </div>
 
       <div>

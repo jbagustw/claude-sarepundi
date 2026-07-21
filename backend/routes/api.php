@@ -13,12 +13,16 @@ use App\Http\Controllers\Mitra\BookingController as MitraBookingController;
 use App\Http\Controllers\Mitra\DashboardController as MitraDashboardController;
 use App\Http\Controllers\Mitra\PayoutController as MitraPayoutController;
 use App\Http\Controllers\Mitra\ProfileController as MitraProfileController;
+use App\Http\Controllers\Mitra\ReviewController as MitraReviewController;
 use App\Http\Controllers\Mitra\VillaAvailabilityController as MitraVillaAvailabilityController;
 use App\Http\Controllers\Mitra\VillaController as MitraVillaController;
 use App\Http\Controllers\Mitra\VillaImageController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Public\ReviewController as PublicReviewController;
 use App\Http\Controllers\Public\VillaAvailabilityController as PublicVillaAvailabilityController;
 use App\Http\Controllers\Public\VillaController as PublicVillaController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\XenditWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,12 +33,17 @@ Route::get('/facilities', [FacilityController::class, 'index']);
 Route::get('/villas', [PublicVillaController::class, 'index']);
 Route::get('/villas/{slug}', [PublicVillaController::class, 'show']);
 Route::get('/villas/{slug}/availability', PublicVillaAvailabilityController::class);
+Route::get('/villas/{slug}/reviews', [PublicReviewController::class, 'index']);
 
 Route::post('/webhooks/xendit', [XenditWebhookController::class, 'handle']);
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
 
     Route::middleware('role:user')->group(function () {
         Route::get('/user/ping', fn () => response()->json(['message' => 'pong from user area']));
@@ -44,6 +53,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/bookings/{booking}', [BookingController::class, 'show']);
         Route::post('/bookings/{booking}/pay', [PaymentController::class, 'store']);
         Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
+        Route::post('/bookings/{booking}/review', [ReviewController::class, 'store']);
     });
 
     Route::middleware('role:mitra')->prefix('mitra')->group(function () {
@@ -67,6 +77,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/bookings', [MitraBookingController::class, 'index']);
         Route::post('/bookings/{booking}/accept', [MitraBookingController::class, 'accept']);
         Route::post('/bookings/{booking}/reject', [MitraBookingController::class, 'reject']);
+
+        Route::get('/reviews', [MitraReviewController::class, 'index']);
+        Route::post('/reviews/{review}/reply', [MitraReviewController::class, 'reply']);
     });
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {

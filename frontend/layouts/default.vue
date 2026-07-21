@@ -22,6 +22,7 @@ async function handleLogout() {
         </div>
 
         <div v-if="authStore.isAuthenticated" class="flex items-center gap-4 text-sm">
+          <NotificationBell />
           <span class="text-gray-600">
             {{ authStore.user?.name }}
             <span class="ml-1 rounded bg-gray-100 px-2 py-0.5 text-xs uppercase tracking-wide text-gray-500">

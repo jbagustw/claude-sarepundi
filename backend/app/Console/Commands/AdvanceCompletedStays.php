@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Booking;
+use App\Services\NotificationService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -20,7 +21,7 @@ class AdvanceCompletedStays extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): void
+    public function handle(NotificationService $notifications): void
     {
         $checkedIn = Booking::where('status', 'dikonfirmasi')
             ->where('check_in_date', '<=', now())
@@ -28,10 +29,22 @@ class AdvanceCompletedStays extends Command
 
         $this->info("Marked {$checkedIn} booking(s) as checked_in.");
 
-        $completed = Booking::whereIn('status', ['dikonfirmasi', 'checked_in'])
+        $completedBookings = Booking::whereIn('status', ['dikonfirmasi', 'checked_in'])
             ->where('check_out_date', '<=', now())
-            ->update(['status' => 'selesai']);
+            ->with(['user', 'villa'])
+            ->get();
 
-        $this->info("Marked {$completed} booking(s) as selesai.");
+        foreach ($completedBookings as $booking) {
+            $booking->update(['status' => 'selesai']);
+
+            $notifications->notify(
+                $booking->user,
+                'booking_completed',
+                'Terima kasih sudah menginap!',
+                "Booking {$booking->booking_code} di {$booking->villa->name} sudah selesai. Yuk beri review untuk villa ini."
+            );
+        }
+
+        $this->info("Marked {$completedBookings->count()} booking(s) as selesai.");
     }
 }
