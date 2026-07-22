@@ -25,7 +25,7 @@ onMounted(loadReviews)
     <p v-else-if="reviews.length === 0" class="text-sm text-gray-600">Belum ada ulasan untuk villa ini.</p>
 
     <div v-else class="space-y-4">
-      <div v-for="review in reviews" :key="review.id" class="rounded border border-gray-200 bg-white p-4">
+      <div v-for="review in reviews" :key="review.id" class="card p-4">
         <div class="flex items-center justify-between">
           <p class="font-medium text-gray-900">{{ review.user.name }}</p>
           <ReviewStars :rating="review.rating" />
@@ -33,7 +33,7 @@ onMounted(loadReviews)
         <p class="mt-1 text-xs text-gray-500">{{ new Date(review.created_at).toLocaleDateString('id-ID') }}</p>
         <p v-if="review.comment" class="mt-2 text-sm text-gray-700">{{ review.comment }}</p>
 
-        <div v-if="review.mitra_reply" class="mt-3 rounded bg-gray-50 p-3 text-sm">
+        <div v-if="review.mitra_reply" class="mt-3 rounded-xl bg-brand-sage/10 p-3 text-sm">
           <p class="font-medium text-gray-900">Balasan dari mitra</p>
           <p class="mt-1 text-gray-700">{{ review.mitra_reply }}</p>
         </div>

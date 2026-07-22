@@ -58,9 +58,9 @@ onMounted(loadPayouts)
 <template>
   <div>
     <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-gray-900">Payout Mitra</h1>
+      <h1 class="font-display text-2xl font-bold text-gray-900">Payout Mitra</h1>
       <button
-        class="rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+        class="btn-primary"
         :disabled="running"
         @click="runPayouts"
       >
@@ -73,7 +73,7 @@ onMounted(loadPayouts)
     </p>
 
     <form class="mt-4 flex gap-3" @submit.prevent="loadPayouts">
-      <select v-model="statusFilter" class="rounded border border-gray-300 px-3 py-2 text-sm" @change="loadPayouts">
+      <select v-model="statusFilter" class="field-input" @change="loadPayouts">
         <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
       </select>
     </form>
@@ -82,7 +82,7 @@ onMounted(loadPayouts)
     <p v-else-if="payouts.length === 0" class="mt-6 text-gray-600">Belum ada payout.</p>
 
     <div v-else class="mt-6 space-y-3">
-      <div v-for="payout in payouts" :key="payout.id" class="rounded border border-gray-200 bg-white p-4">
+      <div v-for="payout in payouts" :key="payout.id" class="card p-4">
         <div class="flex items-start justify-between">
           <div>
             <p class="font-semibold text-gray-900">{{ payout.mitra?.business_name }}</p>
@@ -104,7 +104,7 @@ onMounted(loadPayouts)
 
         <button
           v-if="payout.status === 'failed'"
-          class="mt-3 rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+          class="btn-primary mt-3 !px-3 !py-1.5"
           :disabled="actingOn === payout.id"
           @click="retry(payout)"
         >

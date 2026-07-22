@@ -73,80 +73,85 @@ async function createBooking() {
 </script>
 
 <template>
-  <div class="rounded border border-gray-200 bg-white p-4">
-    <p class="text-lg font-semibold text-gray-900">{{ formatRupiah(basePrice) }} <span class="text-sm font-normal text-gray-500">/ malam</span></p>
-
-    <div class="mt-4 grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-xs font-medium text-gray-700" for="check-in">Check-in</label>
-        <input
-          id="check-in"
-          v-model="checkInDate"
-          type="date"
-          :min="today"
-          class="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:border-gray-900 focus:outline-none"
-        >
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-700" for="check-out">Check-out</label>
-        <input
-          id="check-out"
-          v-model="checkOutDate"
-          type="date"
-          :min="checkInDate || today"
-          class="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:border-gray-900 focus:outline-none"
-        >
-      </div>
+  <div class="card sticky top-4 overflow-hidden">
+    <div class="bg-brand-terracotta px-4 py-3 text-white">
+      <p class="text-xs text-white/80">Mulai dari</p>
+      <p class="text-lg font-semibold">{{ formatRupiah(basePrice) }} <span class="text-sm font-normal text-white/80">/ malam</span></p>
     </div>
 
-    <div class="mt-3">
-      <label class="block text-xs font-medium text-gray-700" for="guest-count">Jumlah Tamu</label>
-      <input
-        id="guest-count"
-        v-model.number="guestCount"
-        type="number"
-        min="1"
-        class="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:border-gray-900 focus:outline-none"
+    <div class="p-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-700" for="check-in">Check-in</label>
+          <input
+            id="check-in"
+            v-model="checkInDate"
+            type="date"
+            :min="today"
+            class="field-input mt-1"
+          >
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700" for="check-out">Check-out</label>
+          <input
+            id="check-out"
+            v-model="checkOutDate"
+            type="date"
+            :min="checkInDate || today"
+            class="field-input mt-1"
+          >
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <label class="block text-xs font-medium text-gray-700" for="guest-count">Jumlah Tamu</label>
+        <input
+          id="guest-count"
+          v-model.number="guestCount"
+          type="number"
+          min="1"
+          class="field-input mt-1"
+        >
+      </div>
+
+      <button
+        class="btn-outline mt-4 w-full"
+        :disabled="checking"
+        @click="checkAvailability"
       >
-    </div>
+        {{ checking ? 'Mengecek...' : 'Cek Ketersediaan' }}
+      </button>
 
-    <button
-      class="mt-4 w-full rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
-      :disabled="checking"
-      @click="checkAvailability"
-    >
-      {{ checking ? 'Mengecek...' : 'Cek Ketersediaan' }}
-    </button>
+      <p v-if="errorMessage" class="mt-3 text-sm text-red-600">{{ errorMessage }}</p>
 
-    <p v-if="errorMessage" class="mt-3 text-sm text-red-600">{{ errorMessage }}</p>
+      <div v-if="result">
+        <div v-if="result.available" class="mt-4 space-y-1 rounded-xl bg-brand-sage/15 p-3 text-sm text-brand-brown-dark">
+          <p>Tersedia untuk {{ result.nights }} malam.</p>
+          <p class="font-semibold">Total: {{ formatRupiah(result.total_price) }}</p>
+        </div>
+        <p v-else class="mt-3 text-sm text-red-600">{{ result.reason }}</p>
 
-    <div v-if="result">
-      <div v-if="result.available" class="mt-4 space-y-1 rounded bg-green-50 p-3 text-sm text-green-800">
-        <p>Tersedia untuk {{ result.nights }} malam.</p>
-        <p class="font-semibold">Total: {{ formatRupiah(result.total_price) }}</p>
+        <template v-if="result.available">
+          <button
+            v-if="authStore.role === 'user'"
+            class="btn-accent mt-3 w-full"
+            :disabled="booking"
+            @click="createBooking"
+          >
+            {{ booking ? 'Memproses...' : 'Pesan Sekarang' }}
+          </button>
+          <NuxtLink
+            v-else-if="!authStore.isAuthenticated"
+            :to="`/login?redirect=${encodeURIComponent(`/villas/${villaSlug}`)}`"
+            class="btn-primary mt-3 block w-full text-center"
+          >
+            Masuk untuk Booking
+          </NuxtLink>
+          <p v-else class="mt-3 text-sm text-gray-500">
+            Hanya akun pencari villa yang bisa melakukan booking.
+          </p>
+        </template>
       </div>
-      <p v-else class="mt-3 text-sm text-red-600">{{ result.reason }}</p>
-
-      <template v-if="result.available">
-        <button
-          v-if="authStore.role === 'user'"
-          class="mt-3 w-full rounded bg-green-700 px-4 py-2 text-sm text-white hover:bg-green-800 disabled:opacity-50"
-          :disabled="booking"
-          @click="createBooking"
-        >
-          {{ booking ? 'Memproses...' : 'Booking Sekarang' }}
-        </button>
-        <NuxtLink
-          v-else-if="!authStore.isAuthenticated"
-          :to="`/login?redirect=${encodeURIComponent(`/villas/${villaSlug}`)}`"
-          class="mt-3 block w-full rounded bg-gray-900 px-4 py-2 text-center text-sm text-white hover:bg-gray-700"
-        >
-          Masuk untuk Booking
-        </NuxtLink>
-        <p v-else class="mt-3 text-sm text-gray-500">
-          Hanya akun pencari villa yang bisa melakukan booking.
-        </p>
-      </template>
     </div>
   </div>
 </template>

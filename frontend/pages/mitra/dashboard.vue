@@ -34,7 +34,7 @@ onMounted(loadStats)
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">
+    <h1 class="font-display text-2xl font-bold text-gray-900">
       Dashboard Mitra — {{ authStore.user?.mitra_profile?.business_name }}
     </h1>
 
@@ -53,55 +53,40 @@ onMounted(loadStats)
     <p v-if="loading" class="mt-6 text-gray-600">Memuat statistik...</p>
 
     <div v-else-if="stats" class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-      <div class="rounded border border-gray-200 bg-white p-4">
+      <div class="card p-4">
         <p class="text-xs text-gray-500">Pendapatan (setelah komisi)</p>
         <p class="mt-1 text-xl font-semibold text-gray-900">{{ formatRupiah(stats.total_pendapatan) }}</p>
         <p class="text-xs text-gray-400">dari booking selesai</p>
       </div>
-      <div class="rounded border border-gray-200 bg-white p-4">
+      <div class="card p-4">
         <p class="text-xs text-gray-500">Menunggu Konfirmasi</p>
         <p class="mt-1 text-xl font-semibold text-gray-900">{{ stats.booking_counts.menunggu_konfirmasi ?? 0 }}</p>
       </div>
-      <div class="rounded border border-gray-200 bg-white p-4">
+      <div class="card p-4">
         <p class="text-xs text-gray-500">Villa Dipublikasikan</p>
         <p class="mt-1 text-xl font-semibold text-gray-900">{{ stats.published_villas }}</p>
         <p class="text-xs text-gray-400">dari {{ stats.total_villas }} total</p>
       </div>
-      <div class="rounded border border-gray-200 bg-white p-4">
+      <div class="card p-4">
         <p class="text-xs text-gray-500">Occupancy Rate (bulan ini)</p>
         <p class="mt-1 text-xl font-semibold text-gray-900">{{ stats.occupancy_rate }}%</p>
       </div>
     </div>
 
     <div class="mt-6 flex gap-3">
-      <NuxtLink
-        to="/mitra/villas"
-        class="inline-block rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
-      >
+      <NuxtLink to="/mitra/villas" class="btn-primary">
         Kelola Villa
       </NuxtLink>
-      <NuxtLink
-        to="/mitra/bookings"
-        class="inline-block rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-      >
+      <NuxtLink to="/mitra/bookings" class="btn-outline">
         Kelola Booking
       </NuxtLink>
-      <NuxtLink
-        to="/mitra/payouts"
-        class="inline-block rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-      >
+      <NuxtLink to="/mitra/payouts" class="btn-outline">
         Laporan Payout
       </NuxtLink>
-      <NuxtLink
-        to="/mitra/reviews"
-        class="inline-block rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-      >
+      <NuxtLink to="/mitra/reviews" class="btn-outline">
         Ulasan
       </NuxtLink>
-      <NuxtLink
-        to="/mitra/profile"
-        class="inline-block rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-      >
+      <NuxtLink to="/mitra/profile" class="btn-outline">
         Profil Bisnis
       </NuxtLink>
     </div>

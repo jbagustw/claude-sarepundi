@@ -38,24 +38,24 @@ onMounted(loadPending)
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">Approval Mitra</h1>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Approval Mitra</h1>
     <p class="mt-1 text-sm text-gray-600">Pendaftaran mitra yang menunggu persetujuan.</p>
 
     <p v-if="loading" class="mt-6 text-gray-600">Memuat...</p>
     <p v-else-if="mitras.length === 0" class="mt-6 text-gray-600">Tidak ada pendaftaran mitra yang menunggu.</p>
 
     <div v-else class="mt-6 space-y-4">
-      <div v-for="mitra in mitras" :key="mitra.id" class="flex items-start justify-between rounded border border-gray-200 bg-white p-4">
+      <div v-for="mitra in mitras" :key="mitra.id" class="card flex items-start justify-between p-4">
         <div>
-          <h2 class="font-semibold text-gray-900">{{ mitra.business_name }}</h2>
+          <h2 class="font-display font-semibold text-gray-900">{{ mitra.business_name }}</h2>
           <p class="text-sm text-gray-600">{{ mitra.user.name }} &middot; {{ mitra.user.email }}</p>
           <p v-if="mitra.business_address" class="text-sm text-gray-500">{{ mitra.business_address }}</p>
         </div>
         <div class="flex gap-2 text-sm">
-          <button class="rounded bg-green-700 px-3 py-1.5 text-white hover:bg-green-800" @click="approve(mitra)">
+          <button class="rounded-full bg-green-700 px-3 py-1.5 text-white hover:bg-green-800" @click="approve(mitra)">
             Setujui
           </button>
-          <button class="rounded bg-red-600 px-3 py-1.5 text-white hover:bg-red-700" @click="reject(mitra)">
+          <button class="rounded-full bg-red-600 px-3 py-1.5 text-white hover:bg-red-700" @click="reject(mitra)">
             Tolak
           </button>
         </div>

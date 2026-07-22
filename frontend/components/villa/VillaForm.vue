@@ -36,7 +36,7 @@ function toggleFacility(id: number) {
         v-model="form.name"
         type="text"
         required
-        class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+        class="field-input mt-1"
       >
       <p v-if="errors.name" class="mt-1 text-sm text-red-600">{{ errors.name[0] }}</p>
     </div>
@@ -47,7 +47,7 @@ function toggleFacility(id: number) {
         id="villa-description"
         v-model="form.description"
         rows="4"
-        class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+        class="field-input mt-1"
       />
       <p v-if="errors.description" class="mt-1 text-sm text-red-600">{{ errors.description[0] }}</p>
     </div>
@@ -58,7 +58,7 @@ function toggleFacility(id: number) {
         id="villa-address"
         v-model="form.address"
         type="text"
-        class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+        class="field-input mt-1"
       >
     </div>
 
@@ -70,7 +70,7 @@ function toggleFacility(id: number) {
           v-model="form.city"
           type="text"
           required
-          class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+          class="field-input mt-1"
         >
         <p v-if="errors.city" class="mt-1 text-sm text-red-600">{{ errors.city[0] }}</p>
       </div>
@@ -80,7 +80,7 @@ function toggleFacility(id: number) {
           id="villa-province"
           v-model="form.province"
           type="text"
-          class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+          class="field-input mt-1"
         >
       </div>
     </div>
@@ -94,7 +94,7 @@ function toggleFacility(id: number) {
           type="number"
           min="1"
           required
-          class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+          class="field-input mt-1"
         >
         <p v-if="errors.capacity_guest" class="mt-1 text-sm text-red-600">{{ errors.capacity_guest[0] }}</p>
       </div>
@@ -105,7 +105,7 @@ function toggleFacility(id: number) {
           v-model.number="form.bedroom_count"
           type="number"
           min="0"
-          class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+          class="field-input mt-1"
         >
       </div>
       <div>
@@ -115,7 +115,7 @@ function toggleFacility(id: number) {
           v-model.number="form.bathroom_count"
           type="number"
           min="0"
-          class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+          class="field-input mt-1"
         >
       </div>
     </div>
@@ -128,21 +128,23 @@ function toggleFacility(id: number) {
         type="number"
         min="0"
         required
-        class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+        class="field-input mt-1"
       >
       <p v-if="errors.base_price" class="mt-1 text-sm text-red-600">{{ errors.base_price[0] }}</p>
     </div>
 
     <div>
       <span class="block text-sm font-medium text-gray-700">Fasilitas</span>
-      <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div class="mt-2 flex flex-wrap gap-2">
         <label
           v-for="facility in facilities"
           :key="facility.id"
-          class="flex items-center gap-2 text-sm text-gray-700"
+          class="flex cursor-pointer items-center gap-1.5"
+          :class="form.facility_ids.includes(facility.id) ? 'chip-active' : 'chip'"
         >
           <input
             type="checkbox"
+            class="hidden"
             :checked="form.facility_ids.includes(facility.id)"
             @change="toggleFacility(facility.id)"
           >
@@ -154,7 +156,7 @@ function toggleFacility(id: number) {
     <button
       type="submit"
       :disabled="submitting"
-      class="rounded bg-gray-900 px-4 py-2 text-white hover:bg-gray-700 disabled:opacity-50"
+      class="btn-primary"
     >
       {{ submitting ? 'Menyimpan...' : submitLabel }}
     </button>

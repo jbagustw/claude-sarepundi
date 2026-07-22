@@ -62,11 +62,8 @@ onMounted(loadVillas)
 <template>
   <div>
     <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-gray-900">Villa Saya</h1>
-      <NuxtLink
-        to="/mitra/villas/create"
-        class="rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
-      >
+      <h1 class="font-display text-2xl font-bold text-gray-900">Villa Saya</h1>
+      <NuxtLink to="/mitra/villas/create" class="btn-primary">
         + Tambah Villa
       </NuxtLink>
     </div>
@@ -78,9 +75,9 @@ onMounted(loadVillas)
     </p>
 
     <div v-else class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div v-for="villa in villas" :key="villa.id" class="rounded border border-gray-200 bg-white p-4">
+      <div v-for="villa in villas" :key="villa.id" class="card p-4">
         <div class="flex items-start justify-between">
-          <h2 class="font-semibold text-gray-900">{{ villa.name }}</h2>
+          <h2 class="font-display font-semibold text-gray-900">{{ villa.name }}</h2>
           <span class="rounded px-2 py-0.5 text-xs font-medium" :class="statusColor[villa.status]">
             {{ statusLabel[villa.status] }}
           </span>
@@ -93,7 +90,7 @@ onMounted(loadVillas)
         </p>
 
         <div class="mt-3 flex flex-wrap gap-2 text-sm">
-          <NuxtLink :to="`/mitra/villas/${villa.id}/edit`" class="text-gray-700 underline">
+          <NuxtLink :to="`/mitra/villas/${villa.id}/edit`" class="text-brand-brown underline">
             Edit
           </NuxtLink>
           <button

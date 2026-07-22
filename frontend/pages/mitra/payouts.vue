@@ -19,7 +19,7 @@ onMounted(loadPayouts)
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">Laporan Payout</h1>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Laporan Payout</h1>
     <p class="mt-1 text-sm text-gray-600">
       Pencairan dana dari platform, dikumpulkan dari booking yang sudah selesai.
     </p>
@@ -29,7 +29,7 @@ onMounted(loadPayouts)
       Belum ada payout. Payout akan dibuat otomatis setelah booking selesai.
     </p>
 
-    <div v-else class="mt-6 overflow-x-auto rounded border border-gray-200 bg-white">
+    <div v-else class="card mt-6 overflow-x-auto">
       <table class="min-w-full text-sm">
         <thead class="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase text-gray-500">
           <tr>

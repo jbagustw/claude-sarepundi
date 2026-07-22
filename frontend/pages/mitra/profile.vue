@@ -47,7 +47,7 @@ onMounted(loadProfile)
 
 <template>
   <div class="mx-auto max-w-lg">
-    <h1 class="text-2xl font-bold text-gray-900">Profil Bisnis</h1>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Profil Bisnis</h1>
     <p class="mt-1 text-sm text-gray-600">
       Data rekening dibutuhkan supaya payout otomatis bisa dicairkan ke akunmu.
     </p>
@@ -62,7 +62,7 @@ onMounted(loadProfile)
           v-model="form.business_name"
           type="text"
           required
-          class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+          class="field-input mt-1"
         >
         <p v-if="errors.business_name" class="mt-1 text-sm text-red-600">{{ errors.business_name[0] }}</p>
       </div>
@@ -73,7 +73,7 @@ onMounted(loadProfile)
           id="business_address"
           v-model="form.business_address"
           rows="2"
-          class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+          class="field-input mt-1"
         />
       </div>
 
@@ -87,7 +87,7 @@ onMounted(loadProfile)
             v-model="form.bank_name"
             type="text"
             placeholder="mis. BCA, MANDIRI, BNI"
-            class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+            class="field-input mt-1"
           >
           <p v-if="errors.bank_name" class="mt-1 text-sm text-red-600">{{ errors.bank_name[0] }}</p>
         </div>
@@ -98,7 +98,7 @@ onMounted(loadProfile)
             id="bank_account"
             v-model="form.bank_account"
             type="text"
-            class="mt-1 w-full rounded border border-gray-300 px-3 py-2 focus:border-gray-900 focus:outline-none"
+            class="field-input mt-1"
           >
           <p v-if="errors.bank_account" class="mt-1 text-sm text-red-600">{{ errors.bank_account[0] }}</p>
         </div>
@@ -109,7 +109,7 @@ onMounted(loadProfile)
       <button
         type="submit"
         :disabled="saving"
-        class="rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+        class="btn-primary"
       >
         {{ saving ? 'Menyimpan...' : 'Simpan' }}
       </button>

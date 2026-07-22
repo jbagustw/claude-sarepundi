@@ -51,7 +51,7 @@ onMounted(loadFacilities)
 
 <template>
   <div class="mx-auto max-w-2xl">
-    <h1 class="text-2xl font-bold text-gray-900">Tambah Villa</h1>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Tambah Villa</h1>
     <p class="mt-1 text-sm text-gray-600">
       Villa baru akan tersimpan sebagai draft. Tambahkan foto lalu kirim untuk direview admin.
     </p>

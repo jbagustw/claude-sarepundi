@@ -67,25 +67,25 @@ onMounted(loadOverrides)
 
 <template>
   <div>
-    <h2 class="text-lg font-semibold text-gray-900">Kalender Ketersediaan</h2>
+    <h2 class="font-display text-lg font-semibold text-gray-900">Kalender Ketersediaan</h2>
     <p class="mt-1 text-sm text-gray-600">Blokir tanggal yang tidak tersedia, atau atur harga/minimum menginap khusus.</p>
 
-    <div class="mt-3 grid grid-cols-2 gap-3 rounded border border-gray-200 bg-white p-4 sm:grid-cols-4">
+    <div class="card mt-3 grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
       <div>
         <label class="block text-xs font-medium text-gray-700" for="avail-from">Dari</label>
-        <input id="avail-from" v-model="rangeFrom" type="date" :min="today" class="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm">
+        <input id="avail-from" v-model="rangeFrom" type="date" :min="today" class="field-input mt-1">
       </div>
       <div>
         <label class="block text-xs font-medium text-gray-700" for="avail-to">Sampai</label>
-        <input id="avail-to" v-model="rangeTo" type="date" :min="rangeFrom || today" class="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm">
+        <input id="avail-to" v-model="rangeTo" type="date" :min="rangeFrom || today" class="field-input mt-1">
       </div>
       <div>
         <label class="block text-xs font-medium text-gray-700" for="avail-price">Harga Khusus (opsional)</label>
-        <input id="avail-price" v-model.number="customPrice" type="number" min="0" class="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm">
+        <input id="avail-price" v-model.number="customPrice" type="number" min="0" class="field-input mt-1">
       </div>
       <div>
         <label class="block text-xs font-medium text-gray-700" for="avail-min-stay">Min. Menginap (opsional)</label>
-        <input id="avail-min-stay" v-model.number="minStay" type="number" min="1" class="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm">
+        <input id="avail-min-stay" v-model.number="minStay" type="number" min="1" class="field-input mt-1">
       </div>
 
       <div class="col-span-2 flex items-center gap-4 sm:col-span-4">
@@ -96,7 +96,7 @@ onMounted(loadOverrides)
           <input v-model="isAvailable" type="radio" :value="false"> Blokir
         </label>
         <button
-          class="ml-auto rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+          class="btn-primary ml-auto !px-3 !py-1.5"
           :disabled="saving"
           @click="saveRange"
         >
@@ -110,7 +110,7 @@ onMounted(loadOverrides)
       <p v-else-if="overrides.length === 0" class="text-sm text-gray-500">
         Belum ada tanggal khusus dalam 90 hari ke depan. Semua tanggal tersedia dengan harga dasar.
       </p>
-      <ul v-else class="divide-y divide-gray-200 rounded border border-gray-200 bg-white text-sm">
+      <ul v-else class="card divide-y divide-gray-100 text-sm">
         <li v-for="override in overrides" :key="override.id" class="flex items-center justify-between px-3 py-2">
           <span>{{ override.date }}</span>
           <span class="flex items-center gap-3 text-xs">

@@ -113,10 +113,10 @@ onMounted(loadData)
 
     <template v-else-if="villa">
       <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Edit Villa</h1>
+        <h1 class="font-display text-2xl font-bold text-gray-900">Edit Villa</h1>
         <button
           v-if="villa.status === 'draft' || villa.status === 'rejected'"
-          class="rounded bg-green-700 px-4 py-2 text-sm text-white hover:bg-green-800"
+          class="rounded-full bg-green-700 px-4 py-2 text-sm text-white hover:bg-green-800"
           @click="submitForReview"
         >
           Kirim untuk Review
@@ -143,7 +143,7 @@ onMounted(loadData)
             </button>
           </div>
         </div>
-        <label class="mt-3 inline-block cursor-pointer text-sm text-gray-700 underline">
+        <label class="mt-3 inline-block cursor-pointer text-sm text-brand-brown underline">
           {{ uploading ? 'Mengunggah...' : '+ Unggah Foto' }}
           <input type="file" accept="image/*" class="hidden" :disabled="uploading" @change="handleImageUpload">
         </label>

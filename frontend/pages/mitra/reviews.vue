@@ -46,14 +46,14 @@ onMounted(loadReviews)
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">Ulasan Villa</h1>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Ulasan Villa</h1>
     <p class="mt-1 text-sm text-gray-600">Ulasan dari tamu untuk semua villa kamu. Kamu bisa membalas setiap ulasan satu kali.</p>
 
     <p v-if="loading" class="mt-6 text-gray-600">Memuat...</p>
     <p v-else-if="reviews.length === 0" class="mt-6 text-gray-600">Belum ada ulasan.</p>
 
     <div v-else class="mt-6 space-y-4">
-      <div v-for="review in reviews" :key="review.id" class="rounded border border-gray-200 bg-white p-4">
+      <div v-for="review in reviews" :key="review.id" class="card p-4">
         <div class="flex items-center justify-between">
           <p class="font-semibold text-gray-900">{{ review.villa.name }}</p>
           <ReviewStars :rating="review.rating" />
@@ -61,7 +61,7 @@ onMounted(loadReviews)
         <p class="text-xs text-gray-500">{{ review.user.name }} &middot; {{ new Date(review.created_at).toLocaleDateString('id-ID') }}</p>
         <p v-if="review.comment" class="mt-2 text-sm text-gray-700">{{ review.comment }}</p>
 
-        <div v-if="review.mitra_reply" class="mt-3 rounded bg-gray-50 p-3 text-sm">
+        <div v-if="review.mitra_reply" class="mt-3 rounded-xl bg-brand-sage/10 p-3 text-sm">
           <p class="font-medium text-gray-900">Balasanmu</p>
           <p class="mt-1 text-gray-700">{{ review.mitra_reply }}</p>
         </div>
@@ -72,10 +72,10 @@ onMounted(loadReviews)
             rows="2"
             maxlength="2000"
             placeholder="Tulis balasan untuk ulasan ini..."
-            class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+            class="field-input rounded-2xl"
           />
           <button
-            class="mt-2 rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+            class="btn-primary mt-2 !px-3 !py-1.5"
             :disabled="replying === review.id"
             @click="reply(review)"
           >

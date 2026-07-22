@@ -59,13 +59,13 @@ onMounted(loadNotifications)
 
     <div
       v-if="open"
-      class="absolute right-0 z-10 mt-2 w-80 rounded border border-gray-200 bg-white shadow-lg"
+      class="card absolute right-0 z-10 mt-2 w-80 overflow-hidden"
     >
       <div class="flex items-center justify-between border-b border-gray-100 px-3 py-2">
         <p class="text-sm font-medium text-gray-900">Notifikasi</p>
         <button
           v-if="unreadCount > 0"
-          class="text-xs text-gray-600 hover:text-gray-900"
+          class="text-xs text-brand-brown hover:underline"
           @click="markAllRead"
         >
           Tandai semua dibaca
@@ -79,7 +79,7 @@ onMounted(loadNotifications)
           v-for="notification in notifications"
           :key="notification.id"
           class="block w-full border-b border-gray-50 px-3 py-2 text-left hover:bg-gray-50"
-          :class="{ 'bg-blue-50': !notification.is_read }"
+          :class="{ 'bg-brand-sage/10': !notification.is_read }"
           @click="markRead(notification)"
         >
           <p class="text-sm font-medium text-gray-900">{{ notification.title }}</p>

@@ -93,7 +93,7 @@ onMounted(loadBooking)
 
     <div v-else-if="booking">
       <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">{{ booking.booking_code }}</h1>
+        <h1 class="font-display text-2xl font-bold text-gray-900">{{ booking.booking_code }}</h1>
         <span class="rounded px-3 py-1 text-sm font-medium" :class="BOOKING_STATUS_COLOR[booking.status]">
           {{ BOOKING_STATUS_LABEL[booking.status] }}
         </span>
@@ -106,7 +106,7 @@ onMounted(loadBooking)
         Pembayaran belum berhasil. Kamu bisa mencoba lagi di bawah.
       </p>
 
-      <div class="mt-6 rounded border border-gray-200 bg-white p-4">
+      <div class="card mt-6 p-4">
         <div class="flex gap-4">
           <img
             v-if="booking.villa.primary_image"
@@ -140,7 +140,7 @@ onMounted(loadBooking)
 
         <template v-if="booking.status === 'pending_payment'">
           <button
-            class="mt-4 w-full rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+            class="btn-primary mt-4 w-full"
             :disabled="paying"
             @click="payNow"
           >
@@ -172,7 +172,7 @@ onMounted(loadBooking)
 
         <template v-if="canCancel">
           <button
-            class="mt-4 w-full rounded border border-red-300 px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+            class="btn-danger-outline mt-4 w-full"
             :disabled="cancelling"
             @click="cancelBooking"
           >
@@ -185,14 +185,14 @@ onMounted(loadBooking)
       <div v-if="booking.status === 'selesai'" class="mt-6">
         <ReviewForm v-if="!booking.review" :booking-id="booking.id" @submitted="onReviewSubmitted" />
 
-        <div v-else class="rounded border border-gray-200 bg-white p-4">
+        <div v-else class="card p-4">
           <p class="font-medium text-gray-900">Ulasanmu</p>
           <div class="mt-2">
             <ReviewStars :rating="booking.review.rating" />
           </div>
           <p v-if="booking.review.comment" class="mt-2 text-sm text-gray-700">{{ booking.review.comment }}</p>
 
-          <div v-if="booking.review.mitra_reply" class="mt-3 rounded bg-gray-50 p-3 text-sm">
+          <div v-if="booking.review.mitra_reply" class="mt-3 rounded-xl bg-brand-sage/10 p-3 text-sm">
             <p class="font-medium text-gray-900">Balasan dari mitra</p>
             <p class="mt-1 text-gray-700">{{ booking.review.mitra_reply }}</p>
           </div>

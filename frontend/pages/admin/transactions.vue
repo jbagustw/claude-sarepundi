@@ -36,19 +36,19 @@ onMounted(loadBookings)
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">Monitoring Transaksi</h1>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Monitoring Transaksi</h1>
 
     <form class="mt-4 flex flex-wrap gap-3" @submit.prevent="loadBookings">
       <input
         v-model="search"
         type="text"
         placeholder="Cari kode booking, villa, atau user"
-        class="min-w-[240px] flex-1 rounded border border-gray-300 px-3 py-2 text-sm"
+        class="field-input min-w-[240px] flex-1"
       >
-      <select v-model="statusFilter" class="rounded border border-gray-300 px-3 py-2 text-sm">
+      <select v-model="statusFilter" class="field-input">
         <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
       </select>
-      <button type="submit" class="rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700">
+      <button type="submit" class="btn-primary">
         Filter
       </button>
     </form>
@@ -56,7 +56,7 @@ onMounted(loadBookings)
     <p v-if="loading" class="mt-6 text-gray-600">Memuat...</p>
     <p v-else-if="bookings.length === 0" class="mt-6 text-gray-600">Tidak ada transaksi yang cocok.</p>
 
-    <div v-else class="mt-6 overflow-x-auto rounded border border-gray-200 bg-white">
+    <div v-else class="card mt-6 overflow-x-auto">
       <table class="min-w-full text-sm">
         <thead class="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase text-gray-500">
           <tr>

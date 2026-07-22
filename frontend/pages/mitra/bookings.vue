@@ -61,14 +61,14 @@ onMounted(loadBookings)
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">Kelola Booking</h1>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Kelola Booking</h1>
     <p class="mt-1 text-sm text-gray-600">
       Semua booking untuk villa kamu. Booking yang menunggu konfirmasi wajib direspon dalam
       24 jam, jika tidak booking otomatis dibatalkan dan user direfund 100%.
     </p>
 
     <form class="mt-4 flex gap-3" @submit.prevent="loadBookings">
-      <select v-model="statusFilter" class="rounded border border-gray-300 px-3 py-2 text-sm" @change="loadBookings">
+      <select v-model="statusFilter" class="field-input" @change="loadBookings">
         <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
       </select>
     </form>
@@ -77,7 +77,7 @@ onMounted(loadBookings)
     <p v-else-if="bookings.length === 0" class="mt-6 text-gray-600">Tidak ada booking yang cocok.</p>
 
     <div v-else class="mt-6 space-y-4">
-      <div v-for="booking in bookings" :key="booking.id" class="rounded border border-gray-200 bg-white p-4">
+      <div v-for="booking in bookings" :key="booking.id" class="card p-4">
         <div class="flex items-start justify-between">
           <div>
             <p class="font-semibold text-gray-900">{{ booking.villa.name }}</p>
@@ -108,14 +108,14 @@ onMounted(loadBookings)
 
         <div v-if="booking.status === 'menunggu_konfirmasi'" class="mt-3 flex gap-2">
           <button
-            class="rounded bg-green-700 px-3 py-1.5 text-sm text-white hover:bg-green-800 disabled:opacity-50"
+            class="rounded-full bg-green-700 px-3 py-1.5 text-sm text-white hover:bg-green-800 disabled:opacity-50"
             :disabled="actingOn === booking.id"
             @click="accept(booking)"
           >
             Terima
           </button>
           <button
-            class="rounded bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-50"
+            class="rounded-full bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-50"
             :disabled="actingOn === booking.id"
             @click="reject(booking)"
           >

@@ -2,17 +2,24 @@
 import type { Facility, Villa } from '~/types/villa'
 
 const api = useApi()
+const route = useRoute()
 const villas = ref<Villa[]>([])
 const facilities = ref<Facility[]>([])
 const loading = ref(true)
 
+function toArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String)
+  if (value === undefined || value === null) return []
+  return [String(value)]
+}
+
 const filters = reactive({
-  q: '',
-  city: '',
-  guests: '',
+  q: typeof route.query.q === 'string' ? route.query.q : '',
+  city: typeof route.query.city === 'string' ? route.query.city : '',
+  guests: typeof route.query.guests === 'string' ? route.query.guests : '',
   min_price: '',
   max_price: '',
-  facility_ids: [] as number[],
+  facility_ids: toArray(route.query.facility_ids).map(Number),
 })
 
 async function loadFacilities() {
@@ -49,15 +56,15 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">Cari Villa</h1>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Cari Villa</h1>
 
-    <form class="mt-4 grid gap-3 rounded border border-gray-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4" @submit.prevent="search">
-      <input v-model="filters.q" type="text" placeholder="Cari nama villa" class="rounded border border-gray-300 px-3 py-2 text-sm">
-      <input v-model="filters.city" type="text" placeholder="Kota" class="rounded border border-gray-300 px-3 py-2 text-sm">
-      <input v-model="filters.guests" type="number" min="1" placeholder="Jumlah tamu" class="rounded border border-gray-300 px-3 py-2 text-sm">
+    <form class="card mt-4 grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4" @submit.prevent="search">
+      <input v-model="filters.q" type="text" placeholder="Cari nama villa" class="field-input">
+      <input v-model="filters.city" type="text" placeholder="Kota" class="field-input">
+      <input v-model="filters.guests" type="number" min="1" placeholder="Jumlah tamu" class="field-input">
       <div class="flex gap-2">
-        <input v-model="filters.min_price" type="number" min="0" placeholder="Harga min" class="w-1/2 rounded border border-gray-300 px-3 py-2 text-sm">
-        <input v-model="filters.max_price" type="number" min="0" placeholder="Harga maks" class="w-1/2 rounded border border-gray-300 px-3 py-2 text-sm">
+        <input v-model="filters.min_price" type="number" min="0" placeholder="Harga min" class="field-input w-1/2">
+        <input v-model="filters.max_price" type="number" min="0" placeholder="Harga maks" class="field-input w-1/2">
       </div>
 
       <div class="sm:col-span-2 lg:col-span-4">
@@ -65,15 +72,21 @@ onMounted(async () => {
           <label
             v-for="facility in facilities"
             :key="facility.id"
-            class="flex items-center gap-1.5 rounded border border-gray-300 px-2 py-1 text-xs text-gray-700"
+            class="flex cursor-pointer items-center gap-1.5"
+            :class="filters.facility_ids.includes(facility.id) ? 'chip-active' : 'chip'"
           >
-            <input type="checkbox" :checked="filters.facility_ids.includes(facility.id)" @change="toggleFacility(facility.id)">
+            <input
+              type="checkbox"
+              class="hidden"
+              :checked="filters.facility_ids.includes(facility.id)"
+              @change="toggleFacility(facility.id)"
+            >
             {{ facility.name }}
           </label>
         </div>
       </div>
 
-      <button type="submit" class="rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 sm:col-span-2 lg:col-span-4">
+      <button type="submit" class="btn-primary sm:col-span-2 lg:col-span-4">
         Cari
       </button>
     </form>
@@ -86,25 +99,26 @@ onMounted(async () => {
         v-for="villa in villas"
         :key="villa.id"
         :to="`/villas/${villa.slug}`"
-        class="block overflow-hidden rounded border border-gray-200 bg-white hover:shadow"
+        class="card block overflow-hidden transition hover:shadow-md"
       >
-        <img
-          v-if="villa.images[0]"
-          :src="villa.images[0].url"
-          class="h-40 w-full object-cover"
-          alt=""
-        >
-        <div v-else class="flex h-40 w-full items-center justify-center bg-gray-100 text-sm text-gray-400">
-          Belum ada foto
-        </div>
-        <div class="p-3">
-          <h2 class="font-semibold text-gray-900">{{ villa.name }}</h2>
-          <p class="text-sm text-gray-600">{{ villa.city }}</p>
-          <div v-if="villa.reviews_count > 0" class="mt-1 flex items-center gap-1 text-xs">
-            <ReviewStars :rating="villa.reviews_avg_rating ?? 0" />
-            <span class="text-gray-600">({{ villa.reviews_count }})</span>
+        <div class="relative">
+          <img
+            v-if="villa.images[0]"
+            :src="villa.images[0].url"
+            class="h-40 w-full object-cover"
+            alt=""
+          >
+          <div v-else class="flex h-40 w-full items-center justify-center bg-gray-100 text-sm text-gray-400">
+            Belum ada foto
           </div>
-          <p class="mt-1 text-sm font-medium text-gray-900">{{ formatRupiah(villa.base_price) }} / malam</p>
+          <span class="badge absolute right-2 top-2 bg-black/60 text-white">{{ formatRupiah(villa.base_price) }}</span>
+        </div>
+        <div class="bg-brand-brown/90 p-3 text-white">
+          <h2 class="font-display font-semibold">{{ villa.name }}</h2>
+          <p class="text-xs text-white/80">{{ villa.city }}</p>
+          <div v-if="villa.reviews_count > 0" class="mt-1 flex items-center gap-1 text-xs">
+            <span class="text-brand-gold">★</span> {{ villa.reviews_avg_rating }} <span class="text-white/70">({{ villa.reviews_count }})</span>
+          </div>
         </div>
       </NuxtLink>
     </div>

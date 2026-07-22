@@ -19,12 +19,12 @@ onMounted(loadBookings)
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">Riwayat Booking</h1>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Riwayat Booking</h1>
 
     <p v-if="loading" class="mt-6 text-gray-600">Memuat...</p>
     <p v-else-if="bookings.length === 0" class="mt-6 text-gray-600">
       Belum ada booking.
-      <NuxtLink to="/villas" class="text-gray-900 underline">Cari villa</NuxtLink>
+      <NuxtLink to="/villas" class="text-brand-brown underline">Cari villa</NuxtLink>
     </p>
 
     <div v-else class="mt-6 space-y-3">
@@ -32,7 +32,7 @@ onMounted(loadBookings)
         v-for="booking in bookings"
         :key="booking.id"
         :to="`/user/bookings/${booking.id}`"
-        class="flex items-center justify-between rounded border border-gray-200 bg-white p-4 hover:shadow"
+        class="card flex items-center justify-between p-4 transition hover:shadow-md"
       >
         <div>
           <p class="font-semibold text-gray-900">{{ booking.villa.name }}</p>

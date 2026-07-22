@@ -6,7 +6,7 @@ const authStore = useAuthStore()
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">
+    <h1 class="font-display text-2xl font-bold text-gray-900">
       Selamat datang, {{ authStore.user?.name }}
     </h1>
     <p class="mt-2 text-gray-600">
@@ -14,10 +14,10 @@ const authStore = useAuthStore()
     </p>
 
     <div class="mt-6 flex gap-3">
-      <NuxtLink to="/villas" class="rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700">
+      <NuxtLink to="/villas" class="btn-primary">
         Cari Villa
       </NuxtLink>
-      <NuxtLink to="/user/bookings" class="rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+      <NuxtLink to="/user/bookings" class="btn-outline">
         Riwayat Booking
       </NuxtLink>
     </div>
