@@ -36,12 +36,18 @@ onMounted(loadHomeData)
 <template>
   <div class="-mx-4 -mt-8">
     <section class="relative overflow-hidden bg-gradient-to-br from-brand-brown-dark via-brand-brown to-brand-terracotta px-4 pb-24 pt-14 sm:pb-28 sm:pt-20">
+      <div
+        class="absolute inset-0 bg-cover bg-center"
+        style="background-image: url('/images/hero-banner.jpg')"
+        aria-hidden="true"
+      />
+      <div class="absolute inset-0 bg-gradient-to-br from-brand-brown-dark/85 via-brand-brown/75 to-brand-terracotta/70" />
       <div class="pointer-events-none absolute inset-0 opacity-30">
         <div class="absolute -left-16 -top-16 h-72 w-72 rounded-full bg-brand-gold blur-3xl" />
         <div class="absolute -right-10 bottom-0 h-72 w-72 rounded-full bg-brand-sage blur-3xl" />
       </div>
 
-      <div class="relative mx-auto max-w-3xl text-center">
+      <div class="relative z-10 mx-auto max-w-3xl text-center">
         <h1 class="font-display text-3xl font-bold text-white sm:text-4xl">
           Cari &amp; Booking Villa Impianmu
         </h1>
@@ -58,7 +64,7 @@ onMounted(loadHomeData)
       </div>
 
       <form
-        class="card relative mx-auto mt-10 flex max-w-3xl flex-col gap-3 rounded-3xl p-4 sm:flex-row sm:items-center sm:p-3"
+        class="card relative z-10 mx-auto mt-10 flex max-w-3xl flex-col gap-3 rounded-3xl p-4 sm:flex-row sm:items-center sm:p-3"
         @submit.prevent="search"
       >
         <div class="flex flex-1 items-center gap-2 px-2">
