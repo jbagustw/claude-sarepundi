@@ -77,6 +77,9 @@ onMounted(loadStats)
       <NuxtLink to="/mitra/villas" class="btn-primary">
         Kelola Villa
       </NuxtLink>
+      <NuxtLink to="/mitra/homestays" class="btn-primary">
+        Kelola Homestay
+      </NuxtLink>
       <NuxtLink to="/mitra/bookings" class="btn-outline">
         Kelola Booking
       </NuxtLink>

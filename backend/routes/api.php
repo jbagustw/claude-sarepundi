@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ArticleController as AdminArticleController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\HomestayModerationController;
 use App\Http\Controllers\Admin\MitraModerationController;
 use App\Http\Controllers\Admin\PayoutController as AdminPayoutController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -12,6 +13,8 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\Mitra\BookingController as MitraBookingController;
 use App\Http\Controllers\Mitra\DashboardController as MitraDashboardController;
+use App\Http\Controllers\Mitra\HomestayController as MitraHomestayController;
+use App\Http\Controllers\Mitra\HomestayImageController;
 use App\Http\Controllers\Mitra\PayoutController as MitraPayoutController;
 use App\Http\Controllers\Mitra\ProfileController as MitraProfileController;
 use App\Http\Controllers\Mitra\ReviewController as MitraReviewController;
@@ -21,6 +24,7 @@ use App\Http\Controllers\Mitra\VillaImageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Public\ArticleController as PublicArticleController;
+use App\Http\Controllers\Public\HomestayController as PublicHomestayController;
 use App\Http\Controllers\Public\ReviewController as PublicReviewController;
 use App\Http\Controllers\Public\VillaAvailabilityController as PublicVillaAvailabilityController;
 use App\Http\Controllers\Public\VillaController as PublicVillaController;
@@ -38,6 +42,8 @@ Route::get('/villas/{slug}/availability', PublicVillaAvailabilityController::cla
 Route::get('/villas/{slug}/reviews', [PublicReviewController::class, 'index']);
 Route::get('/articles', [PublicArticleController::class, 'index']);
 Route::get('/articles/{slug}', [PublicArticleController::class, 'show']);
+Route::get('/homestays', [PublicHomestayController::class, 'index']);
+Route::get('/homestays/{slug}', [PublicHomestayController::class, 'show']);
 
 Route::post('/webhooks/xendit', [XenditWebhookController::class, 'handle']);
 
@@ -78,6 +84,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/villas/{villa}/availability', [MitraVillaAvailabilityController::class, 'index']);
         Route::put('/villas/{villa}/availability', [MitraVillaAvailabilityController::class, 'update']);
 
+        Route::apiResource('homestays', MitraHomestayController::class);
+        Route::post('/homestays/{homestay}/submit', [MitraHomestayController::class, 'submit']);
+        Route::post('/homestays/{homestay}/images', [HomestayImageController::class, 'store']);
+        Route::delete('/homestays/{homestay}/images/{image}', [HomestayImageController::class, 'destroy']);
+
         Route::get('/bookings', [MitraBookingController::class, 'index']);
         Route::post('/bookings/{booking}/accept', [MitraBookingController::class, 'accept']);
         Route::post('/bookings/{booking}/reject', [MitraBookingController::class, 'reject']);
@@ -92,6 +103,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/villas', [VillaModerationController::class, 'index']);
         Route::post('/villas/{villa}/approve', [VillaModerationController::class, 'approve']);
         Route::post('/villas/{villa}/reject', [VillaModerationController::class, 'reject']);
+
+        Route::get('/homestays', [HomestayModerationController::class, 'index']);
+        Route::post('/homestays/{homestay}/approve', [HomestayModerationController::class, 'approve']);
+        Route::post('/homestays/{homestay}/reject', [HomestayModerationController::class, 'reject']);
 
         Route::get('/mitras', [MitraModerationController::class, 'index']);
         Route::post('/mitras/{mitra}/approve', [MitraModerationController::class, 'approve']);
