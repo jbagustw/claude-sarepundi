@@ -20,9 +20,17 @@ async function handleLogout() {
           <span class="text-brand-navy">sare<span class="text-brand-gold">pundi</span></span>
         </NuxtLink>
 
-        <NuxtLink to="/villas" class="hidden text-sm font-medium text-gray-600 hover:text-brand-brown sm:block">
-          Cari Villa
-        </NuxtLink>
+        <nav class="hidden items-center gap-6 sm:flex">
+          <NuxtLink to="/villas" class="text-sm font-medium text-gray-600 hover:text-brand-brown">
+            Cari Villa
+          </NuxtLink>
+          <NuxtLink to="/berita" class="text-sm font-medium text-gray-600 hover:text-brand-brown">
+            Berita dan Artikel
+          </NuxtLink>
+          <NuxtLink v-if="!authStore.isAuthenticated" to="/jadi-mitra" class="text-sm font-medium text-gray-600 hover:text-brand-brown">
+            Daftar Sebagai Mitra
+          </NuxtLink>
+        </nav>
 
         <div class="flex-1" />
 
@@ -63,6 +71,8 @@ async function handleLogout() {
           <ul class="mt-3 space-y-2 text-sm text-gray-300">
             <li><NuxtLink to="/" class="hover:text-white">Beranda</NuxtLink></li>
             <li><NuxtLink to="/villas" class="hover:text-white">Cari Villa</NuxtLink></li>
+            <li><NuxtLink to="/berita" class="hover:text-white">Berita dan Artikel</NuxtLink></li>
+            <li><NuxtLink to="/jadi-mitra" class="hover:text-white">Daftar Sebagai Mitra</NuxtLink></li>
           </ul>
         </div>
         <div>

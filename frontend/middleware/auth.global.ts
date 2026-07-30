@@ -1,7 +1,7 @@
 import type { UserRole } from '~/types/auth'
 
-const PUBLIC_ROUTES = ['/', '/login', '/register']
-const PUBLIC_PREFIXES = ['/villas']
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/daftar-mitra', '/jadi-mitra']
+const PUBLIC_PREFIXES = ['/villas', '/berita']
 
 export default defineNuxtRouteMiddleware((to) => {
   const authStore = useAuthStore()
@@ -17,7 +17,7 @@ export default defineNuxtRouteMiddleware((to) => {
 
   const homePath = ROLE_HOME[authStore.role as UserRole]
 
-  if (to.path === '/login' || to.path === '/register') {
+  if (to.path === '/login' || to.path === '/register' || to.path === '/daftar-mitra') {
     return navigateTo(homePath)
   }
 

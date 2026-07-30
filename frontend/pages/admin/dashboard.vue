@@ -82,6 +82,9 @@ onMounted(loadStats)
       <NuxtLink to="/admin/payouts" class="btn-outline">
         Payout Mitra
       </NuxtLink>
+      <NuxtLink to="/admin/articles" class="btn-outline">
+        Kelola Artikel
+      </NuxtLink>
     </div>
   </div>
 </template>

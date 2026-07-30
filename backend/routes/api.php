@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ArticleController as AdminArticleController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\MitraModerationController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Mitra\VillaController as MitraVillaController;
 use App\Http\Controllers\Mitra\VillaImageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Public\ArticleController as PublicArticleController;
 use App\Http\Controllers\Public\ReviewController as PublicReviewController;
 use App\Http\Controllers\Public\VillaAvailabilityController as PublicVillaAvailabilityController;
 use App\Http\Controllers\Public\VillaController as PublicVillaController;
@@ -34,6 +36,8 @@ Route::get('/villas', [PublicVillaController::class, 'index']);
 Route::get('/villas/{slug}', [PublicVillaController::class, 'show']);
 Route::get('/villas/{slug}/availability', PublicVillaAvailabilityController::class);
 Route::get('/villas/{slug}/reviews', [PublicReviewController::class, 'index']);
+Route::get('/articles', [PublicArticleController::class, 'index']);
+Route::get('/articles/{slug}', [PublicArticleController::class, 'show']);
 
 Route::post('/webhooks/xendit', [XenditWebhookController::class, 'handle']);
 
@@ -104,5 +108,14 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/payouts', [AdminPayoutController::class, 'index']);
         Route::post('/payouts/run', [AdminPayoutController::class, 'run']);
         Route::post('/payouts/{payout}/retry', [AdminPayoutController::class, 'retry']);
+
+        Route::get('/articles', [AdminArticleController::class, 'index']);
+        Route::post('/articles', [AdminArticleController::class, 'store']);
+        Route::get('/articles/{article}', [AdminArticleController::class, 'show']);
+        Route::patch('/articles/{article}', [AdminArticleController::class, 'update']);
+        Route::delete('/articles/{article}', [AdminArticleController::class, 'destroy']);
+        Route::post('/articles/{article}/publish', [AdminArticleController::class, 'publish']);
+        Route::post('/articles/{article}/unpublish', [AdminArticleController::class, 'unpublish']);
+        Route::post('/articles/{article}/cover', [AdminArticleController::class, 'uploadCover']);
     });
 });
