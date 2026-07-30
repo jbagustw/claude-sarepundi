@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ArticleController as AdminArticleController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\GatheringVenueModerationController;
 use App\Http\Controllers\Admin\HomestayModerationController;
 use App\Http\Controllers\Admin\MitraModerationController;
 use App\Http\Controllers\Admin\PayoutController as AdminPayoutController;
@@ -13,6 +14,9 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\Mitra\BookingController as MitraBookingController;
 use App\Http\Controllers\Mitra\DashboardController as MitraDashboardController;
+use App\Http\Controllers\Mitra\GatheringVenueController as MitraGatheringVenueController;
+use App\Http\Controllers\Mitra\GatheringVenueImageController;
+use App\Http\Controllers\Mitra\GatheringVenueSlotController;
 use App\Http\Controllers\Mitra\HomestayController as MitraHomestayController;
 use App\Http\Controllers\Mitra\HomestayImageController;
 use App\Http\Controllers\Mitra\PayoutController as MitraPayoutController;
@@ -24,6 +28,7 @@ use App\Http\Controllers\Mitra\VillaImageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Public\ArticleController as PublicArticleController;
+use App\Http\Controllers\Public\GatheringVenueController as PublicGatheringVenueController;
 use App\Http\Controllers\Public\HomestayController as PublicHomestayController;
 use App\Http\Controllers\Public\ReviewController as PublicReviewController;
 use App\Http\Controllers\Public\VillaAvailabilityController as PublicVillaAvailabilityController;
@@ -44,6 +49,8 @@ Route::get('/articles', [PublicArticleController::class, 'index']);
 Route::get('/articles/{slug}', [PublicArticleController::class, 'show']);
 Route::get('/homestays', [PublicHomestayController::class, 'index']);
 Route::get('/homestays/{slug}', [PublicHomestayController::class, 'show']);
+Route::get('/gathering-venues', [PublicGatheringVenueController::class, 'index']);
+Route::get('/gathering-venues/{slug}', [PublicGatheringVenueController::class, 'show']);
 
 Route::post('/webhooks/xendit', [XenditWebhookController::class, 'handle']);
 
@@ -89,6 +96,15 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::post('/homestays/{homestay}/images', [HomestayImageController::class, 'store']);
         Route::delete('/homestays/{homestay}/images/{image}', [HomestayImageController::class, 'destroy']);
 
+        Route::apiResource('gathering-venues', MitraGatheringVenueController::class)
+            ->parameters(['gathering-venues' => 'gatheringVenue']);
+        Route::post('/gathering-venues/{gatheringVenue}/submit', [MitraGatheringVenueController::class, 'submit']);
+        Route::post('/gathering-venues/{gatheringVenue}/images', [GatheringVenueImageController::class, 'store']);
+        Route::delete('/gathering-venues/{gatheringVenue}/images/{image}', [GatheringVenueImageController::class, 'destroy']);
+        Route::post('/gathering-venues/{gatheringVenue}/slots', [GatheringVenueSlotController::class, 'store']);
+        Route::patch('/gathering-venues/{gatheringVenue}/slots/{slot}', [GatheringVenueSlotController::class, 'update']);
+        Route::delete('/gathering-venues/{gatheringVenue}/slots/{slot}', [GatheringVenueSlotController::class, 'destroy']);
+
         Route::get('/bookings', [MitraBookingController::class, 'index']);
         Route::post('/bookings/{booking}/accept', [MitraBookingController::class, 'accept']);
         Route::post('/bookings/{booking}/reject', [MitraBookingController::class, 'reject']);
@@ -107,6 +123,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/homestays', [HomestayModerationController::class, 'index']);
         Route::post('/homestays/{homestay}/approve', [HomestayModerationController::class, 'approve']);
         Route::post('/homestays/{homestay}/reject', [HomestayModerationController::class, 'reject']);
+
+        Route::get('/gathering-venues', [GatheringVenueModerationController::class, 'index']);
+        Route::post('/gathering-venues/{gatheringVenue}/approve', [GatheringVenueModerationController::class, 'approve']);
+        Route::post('/gathering-venues/{gatheringVenue}/reject', [GatheringVenueModerationController::class, 'reject']);
 
         Route::get('/mitras', [MitraModerationController::class, 'index']);
         Route::post('/mitras/{mitra}/approve', [MitraModerationController::class, 'approve']);

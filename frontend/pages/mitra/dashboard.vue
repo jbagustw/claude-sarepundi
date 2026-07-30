@@ -80,6 +80,9 @@ onMounted(loadStats)
       <NuxtLink to="/mitra/homestays" class="btn-primary">
         Kelola Homestay
       </NuxtLink>
+      <NuxtLink to="/mitra/gathering-venues" class="btn-primary">
+        Kelola Lokasi Gathering
+      </NuxtLink>
       <NuxtLink to="/mitra/bookings" class="btn-outline">
         Kelola Booking
       </NuxtLink>

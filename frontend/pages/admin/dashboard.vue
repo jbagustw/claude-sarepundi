@@ -76,6 +76,9 @@ onMounted(loadStats)
       <NuxtLink to="/admin/homestays" class="btn-primary">
         Moderasi Homestay
       </NuxtLink>
+      <NuxtLink to="/admin/gathering-venues" class="btn-primary">
+        Moderasi Lokasi Gathering
+      </NuxtLink>
       <NuxtLink to="/admin/transactions" class="btn-outline">
         Monitoring Transaksi
       </NuxtLink>

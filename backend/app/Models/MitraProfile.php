@@ -59,6 +59,11 @@ class MitraProfile extends Model
         return $this->hasMany(Homestay::class, 'mitra_id');
     }
 
+    public function gatheringVenues(): HasMany
+    {
+        return $this->hasMany(GatheringVenue::class, 'mitra_id');
+    }
+
     public function payouts(): HasMany
     {
         return $this->hasMany(Payout::class, 'mitra_id');
