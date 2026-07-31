@@ -63,7 +63,7 @@ onMounted(loadBookings)
   <div>
     <h1 class="font-display text-2xl font-bold text-gray-900">Kelola Booking</h1>
     <p class="mt-1 text-sm text-gray-600">
-      Semua booking untuk villa kamu. Booking yang menunggu konfirmasi wajib direspon dalam
+      Semua booking untuk listing kamu. Booking yang menunggu konfirmasi wajib direspon dalam
       24 jam, jika tidak booking otomatis dibatalkan dan user direfund 100%.
     </p>
 
@@ -93,7 +93,15 @@ onMounted(loadBookings)
           </div>
         </div>
 
-        <dl class="mt-3 grid grid-cols-3 gap-y-1 text-sm">
+        <dl v-if="booking.bookable.type === 'gathering_venue'" class="mt-3 grid grid-cols-3 gap-y-1 text-sm">
+          <dt class="text-gray-500">Tanggal</dt>
+          <dd class="col-span-2 text-gray-900">{{ booking.check_in_date }}</dd>
+          <dt v-if="booking.slot" class="text-gray-500">Sesi</dt>
+          <dd v-if="booking.slot" class="col-span-2 text-gray-900">{{ booking.slot.name }} ({{ booking.slot.start_time }}-{{ booking.slot.end_time }})</dd>
+          <dt class="text-gray-500">Tamu</dt>
+          <dd class="col-span-2 text-gray-900">{{ booking.guest_count }}</dd>
+        </dl>
+        <dl v-else class="mt-3 grid grid-cols-3 gap-y-1 text-sm">
           <dt class="text-gray-500">Check-in</dt>
           <dd class="col-span-2 text-gray-900">{{ booking.check_in_date }}</dd>
           <dt class="text-gray-500">Check-out</dt>

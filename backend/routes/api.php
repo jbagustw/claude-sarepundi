@@ -31,7 +31,9 @@ use App\Http\Controllers\Mitra\VillaImageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Public\ArticleController as PublicArticleController;
+use App\Http\Controllers\Public\GatheringVenueAvailabilityController as PublicGatheringVenueAvailabilityController;
 use App\Http\Controllers\Public\GatheringVenueController as PublicGatheringVenueController;
+use App\Http\Controllers\Public\GatheringVenueReviewController as PublicGatheringVenueReviewController;
 use App\Http\Controllers\Public\HomestayAvailabilityController as PublicHomestayAvailabilityController;
 use App\Http\Controllers\Public\HomestayController as PublicHomestayController;
 use App\Http\Controllers\Public\HomestayReviewController as PublicHomestayReviewController;
@@ -59,6 +61,8 @@ Route::get('/homestays/{slug}/availability', PublicHomestayAvailabilityControlle
 Route::get('/homestays/{slug}/reviews', [PublicHomestayReviewController::class, 'index']);
 Route::get('/gathering-venues', [PublicGatheringVenueController::class, 'index']);
 Route::get('/gathering-venues/{slug}', [PublicGatheringVenueController::class, 'show']);
+Route::get('/gathering-venues/{slug}/availability', PublicGatheringVenueAvailabilityController::class);
+Route::get('/gathering-venues/{slug}/reviews', [PublicGatheringVenueReviewController::class, 'index']);
 Route::get('/transports', [PublicTransportController::class, 'index']);
 Route::get('/transports/{slug}', [PublicTransportController::class, 'show']);
 

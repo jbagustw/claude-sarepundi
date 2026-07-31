@@ -5,5 +5,7 @@ export interface MitraStats {
   published_villas: number
   total_homestays: number
   published_homestays: number
+  total_gathering_venues: number
+  published_gathering_venues: number
   occupancy_rate: number
 }

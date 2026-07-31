@@ -73,6 +73,11 @@ onMounted(loadStats)
         <p class="text-xs text-gray-400">dari {{ stats.total_homestays }} total</p>
       </div>
       <div class="card p-4">
+        <p class="text-xs text-gray-500">Lokasi Gathering Dipublikasikan</p>
+        <p class="mt-1 text-xl font-semibold text-gray-900">{{ stats.published_gathering_venues }}</p>
+        <p class="text-xs text-gray-400">dari {{ stats.total_gathering_venues }} total</p>
+      </div>
+      <div class="card p-4">
         <p class="text-xs text-gray-500">Occupancy Rate (bulan ini)</p>
         <p class="mt-1 text-xl font-semibold text-gray-900">{{ stats.occupancy_rate }}%</p>
       </div>

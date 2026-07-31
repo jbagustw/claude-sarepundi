@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\GatheringVenue;
 use App\Models\Homestay;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -25,10 +26,15 @@ class MitraBookingResource extends JsonResource
             'mitra_confirmation_deadline' => $this->mitra_confirmation_deadline?->toIso8601String(),
             'cancellation_reason' => $this->cancellation_reason,
             'bookable' => [
-                'type' => $this->bookable instanceof Homestay ? 'homestay' : 'villa',
+                'type' => $this->bookableType(),
                 'id' => $this->bookable->id,
                 'name' => $this->bookable->name,
             ],
+            'slot' => $this->whenLoaded('slot', fn () => $this->slot ? [
+                'name' => $this->slot->name,
+                'start_time' => substr((string) $this->slot->start_time, 0, 5),
+                'end_time' => substr((string) $this->slot->end_time, 0, 5),
+            ] : null),
             'guest' => [
                 'name' => $this->user->name,
                 'email' => $this->user->email,
@@ -36,5 +42,14 @@ class MitraBookingResource extends JsonResource
             ],
             'created_at' => $this->created_at?->toIso8601String(),
         ];
+    }
+
+    private function bookableType(): string
+    {
+        return match (true) {
+            $this->bookable instanceof Homestay => 'homestay',
+            $this->bookable instanceof GatheringVenue => 'gathering_venue',
+            default => 'villa',
+        };
     }
 }

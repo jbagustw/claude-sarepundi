@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
     'user_id',
     'bookable_type',
     'bookable_id',
+    'gathering_venue_slot_id',
     'check_in_date',
     'check_out_date',
     'guest_count',
@@ -44,8 +45,8 @@ class Booking extends Model
     }
 
     /**
-     * The listing being booked — a Villa or a Homestay today, more
-     * categories (gathering venue, transport) as they become bookable.
+     * The listing being booked — Villa, Homestay, or GatheringVenue today,
+     * more categories (transport) as they become bookable.
      */
     public function bookable(): MorphTo
     {
@@ -55,6 +56,15 @@ class Booking extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Only set when bookable_type is GatheringVenue — the specific time
+     * slot that was booked for that day.
+     */
+    public function slot(): BelongsTo
+    {
+        return $this->belongsTo(GatheringVenueSlot::class, 'gathering_venue_slot_id');
     }
 
     public function payments(): HasMany
@@ -92,7 +102,7 @@ class Booking extends Model
      */
     public static function bookableTypes(): array
     {
-        return [Villa::class, Homestay::class];
+        return [Villa::class, Homestay::class, GatheringVenue::class];
     }
 
     /**

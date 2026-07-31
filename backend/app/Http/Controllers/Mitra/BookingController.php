@@ -22,7 +22,7 @@ class BookingController extends Controller
         ]);
 
         $bookings = Booking::forMitra($request->user()->mitraProfile)
-            ->with(['bookable', 'user'])
+            ->with(['bookable', 'slot', 'user'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->query('status')))
             ->latest()
             ->get();
@@ -48,7 +48,7 @@ class BookingController extends Controller
             "Booking {$booking->booking_code} untuk {$booking->bookable->name} telah dikonfirmasi oleh mitra."
         );
 
-        return new MitraBookingResource($booking->load(['bookable', 'user']));
+        return new MitraBookingResource($booking->load(['bookable', 'slot', 'user']));
     }
 
     public function reject(Booking $booking, BookingCancellationService $cancellationService)
@@ -59,6 +59,6 @@ class BookingController extends Controller
 
         $cancellationService->cancelByMitra($booking, 'mitra_reject');
 
-        return new MitraBookingResource($booking->fresh()->load(['bookable', 'user']));
+        return new MitraBookingResource($booking->fresh()->load(['bookable', 'slot', 'user']));
     }
 }

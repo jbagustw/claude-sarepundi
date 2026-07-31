@@ -86,8 +86,8 @@ function onReviewSubmitted(review: Review) {
 
 const bookablePath = computed(() => {
   if (!booking.value) return ''
-  const segment = booking.value.bookable.type === 'homestay' ? 'homestays' : 'villas'
-  return `/${segment}/${booking.value.bookable.slug}`
+  const segments: Record<string, string> = { homestay: 'homestays', gathering_venue: 'gathering-venues', villa: 'villas' }
+  return `/${segments[booking.value.bookable.type]}/${booking.value.bookable.slug}`
 })
 
 onMounted(loadBooking)
@@ -128,7 +128,15 @@ onMounted(loadBooking)
           </div>
         </div>
 
-        <dl class="mt-4 grid grid-cols-2 gap-y-2 text-sm">
+        <dl v-if="booking.bookable.type === 'gathering_venue'" class="mt-4 grid grid-cols-2 gap-y-2 text-sm">
+          <dt class="text-gray-500">Tanggal Acara</dt>
+          <dd class="text-gray-900">{{ booking.check_in_date }}</dd>
+          <dt v-if="booking.slot" class="text-gray-500">Sesi</dt>
+          <dd v-if="booking.slot" class="text-gray-900">{{ booking.slot.name }} ({{ booking.slot.start_time }} - {{ booking.slot.end_time }})</dd>
+          <dt class="text-gray-500">Jumlah Tamu</dt>
+          <dd class="text-gray-900">{{ booking.guest_count }}</dd>
+        </dl>
+        <dl v-else class="mt-4 grid grid-cols-2 gap-y-2 text-sm">
           <dt class="text-gray-500">Check-in</dt>
           <dd class="text-gray-900">{{ booking.check_in_date }}</dd>
           <dt class="text-gray-500">Check-out</dt>

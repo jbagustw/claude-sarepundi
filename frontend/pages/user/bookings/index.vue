@@ -36,7 +36,10 @@ onMounted(loadBookings)
       >
         <div>
           <p class="font-semibold text-gray-900">{{ booking.bookable.name }}</p>
-          <p class="text-sm text-gray-600">
+          <p v-if="booking.bookable.type === 'gathering_venue'" class="text-sm text-gray-600">
+            {{ booking.check_in_date }}<span v-if="booking.slot"> &middot; {{ booking.slot.name }} ({{ booking.slot.start_time }}-{{ booking.slot.end_time }})</span> &middot; {{ booking.guest_count }} tamu
+          </p>
+          <p v-else class="text-sm text-gray-600">
             {{ booking.check_in_date }} &rarr; {{ booking.check_out_date }} &middot; {{ booking.guest_count }} tamu
           </p>
           <p class="text-xs text-gray-500">{{ booking.booking_code }}</p>

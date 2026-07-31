@@ -17,14 +17,25 @@ class StoreBookingRequest extends FormRequest
      */
     public function rules(): array
     {
-        $table = $this->input('bookable_type') === 'homestay' ? 'homestays' : 'villas';
+        $table = match ($this->input('bookable_type')) {
+            'homestay' => 'homestays',
+            'gathering_venue' => 'gathering_venues',
+            default => 'villas',
+        };
 
-        return [
-            'bookable_type' => ['required', 'string', Rule::in(['villa', 'homestay'])],
+        $rules = [
+            'bookable_type' => ['required', 'string', Rule::in(['villa', 'homestay', 'gathering_venue'])],
             'bookable_id' => ['required', 'integer', Rule::exists($table, 'id')],
             'check_in_date' => ['required', 'date', 'after_or_equal:today'],
-            'check_out_date' => ['required', 'date', 'after:check_in_date'],
             'guest_count' => ['required', 'integer', 'min:1'],
         ];
+
+        if ($this->input('bookable_type') === 'gathering_venue') {
+            $rules['gathering_venue_slot_id'] = ['required', 'integer', Rule::exists('gathering_venue_slots', 'id')];
+        } else {
+            $rules['check_out_date'] = ['required', 'date', 'after:check_in_date'];
+        }
+
+        return $rules;
     }
 }

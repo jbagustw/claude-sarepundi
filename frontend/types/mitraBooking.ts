@@ -12,10 +12,15 @@ export interface MitraBooking {
   mitra_confirmation_deadline: string | null
   cancellation_reason: string | null
   bookable: {
-    type: 'villa' | 'homestay'
+    type: 'villa' | 'homestay' | 'gathering_venue'
     id: number
     name: string
   }
+  slot: {
+    name: string
+    start_time: string
+    end_time: string
+  } | null
   guest: {
     name: string
     email: string

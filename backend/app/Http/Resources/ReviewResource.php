@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\GatheringVenue;
 use App\Models\Homestay;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -23,7 +24,11 @@ class ReviewResource extends JsonResource
                 'name' => $this->user->name,
             ],
             'reviewable' => [
-                'type' => $this->reviewable instanceof Homestay ? 'homestay' : 'villa',
+                'type' => match (true) {
+                    $this->reviewable instanceof Homestay => 'homestay',
+                    $this->reviewable instanceof GatheringVenue => 'gathering_venue',
+                    default => 'villa',
+                },
                 'id' => $this->reviewable->id,
                 'name' => $this->reviewable->name,
             ],

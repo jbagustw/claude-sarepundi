@@ -30,13 +30,19 @@ export interface Booking {
     paid_at: string | null
   } | null
   bookable: {
-    type: 'villa' | 'homestay'
+    type: 'villa' | 'homestay' | 'gathering_venue'
     id: number
     name: string
     slug: string
     city: string
     primary_image: string | null
   }
+  slot: {
+    id: number
+    name: string
+    start_time: string
+    end_time: string
+  } | null
   review: Review | null
   created_at: string
 }
@@ -48,6 +54,20 @@ export interface AvailabilityResult {
   total_price: number
   commission_amount: number
   mitra_payout_amount: number
+}
+
+export interface GatheringVenueSlotAvailability {
+  id: number
+  name: string
+  start_time: string
+  end_time: string
+  price: number
+  available: boolean
+}
+
+export interface GatheringVenueAvailabilityResult {
+  date: string
+  slots: GatheringVenueSlotAvailability[]
 }
 
 export interface VillaAvailabilityOverride {

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Mitra;
 
 use App\Models\Booking;
+use App\Models\GatheringVenue;
 use App\Models\MitraProfile;
 use App\Models\User;
 use App\Models\Villa;
@@ -149,6 +150,45 @@ class MitraDashboardTest extends TestCase
 
         // 2 / 31 * 100 = 6.5
         $response->assertJsonPath('data.occupancy_rate', 6.5);
+    }
+
+    public function test_occupancy_rate_ignores_gathering_venue_bookings(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-15'));
+
+        $mitra = $this->approvedMitra();
+        $this->villa($mitra); // 1 published villa, no bookings -> 0 booked nights
+
+        $venue = $mitra->mitraProfile->gatheringVenues()->create([
+            'name' => 'Aula Serbaguna', 'slug' => 'aula-serbaguna-'.uniqid(),
+            'city' => 'Yogyakarta', 'capacity' => 50, 'status' => 'published',
+        ]);
+        $slot = $venue->slots()->create([
+            'name' => 'Sesi Pagi', 'start_time' => '08:00', 'end_time' => '12:00',
+            'price' => 1000000, 'is_active' => true,
+        ]);
+        Booking::create([
+            'booking_code' => 'BK'.uniqid(),
+            'user_id' => User::factory()->create()->id,
+            'bookable_type' => GatheringVenue::class,
+            'bookable_id' => $venue->id,
+            'gathering_venue_slot_id' => $slot->id,
+            'check_in_date' => '2026-07-20',
+            'check_out_date' => '2026-07-20',
+            'guest_count' => 20,
+            'total_price' => 1000000,
+            'commission_amount' => 100000,
+            'mitra_payout_amount' => 900000,
+            'status' => 'dikonfirmasi',
+        ]);
+
+        $response = $this->fromFrontend()->actingAs($mitra)->getJson('/api/mitra/stats');
+
+        // A confirmed gathering venue booking must not count as "booked
+        // nights" toward the villa/homestay occupancy rate.
+        $response->assertJsonPath('data.occupancy_rate', 0);
+        $response->assertJsonPath('data.total_gathering_venues', 1);
+        $response->assertJsonPath('data.published_gathering_venues', 1);
     }
 
     public function test_non_mitra_cannot_view_mitra_stats(): void

@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Models\Booking;
+use App\Models\GatheringVenue;
+use App\Models\GatheringVenueSlot;
 use App\Models\Homestay;
 use App\Models\Villa;
 use App\Services\BookingCancellationService;
+use App\Services\GatheringVenueAvailabilityService;
 use App\Services\HomestayAvailabilityService;
 use App\Services\VillaAvailabilityService;
 use Carbon\CarbonImmutable;
@@ -22,7 +25,7 @@ class BookingController extends Controller
         $this->authorize('viewAny', Booking::class);
 
         $bookings = $request->user()->bookings()
-            ->with(['bookable.images', 'latestPayment'])
+            ->with(['bookable.images', 'slot', 'latestPayment'])
             ->latest()
             ->get();
 
@@ -33,12 +36,17 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        return new BookingResource($booking->load(['bookable.images', 'latestPayment', 'review']));
+        return new BookingResource($booking->load(['bookable.images', 'slot', 'latestPayment', 'review']));
     }
 
-    public function store(StoreBookingRequest $request, VillaAvailabilityService $villaService, HomestayAvailabilityService $homestayService)
-    {
+    public function store(
+        StoreBookingRequest $request,
+        VillaAvailabilityService $villaService,
+        HomestayAvailabilityService $homestayService,
+        GatheringVenueAvailabilityService $gatheringVenueService,
+    ) {
         $data = $request->validated();
+        $slot = null;
 
         if ($data['bookable_type'] === 'homestay') {
             $bookable = Homestay::publiclyVisible()->findOrFail($data['bookable_id']);
@@ -46,6 +54,15 @@ class BookingController extends Controller
                 $bookable,
                 CarbonImmutable::parse($data['check_in_date']),
                 CarbonImmutable::parse($data['check_out_date']),
+                $data['guest_count'],
+            );
+        } elseif ($data['bookable_type'] === 'gathering_venue') {
+            $bookable = GatheringVenue::publiclyVisible()->findOrFail($data['bookable_id']);
+            $slot = GatheringVenueSlot::findOrFail($data['gathering_venue_slot_id']);
+            $result = $gatheringVenueService->evaluate(
+                $bookable,
+                $slot,
+                CarbonImmutable::parse($data['check_in_date']),
                 $data['guest_count'],
             );
         } else {
@@ -67,8 +84,9 @@ class BookingController extends Controller
             'user_id' => $request->user()->id,
             'bookable_type' => $bookable::class,
             'bookable_id' => $bookable->id,
+            'gathering_venue_slot_id' => $slot?->id,
             'check_in_date' => $data['check_in_date'],
-            'check_out_date' => $data['check_out_date'],
+            'check_out_date' => $data['check_out_date'] ?? $data['check_in_date'],
             'guest_count' => $data['guest_count'],
             'total_price' => $result['total_price'],
             'commission_amount' => $result['commission_amount'],
@@ -76,7 +94,7 @@ class BookingController extends Controller
             'status' => 'pending_payment',
         ]);
 
-        return (new BookingResource($booking->load('bookable.images')))
+        return (new BookingResource($booking->load(['bookable.images', 'slot'])))
             ->response()
             ->setStatusCode(201);
     }
@@ -87,7 +105,7 @@ class BookingController extends Controller
 
         $cancellationService->cancelByUser($booking);
 
-        return new BookingResource($booking->fresh()->load(['bookable.images', 'latestPayment']));
+        return new BookingResource($booking->fresh()->load(['bookable.images', 'slot', 'latestPayment']));
     }
 
     private function generateBookingCode(): string

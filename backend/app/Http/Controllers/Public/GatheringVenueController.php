@@ -21,6 +21,8 @@ class GatheringVenueController extends Controller
 
         $venues = GatheringVenue::publiclyVisible()
             ->with(['images', 'facilities', 'slots'])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
             ->when($request->filled('q'), fn ($q) => $q->where('name', 'like', '%'.$request->query('q').'%'))
             ->when($request->filled('city'), fn ($q) => $q->where('city', 'like', '%'.$request->query('city').'%'))
             ->when($request->filled('capacity'), fn ($q) => $q->where('capacity', '>=', $request->integer('capacity')))
@@ -38,6 +40,8 @@ class GatheringVenueController extends Controller
     {
         $venue = GatheringVenue::publiclyVisible()
             ->with(['images', 'facilities', 'slots'])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
             ->where('slug', $slug)
             ->firstOrFail();
 

@@ -37,6 +37,12 @@ class GatheringVenueSlotController extends Controller
             abort(404);
         }
 
+        abort_if(
+            $slot->bookings()->exists(),
+            422,
+            'Slot ini tidak bisa dihapus karena sudah ada booking untuknya. Nonaktifkan slot ini saja.'
+        );
+
         $slot->delete();
 
         return response()->json(['message' => 'Slot dihapus.']);

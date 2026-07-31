@@ -42,7 +42,7 @@ onMounted(loadBookings)
       <input
         v-model="search"
         type="text"
-        placeholder="Cari kode booking, villa/homestay, atau user"
+        placeholder="Cari kode booking, nama listing, atau user"
         class="field-input min-w-[240px] flex-1"
       >
       <select v-model="statusFilter" class="field-input">
@@ -81,7 +81,12 @@ onMounted(loadBookings)
               <p class="text-xs text-gray-500">{{ booking.user.email }}</p>
             </td>
             <td class="px-3 py-2 text-xs text-gray-600">
-              {{ booking.check_in_date }} &rarr; {{ booking.check_out_date }}
+              <template v-if="booking.bookable.type === 'gathering_venue'">
+                {{ booking.check_in_date }}<span v-if="booking.slot"> &middot; {{ booking.slot.start_time }}-{{ booking.slot.end_time }}</span>
+              </template>
+              <template v-else>
+                {{ booking.check_in_date }} &rarr; {{ booking.check_out_date }}
+              </template>
             </td>
             <td class="px-3 py-2 text-right text-gray-900">{{ formatRupiah(booking.total_price) }}</td>
             <td class="px-3 py-2 text-right text-gray-600">{{ formatRupiah(booking.commission_amount) }}</td>

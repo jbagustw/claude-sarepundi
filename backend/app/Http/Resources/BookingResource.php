@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\GatheringVenue;
 use App\Models\Homestay;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -36,15 +37,30 @@ class BookingResource extends JsonResource
             ] : null),
             'review' => $this->whenLoaded('review', fn () => $this->review ? new ReviewResource($this->review) : null),
             'bookable' => [
-                'type' => $this->bookable instanceof Homestay ? 'homestay' : 'villa',
+                'type' => $this->bookableType(),
                 'id' => $this->bookable->id,
                 'name' => $this->bookable->name,
                 'slug' => $this->bookable->slug,
                 'city' => $this->bookable->city,
                 'primary_image' => $this->primaryImageUrl(),
             ],
+            'slot' => $this->whenLoaded('slot', fn () => $this->slot ? [
+                'id' => $this->slot->id,
+                'name' => $this->slot->name,
+                'start_time' => substr((string) $this->slot->start_time, 0, 5),
+                'end_time' => substr((string) $this->slot->end_time, 0, 5),
+            ] : null),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
+    }
+
+    private function bookableType(): string
+    {
+        return match (true) {
+            $this->bookable instanceof Homestay => 'homestay',
+            $this->bookable instanceof GatheringVenue => 'gathering_venue',
+            default => 'villa',
+        };
     }
 
     private function primaryImageUrl(): ?string

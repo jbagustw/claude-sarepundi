@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Mitra;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Homestay;
+use App\Models\Villa;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -41,6 +43,11 @@ class DashboardController extends Controller
             'published_villas' => $publishedVillaCount,
             'total_homestays' => $mitraProfile->homestays()->count(),
             'published_homestays' => $publishedHomestayCount,
+            'total_gathering_venues' => $mitraProfile->gatheringVenues()->count(),
+            'published_gathering_venues' => $mitraProfile->gatheringVenues()->where('status', 'published')->count(),
+            // Occupancy is a nights-booked metric, which doesn't map onto
+            // gathering venues (per-slot, multiple bookings/day) the way it
+            // does for villa/homestay stays — kept scoped to those two.
             'occupancy_rate' => $this->occupancyRateThisMonth($mitraProfile, $publishedVillaCount + $publishedHomestayCount),
         ]]);
     }
@@ -61,6 +68,7 @@ class DashboardController extends Controller
         $monthEnd = now()->endOfMonth();
 
         $bookedNights = Booking::forMitra($mitraProfile)
+            ->whereIn('bookable_type', [Villa::class, Homestay::class])
             ->whereIn('status', self::OCCUPYING_STATUSES)
             ->where('check_in_date', '<', $monthEnd)
             ->where('check_out_date', '>', $monthStart)

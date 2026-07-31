@@ -2,7 +2,7 @@
 import type { Review } from '~/types/review'
 
 const props = defineProps<{
-  resourceType: 'villa' | 'homestay'
+  resourceType: 'villa' | 'homestay' | 'gathering_venue'
   resourceSlug: string
 }>()
 
@@ -10,7 +10,11 @@ const api = useApi()
 const reviews = ref<Review[]>([])
 const loading = ref(true)
 
-const resourcePathSegment = computed(() => (props.resourceType === 'homestay' ? 'homestays' : 'villas'))
+const resourcePathSegment = computed(() => {
+  if (props.resourceType === 'homestay') return 'homestays'
+  if (props.resourceType === 'gathering_venue') return 'gathering-venues'
+  return 'villas'
+})
 
 async function loadReviews() {
   loading.value = true
