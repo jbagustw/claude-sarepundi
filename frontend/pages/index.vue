@@ -212,11 +212,11 @@ onMounted(loadHomeData)
     <!-- Coupon -->
     <section v-if="coupons.length" class="mx-auto mt-10 max-w-6xl px-4">
       <h2 class="font-display text-xl font-bold text-gray-900">Kupon Promo Untukmu</h2>
-      <div class="mt-4 flex gap-3 overflow-x-auto pb-2">
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="coupon in coupons"
           :key="coupon.id"
-          class="card flex w-72 shrink-0 items-center justify-between gap-3 border-l-4 border-l-brand-terracotta p-4"
+          class="card flex items-center justify-between gap-3 border-l-4 border-l-brand-terracotta p-4"
         >
           <div class="min-w-0">
             <p class="text-xs font-semibold uppercase tracking-wide text-brand-terracotta">Diskon {{ discountLabel(coupon) }}</p>
@@ -237,16 +237,16 @@ onMounted(loadHomeData)
 
     <!-- Banner iklan -->
     <section v-if="banners.length" class="mx-auto mt-10 max-w-6xl px-4">
-      <div class="flex gap-4 overflow-x-auto pb-2">
+      <div class="space-y-4">
         <component
           :is="banner.link_url ? 'a' : 'div'"
           v-for="banner in banners"
           :key="banner.id"
           :href="banner.link_url ?? undefined"
-          class="block w-full shrink-0 overflow-hidden rounded-2xl sm:w-auto"
+          class="block overflow-hidden rounded-2xl"
           :class="{ 'transition hover:opacity-90': banner.link_url }"
         >
-          <img :src="banner.image ?? ''" :alt="banner.title" class="h-32 w-full object-cover sm:h-40 sm:w-[640px]">
+          <img :src="banner.image ?? ''" :alt="banner.title" class="h-40 w-full object-cover sm:h-64">
         </component>
       </div>
     </section>
