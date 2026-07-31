@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Homestay;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,9 +24,10 @@ class MitraBookingResource extends JsonResource
             'status' => $this->status,
             'mitra_confirmation_deadline' => $this->mitra_confirmation_deadline?->toIso8601String(),
             'cancellation_reason' => $this->cancellation_reason,
-            'villa' => [
-                'id' => $this->villa->id,
-                'name' => $this->villa->name,
+            'bookable' => [
+                'type' => $this->bookable instanceof Homestay ? 'homestay' : 'villa',
+                'id' => $this->bookable->id,
+                'name' => $this->bookable->name,
             ],
             'guest' => [
                 'name' => $this->user->name,

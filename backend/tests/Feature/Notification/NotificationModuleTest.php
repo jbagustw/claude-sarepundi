@@ -164,7 +164,8 @@ class NotificationModuleTest extends TestCase
         $booking = Booking::create([
             'booking_code' => 'BK'.uniqid(),
             'user_id' => $user->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => now()->addDays(10)->format('Y-m-d'),
             'check_out_date' => now()->addDays(13)->format('Y-m-d'),
             'guest_count' => 2,

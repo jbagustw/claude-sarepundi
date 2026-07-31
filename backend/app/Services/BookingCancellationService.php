@@ -76,12 +76,12 @@ class BookingCancellationService
 
         $this->refundIfOwed($booking, $amount, $reason);
 
-        $mitraUser = $booking->villa->mitraProfile->user;
+        $mitraUser = $booking->bookable->mitraProfile->user;
         $this->notifications->notify(
             $mitraUser,
             'booking_cancelled_by_user',
             'Booking dibatalkan user',
-            "Booking {$booking->booking_code} untuk {$booking->villa->name} dibatalkan oleh user (refund {$percentage}%)."
+            "Booking {$booking->booking_code} untuk {$booking->bookable->name} dibatalkan oleh user (refund {$percentage}%)."
         );
     }
 

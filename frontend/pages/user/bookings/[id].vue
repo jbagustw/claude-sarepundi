@@ -84,6 +84,12 @@ function onReviewSubmitted(review: Review) {
   if (booking.value) booking.value.review = review
 }
 
+const bookablePath = computed(() => {
+  if (!booking.value) return ''
+  const segment = booking.value.bookable.type === 'homestay' ? 'homestays' : 'villas'
+  return `/${segment}/${booking.value.bookable.slug}`
+})
+
 onMounted(loadBooking)
 </script>
 
@@ -109,16 +115,16 @@ onMounted(loadBooking)
       <div class="card mt-6 p-4">
         <div class="flex gap-4">
           <img
-            v-if="booking.villa.primary_image"
-            :src="booking.villa.primary_image"
+            v-if="booking.bookable.primary_image"
+            :src="booking.bookable.primary_image"
             class="h-20 w-20 rounded object-cover"
             alt=""
           >
           <div>
-            <NuxtLink :to="`/villas/${booking.villa.slug}`" class="font-semibold text-gray-900 hover:underline">
-              {{ booking.villa.name }}
+            <NuxtLink :to="bookablePath" class="font-semibold text-gray-900 hover:underline">
+              {{ booking.bookable.name }}
             </NuxtLink>
-            <p class="text-sm text-gray-600">{{ booking.villa.city }}</p>
+            <p class="text-sm text-gray-600">{{ booking.bookable.city }}</p>
           </div>
         </div>
 

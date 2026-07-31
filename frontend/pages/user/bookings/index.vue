@@ -35,7 +35,7 @@ onMounted(loadBookings)
         class="card flex items-center justify-between p-4 transition hover:shadow-md"
       >
         <div>
-          <p class="font-semibold text-gray-900">{{ booking.villa.name }}</p>
+          <p class="font-semibold text-gray-900">{{ booking.bookable.name }}</p>
           <p class="text-sm text-gray-600">
             {{ booking.check_in_date }} &rarr; {{ booking.check_out_date }} &middot; {{ booking.guest_count }} tamu
           </p>

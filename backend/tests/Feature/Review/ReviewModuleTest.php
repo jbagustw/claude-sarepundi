@@ -58,7 +58,8 @@ class ReviewModuleTest extends TestCase
         return Booking::create([
             'booking_code' => 'BK'.uniqid(),
             'user_id' => $user->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => now()->subDays(10)->format('Y-m-d'),
             'check_out_date' => now()->subDays(7)->format('Y-m-d'),
             'guest_count' => 2,
@@ -82,7 +83,8 @@ class ReviewModuleTest extends TestCase
         $this->assertDatabaseHas('reviews', [
             'booking_id' => $booking->id,
             'user_id' => $user->id,
-            'villa_id' => $villa->id,
+            'reviewable_type' => Villa::class,
+            'reviewable_id' => $villa->id,
             'rating' => 5,
             'comment' => 'Bagus sekali',
         ]);
@@ -111,7 +113,7 @@ class ReviewModuleTest extends TestCase
         $villa = $this->villaWithMitra();
         $booking = $this->booking($user, $villa, 'selesai');
         Review::create([
-            'booking_id' => $booking->id, 'user_id' => $user->id, 'villa_id' => $villa->id, 'rating' => 4,
+            'booking_id' => $booking->id, 'user_id' => $user->id, 'reviewable_type' => Villa::class, 'reviewable_id' => $villa->id, 'rating' => 4,
         ]);
 
         $this->fromFrontend()->actingAs($user)
@@ -150,7 +152,7 @@ class ReviewModuleTest extends TestCase
         $villa = $this->villaWithMitra();
         $booking = $this->booking($user, $villa, 'selesai');
         Review::create([
-            'booking_id' => $booking->id, 'user_id' => $user->id, 'villa_id' => $villa->id,
+            'booking_id' => $booking->id, 'user_id' => $user->id, 'reviewable_type' => Villa::class, 'reviewable_id' => $villa->id,
             'rating' => 5, 'comment' => 'Mantap',
         ]);
 
@@ -174,20 +176,20 @@ class ReviewModuleTest extends TestCase
         $villa = $this->villaWithMitra();
         $booking = $this->booking($user, $villa, 'selesai');
         Review::create([
-            'booking_id' => $booking->id, 'user_id' => $user->id, 'villa_id' => $villa->id, 'rating' => 5,
+            'booking_id' => $booking->id, 'user_id' => $user->id, 'reviewable_type' => Villa::class, 'reviewable_id' => $villa->id, 'rating' => 5,
         ]);
 
         $otherVilla = $this->villaWithMitra();
         $otherBooking = $this->booking($this->regularUser(), $otherVilla, 'selesai');
         Review::create([
-            'booking_id' => $otherBooking->id, 'user_id' => $otherBooking->user_id, 'villa_id' => $otherVilla->id, 'rating' => 3,
+            'booking_id' => $otherBooking->id, 'user_id' => $otherBooking->user_id, 'reviewable_type' => Villa::class, 'reviewable_id' => $otherVilla->id, 'rating' => 3,
         ]);
 
         $response = $this->fromFrontend()->actingAs($villa->mitraProfile->user)->getJson('/api/mitra/reviews');
 
         $response->assertOk();
         $response->assertJsonCount(1, 'data');
-        $response->assertJsonFragment(['villa' => ['id' => $villa->id, 'name' => $villa->name]]);
+        $response->assertJsonFragment(['reviewable' => ['type' => 'villa', 'id' => $villa->id, 'name' => $villa->name]]);
     }
 
     public function test_mitra_can_reply_to_a_review_on_their_own_villa(): void
@@ -196,7 +198,7 @@ class ReviewModuleTest extends TestCase
         $villa = $this->villaWithMitra();
         $booking = $this->booking($user, $villa, 'selesai');
         $review = Review::create([
-            'booking_id' => $booking->id, 'user_id' => $user->id, 'villa_id' => $villa->id, 'rating' => 5,
+            'booking_id' => $booking->id, 'user_id' => $user->id, 'reviewable_type' => Villa::class, 'reviewable_id' => $villa->id, 'rating' => 5,
         ]);
 
         $response = $this->fromFrontend()->actingAs($villa->mitraProfile->user)
@@ -213,7 +215,7 @@ class ReviewModuleTest extends TestCase
         $villa = $this->villaWithMitra();
         $booking = $this->booking($user, $villa, 'selesai');
         $review = Review::create([
-            'booking_id' => $booking->id, 'user_id' => $user->id, 'villa_id' => $villa->id, 'rating' => 5,
+            'booking_id' => $booking->id, 'user_id' => $user->id, 'reviewable_type' => Villa::class, 'reviewable_id' => $villa->id, 'rating' => 5,
         ]);
 
         $otherMitra = $this->villaWithMitra()->mitraProfile->user;
@@ -231,7 +233,7 @@ class ReviewModuleTest extends TestCase
         $villa = $this->villaWithMitra();
         $booking = $this->booking($user, $villa, 'selesai');
         $review = Review::create([
-            'booking_id' => $booking->id, 'user_id' => $user->id, 'villa_id' => $villa->id, 'rating' => 5,
+            'booking_id' => $booking->id, 'user_id' => $user->id, 'reviewable_type' => Villa::class, 'reviewable_id' => $villa->id, 'rating' => 5,
             'mitra_reply' => 'Sudah dibalas', 'mitra_replied_at' => now(),
         ]);
 

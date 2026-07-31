@@ -67,13 +67,13 @@ onMounted(async () => {
         <div class="mt-6">
           <h2 class="font-display font-semibold text-gray-900">Ulasan</h2>
           <div class="mt-3">
-            <ReviewList :villa-slug="villa.slug" />
+            <ReviewList resource-type="villa" :resource-slug="villa.slug" />
           </div>
         </div>
       </div>
 
       <div>
-        <VillaBookingWidget :villa-slug="villa.slug" :villa-id="villa.id" :base-price="villa.base_price" />
+        <BookingWidget bookable-type="villa" :bookable-slug="villa.slug" :bookable-id="villa.id" :base-price="villa.base_price" />
       </div>
     </div>
   </div>

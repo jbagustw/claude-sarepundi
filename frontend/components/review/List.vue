@@ -2,16 +2,19 @@
 import type { Review } from '~/types/review'
 
 const props = defineProps<{
-  villaSlug: string
+  resourceType: 'villa' | 'homestay'
+  resourceSlug: string
 }>()
 
 const api = useApi()
 const reviews = ref<Review[]>([])
 const loading = ref(true)
 
+const resourcePathSegment = computed(() => (props.resourceType === 'homestay' ? 'homestays' : 'villas'))
+
 async function loadReviews() {
   loading.value = true
-  const response = await api<{ data: Review[] }>(`/api/villas/${props.villaSlug}/reviews`)
+  const response = await api<{ data: Review[] }>(`/api/${resourcePathSegment.value}/${props.resourceSlug}/reviews`)
   reviews.value = response.data
   loading.value = false
 }
@@ -22,7 +25,7 @@ onMounted(loadReviews)
 <template>
   <div>
     <p v-if="loading" class="text-sm text-gray-600">Memuat ulasan...</p>
-    <p v-else-if="reviews.length === 0" class="text-sm text-gray-600">Belum ada ulasan untuk villa ini.</p>
+    <p v-else-if="reviews.length === 0" class="text-sm text-gray-600">Belum ada ulasan.</p>
 
     <div v-else class="space-y-4">
       <div v-for="review in reviews" :key="review.id" class="card p-4">

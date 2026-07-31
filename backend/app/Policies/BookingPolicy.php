@@ -29,7 +29,7 @@ class BookingPolicy
     public function respondAsMitra(User $user, Booking $booking): bool
     {
         return $user->hasRole('mitra')
-            && $booking->villa->mitraProfile?->user_id === $user->id;
+            && $booking->bookable->mitraProfile?->user_id === $user->id;
     }
 
     /**

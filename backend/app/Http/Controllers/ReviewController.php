@@ -21,15 +21,16 @@ class ReviewController extends Controller
             ...$request->validated(),
             'booking_id' => $booking->id,
             'user_id' => $booking->user_id,
-            'villa_id' => $booking->villa_id,
+            'reviewable_type' => $booking->bookable_type,
+            'reviewable_id' => $booking->bookable_id,
         ]);
 
-        $mitraUser = $booking->villa->mitraProfile->user;
+        $mitraUser = $booking->bookable->mitraProfile->user;
         $notifications->notify(
             $mitraUser,
             'new_review',
             'Review baru untuk villa kamu',
-            "{$booking->user->name} memberi rating {$review->rating}/5 untuk {$booking->villa->name}."
+            "{$booking->user->name} memberi rating {$review->rating}/5 untuk {$booking->bookable->name}."
         );
 
         return (new ReviewResource($review))->response()->setStatusCode(201);

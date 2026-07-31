@@ -48,7 +48,7 @@ class XenditWebhookController extends Controller
                 ]);
             });
 
-            $booking = $payment->booking()->with(['user', 'villa.mitraProfile.user'])->first();
+            $booking = $payment->booking()->with(['user', 'bookable.mitraProfile.user'])->first();
 
             $notifications->notify(
                 $booking->user,
@@ -57,10 +57,10 @@ class XenditWebhookController extends Controller
                 "Pembayaran untuk booking {$booking->booking_code} berhasil. Menunggu konfirmasi dari mitra dalam 24 jam."
             );
             $notifications->notify(
-                $booking->villa->mitraProfile->user,
+                $booking->bookable->mitraProfile->user,
                 'booking_awaiting_confirmation',
                 'Booking baru menunggu konfirmasi',
-                "Booking {$booking->booking_code} untuk {$booking->villa->name} sudah dibayar dan menunggu konfirmasi kamu dalam 24 jam."
+                "Booking {$booking->booking_code} untuk {$booking->bookable->name} sudah dibayar dan menunggu konfirmasi kamu dalam 24 jam."
             );
         } elseif (in_array($status, ['EXPIRED', 'FAILED'], true)) {
             $payment->update(['status' => 'failed']);

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 #[Fillable([
     'mitra_id',
@@ -64,14 +65,14 @@ class Villa extends Model
         return $this->hasMany(VillaAvailability::class);
     }
 
-    public function bookings(): HasMany
+    public function bookings(): MorphMany
     {
-        return $this->hasMany(Booking::class);
+        return $this->morphMany(Booking::class, 'bookable');
     }
 
-    public function reviews(): HasMany
+    public function reviews(): MorphMany
     {
-        return $this->hasMany(Review::class);
+        return $this->morphMany(Review::class, 'reviewable');
     }
 
     /**

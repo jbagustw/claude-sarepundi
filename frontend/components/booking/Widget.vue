@@ -2,8 +2,9 @@
 import type { AvailabilityResult } from '~/types/booking'
 
 const props = defineProps<{
-  villaSlug: string
-  villaId: number
+  bookableType: 'villa' | 'homestay'
+  bookableSlug: string
+  bookableId: number
   basePrice: number
 }>()
 
@@ -22,6 +23,8 @@ const booking = ref(false)
 const result = ref<AvailabilityResult | null>(null)
 const errorMessage = ref('')
 
+const resourcePathSegment = computed(() => (props.bookableType === 'homestay' ? 'homestays' : 'villas'))
+
 async function checkAvailability() {
   errorMessage.value = ''
   result.value = null
@@ -33,7 +36,7 @@ async function checkAvailability() {
 
   checking.value = true
   try {
-    const response = await api<{ data: AvailabilityResult }>(`/api/villas/${props.villaSlug}/availability`, {
+    const response = await api<{ data: AvailabilityResult }>(`/api/${resourcePathSegment.value}/${props.bookableSlug}/availability`, {
       query: {
         check_in_date: checkInDate.value,
         check_out_date: checkOutDate.value,
@@ -56,7 +59,8 @@ async function createBooking() {
     const response = await api<{ data: { id: number } }>('/api/bookings', {
       method: 'POST',
       body: {
-        villa_id: props.villaId,
+        bookable_type: props.bookableType,
+        bookable_id: props.bookableId,
         check_in_date: checkInDate.value,
         check_out_date: checkOutDate.value,
         guest_count: guestCount.value,
@@ -142,13 +146,13 @@ async function createBooking() {
           </button>
           <NuxtLink
             v-else-if="!authStore.isAuthenticated"
-            :to="`/login?redirect=${encodeURIComponent(`/villas/${villaSlug}`)}`"
+            :to="`/login?redirect=${encodeURIComponent(`/${resourcePathSegment}/${bookableSlug}`)}`"
             class="btn-primary mt-3 block w-full text-center"
           >
             Masuk untuk Booking
           </NuxtLink>
           <p v-else class="mt-3 text-sm text-gray-500">
-            Hanya akun pencari villa yang bisa melakukan booking.
+            Hanya akun pencari yang bisa melakukan booking.
           </p>
         </template>
       </div>

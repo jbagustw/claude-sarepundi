@@ -31,7 +31,7 @@ class AdvanceCompletedStays extends Command
 
         $completedBookings = Booking::whereIn('status', ['dikonfirmasi', 'checked_in'])
             ->where('check_out_date', '<=', now())
-            ->with(['user', 'villa'])
+            ->with(['user', 'bookable'])
             ->get();
 
         foreach ($completedBookings as $booking) {
@@ -41,7 +41,7 @@ class AdvanceCompletedStays extends Command
                 $booking->user,
                 'booking_completed',
                 'Terima kasih sudah menginap!',
-                "Booking {$booking->booking_code} di {$booking->villa->name} sudah selesai. Yuk beri review untuk villa ini."
+                "Booking {$booking->booking_code} di {$booking->bookable->name} sudah selesai. Yuk beri review untuk villa/homestay ini."
             );
         }
 

@@ -76,7 +76,8 @@ class MitraConfirmationTest extends TestCase
         $booking = Booking::create([
             'booking_code' => 'BK'.uniqid(),
             'user_id' => $renter->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-13',
             'guest_count' => 2,

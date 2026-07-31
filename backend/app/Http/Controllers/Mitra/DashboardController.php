@@ -11,16 +11,15 @@ class DashboardController extends Controller
     /**
      * Statuses that represent a real, committed stay — used both for the
      * "confirmed" booking count and for the occupancy calculation. Pending
-     * payment/confirmation or cancelled bookings don't occupy the villa.
+     * payment/confirmation or cancelled bookings don't occupy the listing.
      */
     private const OCCUPYING_STATUSES = ['dikonfirmasi', 'checked_in', 'selesai'];
 
     public function stats(Request $request)
     {
         $mitraProfile = $request->user()->mitraProfile;
-        $villaIds = $mitraProfile->villas()->pluck('id');
 
-        $bookingCounts = Booking::whereIn('villa_id', $villaIds)
+        $bookingCounts = Booking::forMitra($mitraProfile)
             ->selectRaw('status, count(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status');
@@ -28,36 +27,40 @@ class DashboardController extends Controller
         // Payout only actually lands once a stay is complete (see the
         // payout trigger design for milestone 9), so "pendapatan" here
         // means realized earnings, not money still in flight.
-        $totalPendapatan = (int) Booking::whereIn('villa_id', $villaIds)
+        $totalPendapatan = (int) Booking::forMitra($mitraProfile)
             ->where('status', 'selesai')
             ->sum('mitra_payout_amount');
 
         $publishedVillaCount = $mitraProfile->villas()->where('status', 'published')->count();
+        $publishedHomestayCount = $mitraProfile->homestays()->where('status', 'published')->count();
 
         return response()->json(['data' => [
             'total_pendapatan' => $totalPendapatan,
             'booking_counts' => $bookingCounts,
             'total_villas' => $mitraProfile->villas()->count(),
             'published_villas' => $publishedVillaCount,
-            'occupancy_rate' => $this->occupancyRateThisMonth($villaIds, $publishedVillaCount),
+            'total_homestays' => $mitraProfile->homestays()->count(),
+            'published_homestays' => $publishedHomestayCount,
+            'occupancy_rate' => $this->occupancyRateThisMonth($mitraProfile, $publishedVillaCount + $publishedHomestayCount),
         ]]);
     }
 
     /**
-     * % of this month's villa-nights that are booked (confirmed or
-     * beyond), across all of this mitra's published villas. Nights from
-     * bookings that only partially overlap the month are clipped to it.
+     * % of this month's listing-nights (villa + homestay combined) that
+     * are booked (confirmed or beyond), across all of this mitra's
+     * published listings. Nights from bookings that only partially
+     * overlap the month are clipped to it.
      */
-    private function occupancyRateThisMonth($villaIds, int $publishedVillaCount): float
+    private function occupancyRateThisMonth($mitraProfile, int $publishedListingCount): float
     {
-        if ($publishedVillaCount === 0) {
+        if ($publishedListingCount === 0) {
             return 0.0;
         }
 
         $monthStart = now()->startOfMonth();
         $monthEnd = now()->endOfMonth();
 
-        $bookedNights = Booking::whereIn('villa_id', $villaIds)
+        $bookedNights = Booking::forMitra($mitraProfile)
             ->whereIn('status', self::OCCUPYING_STATUSES)
             ->where('check_in_date', '<', $monthEnd)
             ->where('check_out_date', '>', $monthStart)
@@ -69,8 +72,8 @@ class DashboardController extends Controller
                 return max(0, $start->diffInDays($end));
             });
 
-        $totalVillaNights = $publishedVillaCount * $monthStart->daysInMonth;
+        $totalListingNights = $publishedListingCount * $monthStart->daysInMonth;
 
-        return round($bookedNights / $totalVillaNights * 100, 1);
+        return round($bookedNights / $totalListingNights * 100, 1);
     }
 }

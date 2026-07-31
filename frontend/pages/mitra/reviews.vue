@@ -46,8 +46,8 @@ onMounted(loadReviews)
 
 <template>
   <div>
-    <h1 class="font-display text-2xl font-bold text-gray-900">Ulasan Villa</h1>
-    <p class="mt-1 text-sm text-gray-600">Ulasan dari tamu untuk semua villa kamu. Kamu bisa membalas setiap ulasan satu kali.</p>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Ulasan</h1>
+    <p class="mt-1 text-sm text-gray-600">Ulasan dari tamu untuk semua villa dan homestay kamu. Kamu bisa membalas setiap ulasan satu kali.</p>
 
     <p v-if="loading" class="mt-6 text-gray-600">Memuat...</p>
     <p v-else-if="reviews.length === 0" class="mt-6 text-gray-600">Belum ada ulasan.</p>
@@ -55,7 +55,7 @@ onMounted(loadReviews)
     <div v-else class="mt-6 space-y-4">
       <div v-for="review in reviews" :key="review.id" class="card p-4">
         <div class="flex items-center justify-between">
-          <p class="font-semibold text-gray-900">{{ review.villa.name }}</p>
+          <p class="font-semibold text-gray-900">{{ review.reviewable.name }}</p>
           <ReviewStars :rating="review.rating" />
         </div>
         <p class="text-xs text-gray-500">{{ review.user.name }} &middot; {{ new Date(review.created_at).toLocaleDateString('id-ID') }}</p>

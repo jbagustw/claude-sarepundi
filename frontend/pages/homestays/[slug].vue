@@ -26,6 +26,11 @@ onMounted(async () => {
         <h1 class="font-display text-2xl font-bold text-gray-900">{{ homestay.name }}</h1>
         <p class="text-gray-600">{{ homestay.address ? `${homestay.address}, ` : '' }}{{ homestay.city }}{{ homestay.province ? `, ${homestay.province}` : '' }}</p>
 
+        <div v-if="homestay.reviews_count > 0" class="mt-1 flex items-center gap-2 text-sm">
+          <ReviewStars :rating="homestay.reviews_avg_rating ?? 0" />
+          <span class="text-gray-700">{{ homestay.reviews_avg_rating }} ({{ homestay.reviews_count }} ulasan)</span>
+        </div>
+
         <div v-if="homestay.images.length" class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <img
             v-for="image in homestay.images"
@@ -58,17 +63,17 @@ onMounted(async () => {
         </div>
 
         <p class="mt-4 text-sm text-gray-500">Dikelola oleh {{ homestay.mitra.business_name }}</p>
+
+        <div class="mt-6">
+          <h2 class="font-display font-semibold text-gray-900">Ulasan</h2>
+          <div class="mt-3">
+            <ReviewList resource-type="homestay" :resource-slug="homestay.slug" />
+          </div>
+        </div>
       </div>
 
       <div>
-        <div class="card sticky top-4 p-4">
-          <p class="text-lg font-semibold text-gray-900">
-            {{ formatRupiah(homestay.base_price) }} <span class="text-sm font-normal text-gray-500">/ malam</span>
-          </p>
-          <p class="mt-3 rounded-xl bg-brand-sage/15 p-3 text-sm text-brand-brown-dark">
-            Booking online untuk homestay segera hadir. Hubungi mitra melalui platform untuk info ketersediaan.
-          </p>
-        </div>
+        <BookingWidget bookable-type="homestay" :bookable-slug="homestay.slug" :bookable-id="homestay.id" :base-price="homestay.base_price" />
       </div>
     </div>
   </div>

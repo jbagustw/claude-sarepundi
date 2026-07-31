@@ -61,7 +61,8 @@ class UserCancellationTest extends TestCase
         $booking = Booking::create([
             'booking_code' => 'BK'.uniqid(),
             'user_id' => $user->id,
-            'villa_id' => $this->villa()->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $this->villa()->id,
             'check_in_date' => $checkIn->format('Y-m-d'),
             'check_out_date' => (clone $checkIn)->modify('+3 days')->format('Y-m-d'),
             'guest_count' => 2,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Homestay;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,10 +22,10 @@ class ReviewResource extends JsonResource
             'user' => [
                 'name' => $this->user->name,
             ],
-            'villa_id' => $this->villa_id,
-            'villa' => [
-                'id' => $this->villa->id,
-                'name' => $this->villa->name,
+            'reviewable' => [
+                'type' => $this->reviewable instanceof Homestay ? 'homestay' : 'villa',
+                'id' => $this->reviewable->id,
+                'name' => $this->reviewable->name,
             ],
             'created_at' => $this->created_at?->toIso8601String(),
         ];

@@ -40,7 +40,7 @@ async function submit() {
 
 <template>
   <div class="card p-4">
-    <p class="font-medium text-gray-900">Beri ulasan untuk villa ini</p>
+    <p class="font-medium text-gray-900">Beri ulasan untuk booking ini</p>
 
     <div class="mt-2 flex gap-1 text-2xl text-brand-gold">
       <button

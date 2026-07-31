@@ -81,7 +81,8 @@ class AdminDashboardTest extends TestCase
         Booking::create([
             'booking_code' => 'BK'.uniqid(),
             'user_id' => $this->regularUser()->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-12',
             'guest_count' => 2,
@@ -119,7 +120,8 @@ class AdminDashboardTest extends TestCase
         Booking::create([
             'booking_code' => 'BKCONFIRMED',
             'user_id' => $user->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-12',
             'guest_count' => 2,
@@ -131,7 +133,8 @@ class AdminDashboardTest extends TestCase
         Booking::create([
             'booking_code' => 'BKPENDING',
             'user_id' => $user->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-09-10',
             'check_out_date' => '2026-09-12',
             'guest_count' => 2,
@@ -158,7 +161,8 @@ class AdminDashboardTest extends TestCase
         Booking::create([
             'booking_code' => 'BKSEARCHME',
             'user_id' => $this->regularUser()->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-12',
             'guest_count' => 2,

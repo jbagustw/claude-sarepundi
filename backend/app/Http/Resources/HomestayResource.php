@@ -29,6 +29,8 @@ class HomestayResource extends JsonResource
             'status' => $this->status,
             'rejection_reason' => $this->rejection_reason,
             'reviewed_at' => $this->reviewed_at?->toIso8601String(),
+            'reviews_avg_rating' => $this->reviews_avg_rating !== null ? round((float) $this->reviews_avg_rating, 1) : null,
+            'reviews_count' => $this->reviews_count ?? 0,
             'mitra' => [
                 'id' => $this->mitraProfile->id,
                 'business_name' => $this->mitraProfile->business_name,

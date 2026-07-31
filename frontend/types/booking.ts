@@ -29,7 +29,8 @@ export interface Booking {
     invoice_url: string | null
     paid_at: string | null
   } | null
-  villa: {
+  bookable: {
+    type: 'villa' | 'homestay'
     id: number
     name: string
     slug: string

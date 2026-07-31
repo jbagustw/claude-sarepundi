@@ -172,7 +172,8 @@ class BookingModuleTest extends TestCase
         $villa = $this->publishedVilla(['base_price' => 1000000]);
 
         $response = $this->fromFrontend()->actingAs($user)->postJson('/api/bookings', [
-            'villa_id' => $villa->id,
+            'bookable_type' => 'villa',
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-13',
             'guest_count' => 2,
@@ -185,7 +186,8 @@ class BookingModuleTest extends TestCase
         $response->assertJsonPath('data.mitra_payout_amount', 2700000);
         $this->assertDatabaseHas('bookings', [
             'user_id' => $user->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'status' => 'pending_payment',
         ]);
     }
@@ -198,7 +200,8 @@ class BookingModuleTest extends TestCase
         Booking::create([
             'booking_code' => 'BK-EXISTING',
             'user_id' => $user->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-13',
             'guest_count' => 2,
@@ -209,7 +212,8 @@ class BookingModuleTest extends TestCase
         ]);
 
         $response = $this->fromFrontend()->actingAs($this->regularUser())->postJson('/api/bookings', [
-            'villa_id' => $villa->id,
+            'bookable_type' => 'villa',
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-12',
             'check_out_date' => '2026-08-15',
             'guest_count' => 2,
@@ -227,7 +231,8 @@ class BookingModuleTest extends TestCase
         Booking::create([
             'booking_code' => 'BK-CANCELLED',
             'user_id' => $user->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-13',
             'guest_count' => 2,
@@ -238,7 +243,8 @@ class BookingModuleTest extends TestCase
         ]);
 
         $this->fromFrontend()->actingAs($user)->postJson('/api/bookings', [
-            'villa_id' => $villa->id,
+            'bookable_type' => 'villa',
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-13',
             'guest_count' => 2,
@@ -251,7 +257,8 @@ class BookingModuleTest extends TestCase
         $villa = $this->publishedVilla(['capacity_guest' => 2]);
 
         $this->fromFrontend()->actingAs($user)->postJson('/api/bookings', [
-            'villa_id' => $villa->id,
+            'bookable_type' => 'villa',
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-12',
             'guest_count' => 5,
@@ -264,7 +271,8 @@ class BookingModuleTest extends TestCase
         $villa = $this->publishedVilla();
 
         $this->fromFrontend()->actingAs($mitra)->postJson('/api/bookings', [
-            'villa_id' => $villa->id,
+            'bookable_type' => 'villa',
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-12',
             'guest_count' => 2,
@@ -277,7 +285,8 @@ class BookingModuleTest extends TestCase
         $villa = $this->publishedVilla(['status' => 'draft']);
 
         $this->fromFrontend()->actingAs($user)->postJson('/api/bookings', [
-            'villa_id' => $villa->id,
+            'bookable_type' => 'villa',
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-12',
             'guest_count' => 2,
@@ -295,7 +304,8 @@ class BookingModuleTest extends TestCase
         $booking = Booking::create([
             'booking_code' => 'BK-OWNED',
             'user_id' => $owner->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-12',
             'guest_count' => 2,
@@ -323,7 +333,8 @@ class BookingModuleTest extends TestCase
         Booking::create([
             'booking_code' => 'BK-MINE',
             'user_id' => $user->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-10',
             'check_out_date' => '2026-08-12',
             'guest_count' => 2,
@@ -336,7 +347,8 @@ class BookingModuleTest extends TestCase
         Booking::create([
             'booking_code' => 'BK-OTHERS',
             'user_id' => $this->regularUser()->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-09-10',
             'check_out_date' => '2026-09-12',
             'guest_count' => 2,

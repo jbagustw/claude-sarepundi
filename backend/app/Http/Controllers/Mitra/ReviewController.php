@@ -12,11 +12,8 @@ class ReviewController extends Controller
 {
     public function index(Request $request)
     {
-        $reviews = Review::whereHas(
-            'villa',
-            fn ($q) => $q->where('mitra_id', $request->user()->mitraProfile->id)
-        )
-            ->with(['user', 'villa'])
+        $reviews = Review::forMitra($request->user()->mitraProfile)
+            ->with(['user', 'reviewable'])
             ->latest()
             ->get();
 

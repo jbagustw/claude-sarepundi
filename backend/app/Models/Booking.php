@@ -3,15 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 #[Fillable([
     'booking_code',
     'user_id',
-    'villa_id',
+    'bookable_type',
+    'bookable_id',
     'check_in_date',
     'check_out_date',
     'guest_count',
@@ -40,14 +43,18 @@ class Booking extends Model
         ];
     }
 
+    /**
+     * The listing being booked — a Villa or a Homestay today, more
+     * categories (gathering venue, transport) as they become bookable.
+     */
+    public function bookable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function villa(): BelongsTo
-    {
-        return $this->belongsTo(Villa::class);
     }
 
     public function payments(): HasMany
@@ -73,5 +80,46 @@ class Booking extends Model
     public function nights(): int
     {
         return $this->check_in_date->diffInDays($this->check_out_date);
+    }
+
+    /**
+     * Model classes that are currently bookable and carry a `mitra_id`
+     * pointing at mitra_profiles — used by scopeForMitra to find every
+     * booking across a mitra's listings regardless of category. Extend
+     * this list as gathering venues / transport become bookable too.
+     *
+     * @return array<class-string>
+     */
+    public static function bookableTypes(): array
+    {
+        return [Villa::class, Homestay::class];
+    }
+
+    /**
+     * Every booking across every listing type owned by this mitra —
+     * the polymorphic equivalent of the old `whereHas('villa', ...)`.
+     */
+    public function scopeForMitra(Builder $query, MitraProfile $mitra): Builder
+    {
+        $hasAnyCondition = false;
+
+        return $query->where(function (Builder $outer) use ($mitra, &$hasAnyCondition) {
+            foreach (self::bookableTypes() as $type) {
+                $ids = $type::where('mitra_id', $mitra->id)->pluck('id');
+
+                if ($ids->isEmpty()) {
+                    continue;
+                }
+
+                $hasAnyCondition = true;
+                $outer->orWhere(fn (Builder $inner) => $inner
+                    ->where('bookable_type', $type)
+                    ->whereIn('bookable_id', $ids));
+            }
+
+            if (! $hasAnyCondition) {
+                $outer->whereRaw('1 = 0');
+            }
+        });
     }
 }

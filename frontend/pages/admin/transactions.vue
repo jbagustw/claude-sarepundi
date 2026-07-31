@@ -42,7 +42,7 @@ onMounted(loadBookings)
       <input
         v-model="search"
         type="text"
-        placeholder="Cari kode booking, villa, atau user"
+        placeholder="Cari kode booking, villa/homestay, atau user"
         class="field-input min-w-[240px] flex-1"
       >
       <select v-model="statusFilter" class="field-input">
@@ -61,7 +61,7 @@ onMounted(loadBookings)
         <thead class="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase text-gray-500">
           <tr>
             <th class="px-3 py-2">Kode</th>
-            <th class="px-3 py-2">Villa / Mitra</th>
+            <th class="px-3 py-2">Listing / Mitra</th>
             <th class="px-3 py-2">User</th>
             <th class="px-3 py-2">Tanggal</th>
             <th class="px-3 py-2 text-right">Total</th>
@@ -73,7 +73,7 @@ onMounted(loadBookings)
           <tr v-for="booking in bookings" :key="booking.id">
             <td class="px-3 py-2 font-mono text-xs">{{ booking.booking_code }}</td>
             <td class="px-3 py-2">
-              <p class="text-gray-900">{{ booking.villa.name }}</p>
+              <p class="text-gray-900">{{ booking.bookable.name }}</p>
               <p class="text-xs text-gray-500">{{ booking.mitra.business_name }}</p>
             </td>
             <td class="px-3 py-2">

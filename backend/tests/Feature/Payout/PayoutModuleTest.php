@@ -72,7 +72,8 @@ class PayoutModuleTest extends TestCase
         return Booking::create([
             'booking_code' => 'BK'.uniqid(),
             'user_id' => User::factory()->create()->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-06-01',
             'check_out_date' => '2026-06-03',
             'guest_count' => 2,
@@ -122,7 +123,8 @@ class PayoutModuleTest extends TestCase
         Booking::create([
             'booking_code' => 'BK'.uniqid(),
             'user_id' => User::factory()->create()->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => '2026-08-01',
             'check_out_date' => '2026-08-03',
             'guest_count' => 2,

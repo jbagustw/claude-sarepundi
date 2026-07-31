@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Homestay;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,12 +24,13 @@ class AdminBookingResource extends JsonResource
             'status' => $this->status,
             'cancellation_reason' => $this->cancellation_reason,
             'refund_amount' => $this->refund_amount,
-            'villa' => [
-                'id' => $this->villa->id,
-                'name' => $this->villa->name,
+            'bookable' => [
+                'type' => $this->bookable instanceof Homestay ? 'homestay' : 'villa',
+                'id' => $this->bookable->id,
+                'name' => $this->bookable->name,
             ],
             'mitra' => [
-                'business_name' => $this->villa->mitraProfile->business_name,
+                'business_name' => $this->bookable->mitraProfile->business_name,
             ],
             'user' => [
                 'name' => $this->user->name,

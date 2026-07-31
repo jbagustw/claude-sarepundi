@@ -19,7 +19,7 @@ class SendCheckinReminders extends Command
     {
         $bookings = Booking::where('status', 'dikonfirmasi')
             ->whereDate('check_in_date', now()->addDay()->toDateString())
-            ->with(['user', 'villa'])
+            ->with(['user', 'bookable'])
             ->get();
 
         foreach ($bookings as $booking) {
@@ -27,7 +27,7 @@ class SendCheckinReminders extends Command
                 $booking->user,
                 'checkin_reminder',
                 'Check-in besok!',
-                "Jangan lupa, check-in untuk booking {$booking->booking_code} di {$booking->villa->name} adalah besok ({$booking->check_in_date->toDateString()})."
+                "Jangan lupa, check-in untuk booking {$booking->booking_code} di {$booking->bookable->name} adalah besok ({$booking->check_in_date->toDateString()})."
             );
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Homestay;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -34,11 +35,12 @@ class BookingResource extends JsonResource
                 'paid_at' => $this->latestPayment->paid_at?->toIso8601String(),
             ] : null),
             'review' => $this->whenLoaded('review', fn () => $this->review ? new ReviewResource($this->review) : null),
-            'villa' => [
-                'id' => $this->villa->id,
-                'name' => $this->villa->name,
-                'slug' => $this->villa->slug,
-                'city' => $this->villa->city,
+            'bookable' => [
+                'type' => $this->bookable instanceof Homestay ? 'homestay' : 'villa',
+                'id' => $this->bookable->id,
+                'name' => $this->bookable->name,
+                'slug' => $this->bookable->slug,
+                'city' => $this->bookable->city,
                 'primary_image' => $this->primaryImageUrl(),
             ],
             'created_at' => $this->created_at?->toIso8601String(),
@@ -47,7 +49,7 @@ class BookingResource extends JsonResource
 
     private function primaryImageUrl(): ?string
     {
-        $image = $this->villa->images->firstWhere('is_primary', true) ?? $this->villa->images->first();
+        $image = $this->bookable->images->firstWhere('is_primary', true) ?? $this->bookable->images->first();
 
         return $image ? Storage::disk('public')->url($image->image_url) : null;
     }

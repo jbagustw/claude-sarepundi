@@ -9,7 +9,7 @@ class ReplyReviewRequest extends FormRequest
     public function authorize(): bool
     {
         return $this->user()->hasRole('mitra')
-            && $this->route('review')->villa->mitraProfile->user_id === $this->user()->id;
+            && $this->route('review')->reviewable->mitraProfile->user_id === $this->user()->id;
     }
 
     /**

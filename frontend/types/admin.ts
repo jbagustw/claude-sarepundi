@@ -25,7 +25,7 @@ export interface AdminBooking {
   status: BookingStatus
   cancellation_reason: string | null
   refund_amount: number | null
-  villa: { id: number; name: string }
+  bookable: { type: 'villa' | 'homestay'; id: number; name: string }
   mitra: { business_name: string }
   user: { name: string; email: string }
   payment_status: string | null

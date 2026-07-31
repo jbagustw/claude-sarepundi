@@ -45,7 +45,7 @@ class XenditService
                 'external_id' => $booking->booking_code,
                 'amount' => $booking->total_price,
                 'payer_email' => $booking->user->email,
-                'description' => "Pembayaran booking {$booking->booking_code} - {$booking->villa->name}",
+                'description' => "Pembayaran booking {$booking->booking_code} - {$booking->bookable->name}",
                 'success_redirect_url' => $successUrl,
                 'failure_redirect_url' => $failureUrl,
             ]);

@@ -21,11 +21,8 @@ class BookingController extends Controller
             ])],
         ]);
 
-        $bookings = Booking::whereHas(
-            'villa',
-            fn ($q) => $q->where('mitra_id', $request->user()->mitraProfile->id)
-        )
-            ->with(['villa', 'user'])
+        $bookings = Booking::forMitra($request->user()->mitraProfile)
+            ->with(['bookable', 'user'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->query('status')))
             ->latest()
             ->get();
@@ -48,10 +45,10 @@ class BookingController extends Controller
             $booking->user,
             'booking_confirmed',
             'Booking dikonfirmasi',
-            "Booking {$booking->booking_code} untuk {$booking->villa->name} telah dikonfirmasi oleh mitra."
+            "Booking {$booking->booking_code} untuk {$booking->bookable->name} telah dikonfirmasi oleh mitra."
         );
 
-        return new MitraBookingResource($booking->load(['villa', 'user']));
+        return new MitraBookingResource($booking->load(['bookable', 'user']));
     }
 
     public function reject(Booking $booking, BookingCancellationService $cancellationService)
@@ -62,6 +59,6 @@ class BookingController extends Controller
 
         $cancellationService->cancelByMitra($booking, 'mitra_reject');
 
-        return new MitraBookingResource($booking->fresh()->load(['villa', 'user']));
+        return new MitraBookingResource($booking->fresh()->load(['bookable', 'user']));
     }
 }

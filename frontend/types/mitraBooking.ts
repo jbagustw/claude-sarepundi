@@ -11,7 +11,8 @@ export interface MitraBooking {
   status: BookingStatus
   mitra_confirmation_deadline: string | null
   cancellation_reason: string | null
-  villa: {
+  bookable: {
+    type: 'villa' | 'homestay'
     id: number
     name: string
   }

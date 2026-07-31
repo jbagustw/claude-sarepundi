@@ -7,8 +7,8 @@ export interface Review {
   user: {
     name: string
   }
-  villa_id: number
-  villa: {
+  reviewable: {
+    type: 'villa' | 'homestay'
     id: number
     name: string
   }

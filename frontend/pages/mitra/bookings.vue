@@ -80,7 +80,7 @@ onMounted(loadBookings)
       <div v-for="booking in bookings" :key="booking.id" class="card p-4">
         <div class="flex items-start justify-between">
           <div>
-            <p class="font-semibold text-gray-900">{{ booking.villa.name }}</p>
+            <p class="font-semibold text-gray-900">{{ booking.bookable.name }}</p>
             <p class="text-sm text-gray-600">{{ booking.guest.name }} &middot; {{ booking.guest.email }}</p>
             <p class="text-xs text-gray-500">{{ booking.booking_code }}</p>
           </div>

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Models\Booking;
+use App\Models\Homestay;
 use App\Models\Villa;
 use App\Services\BookingCancellationService;
+use App\Services\HomestayAvailabilityService;
 use App\Services\VillaAvailabilityService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -20,7 +22,7 @@ class BookingController extends Controller
         $this->authorize('viewAny', Booking::class);
 
         $bookings = $request->user()->bookings()
-            ->with(['villa.images', 'latestPayment'])
+            ->with(['bookable.images', 'latestPayment'])
             ->latest()
             ->get();
 
@@ -31,19 +33,30 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        return new BookingResource($booking->load(['villa.images', 'latestPayment', 'review']));
+        return new BookingResource($booking->load(['bookable.images', 'latestPayment', 'review']));
     }
 
-    public function store(StoreBookingRequest $request, VillaAvailabilityService $service)
+    public function store(StoreBookingRequest $request, VillaAvailabilityService $villaService, HomestayAvailabilityService $homestayService)
     {
         $data = $request->validated();
 
-        $villa = Villa::publiclyVisible()->findOrFail($data['villa_id']);
-
-        $checkIn = CarbonImmutable::parse($data['check_in_date']);
-        $checkOut = CarbonImmutable::parse($data['check_out_date']);
-
-        $result = $service->evaluate($villa, $checkIn, $checkOut, $data['guest_count']);
+        if ($data['bookable_type'] === 'homestay') {
+            $bookable = Homestay::publiclyVisible()->findOrFail($data['bookable_id']);
+            $result = $homestayService->evaluate(
+                $bookable,
+                CarbonImmutable::parse($data['check_in_date']),
+                CarbonImmutable::parse($data['check_out_date']),
+                $data['guest_count'],
+            );
+        } else {
+            $bookable = Villa::publiclyVisible()->findOrFail($data['bookable_id']);
+            $result = $villaService->evaluate(
+                $bookable,
+                CarbonImmutable::parse($data['check_in_date']),
+                CarbonImmutable::parse($data['check_out_date']),
+                $data['guest_count'],
+            );
+        }
 
         if (! $result['available']) {
             throw ValidationException::withMessages(['check_in_date' => [$result['reason']]]);
@@ -52,7 +65,8 @@ class BookingController extends Controller
         $booking = Booking::create([
             'booking_code' => $this->generateBookingCode(),
             'user_id' => $request->user()->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => $bookable::class,
+            'bookable_id' => $bookable->id,
             'check_in_date' => $data['check_in_date'],
             'check_out_date' => $data['check_out_date'],
             'guest_count' => $data['guest_count'],
@@ -62,7 +76,7 @@ class BookingController extends Controller
             'status' => 'pending_payment',
         ]);
 
-        return (new BookingResource($booking->load('villa.images')))
+        return (new BookingResource($booking->load('bookable.images')))
             ->response()
             ->setStatusCode(201);
     }
@@ -73,7 +87,7 @@ class BookingController extends Controller
 
         $cancellationService->cancelByUser($booking);
 
-        return new BookingResource($booking->fresh()->load(['villa.images', 'latestPayment']));
+        return new BookingResource($booking->fresh()->load(['bookable.images', 'latestPayment']));
     }
 
     private function generateBookingCode(): string

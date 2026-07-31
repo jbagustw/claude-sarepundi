@@ -57,7 +57,8 @@ class VillaAvailabilityService
             $totalPrice += $override?->custom_price ?? $villa->base_price;
         }
 
-        $hasConflict = Booking::where('villa_id', $villa->id)
+        $hasConflict = Booking::where('bookable_type', Villa::class)
+            ->where('bookable_id', $villa->id)
             ->whereIn('status', self::BLOCKING_STATUSES)
             ->where('check_in_date', '<', $checkOut->toDateString())
             ->where('check_out_date', '>', $checkIn->toDateString())

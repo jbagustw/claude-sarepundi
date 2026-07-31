@@ -61,7 +61,8 @@ class MitraDashboardTest extends TestCase
         return Booking::create([
             'booking_code' => 'BK'.uniqid(),
             'user_id' => User::factory()->create()->id,
-            'villa_id' => $villa->id,
+            'bookable_type' => Villa::class,
+            'bookable_id' => $villa->id,
             'check_in_date' => $checkIn,
             'check_out_date' => $checkOut,
             'guest_count' => 2,

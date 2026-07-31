@@ -19,6 +19,8 @@ export interface Homestay {
   status: HomestayStatus
   rejection_reason: string | null
   reviewed_at: string | null
+  reviews_avg_rating: number | null
+  reviews_count: number
   mitra: {
     id: number
     business_name: string

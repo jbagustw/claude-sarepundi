@@ -35,9 +35,7 @@ class PayoutService
 
     private function createPayoutForMitra(MitraProfile $mitra): ?Payout
     {
-        $villaIds = $mitra->villas()->pluck('id');
-
-        $eligibleBookings = Booking::whereIn('villa_id', $villaIds)
+        $eligibleBookings = Booking::forMitra($mitra)
             ->where('status', 'selesai')
             ->whereNull('payout_id')
             ->get();
