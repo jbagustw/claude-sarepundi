@@ -79,6 +79,9 @@ onMounted(loadStats)
       <NuxtLink to="/admin/gathering-venues" class="btn-primary">
         Moderasi Lokasi Gathering
       </NuxtLink>
+      <NuxtLink to="/admin/transports" class="btn-primary">
+        Moderasi Transport
+      </NuxtLink>
       <NuxtLink to="/admin/transactions" class="btn-outline">
         Monitoring Transaksi
       </NuxtLink>

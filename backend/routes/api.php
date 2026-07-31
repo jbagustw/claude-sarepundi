@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\GatheringVenueModerationController;
 use App\Http\Controllers\Admin\HomestayModerationController;
 use App\Http\Controllers\Admin\MitraModerationController;
 use App\Http\Controllers\Admin\PayoutController as AdminPayoutController;
+use App\Http\Controllers\Admin\TransportModerationController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VillaModerationController;
 use App\Http\Controllers\Auth\AuthController;
@@ -22,6 +23,8 @@ use App\Http\Controllers\Mitra\HomestayImageController;
 use App\Http\Controllers\Mitra\PayoutController as MitraPayoutController;
 use App\Http\Controllers\Mitra\ProfileController as MitraProfileController;
 use App\Http\Controllers\Mitra\ReviewController as MitraReviewController;
+use App\Http\Controllers\Mitra\TransportController as MitraTransportController;
+use App\Http\Controllers\Mitra\TransportImageController;
 use App\Http\Controllers\Mitra\VillaAvailabilityController as MitraVillaAvailabilityController;
 use App\Http\Controllers\Mitra\VillaController as MitraVillaController;
 use App\Http\Controllers\Mitra\VillaImageController;
@@ -31,6 +34,7 @@ use App\Http\Controllers\Public\ArticleController as PublicArticleController;
 use App\Http\Controllers\Public\GatheringVenueController as PublicGatheringVenueController;
 use App\Http\Controllers\Public\HomestayController as PublicHomestayController;
 use App\Http\Controllers\Public\ReviewController as PublicReviewController;
+use App\Http\Controllers\Public\TransportController as PublicTransportController;
 use App\Http\Controllers\Public\VillaAvailabilityController as PublicVillaAvailabilityController;
 use App\Http\Controllers\Public\VillaController as PublicVillaController;
 use App\Http\Controllers\ReviewController;
@@ -51,6 +55,8 @@ Route::get('/homestays', [PublicHomestayController::class, 'index']);
 Route::get('/homestays/{slug}', [PublicHomestayController::class, 'show']);
 Route::get('/gathering-venues', [PublicGatheringVenueController::class, 'index']);
 Route::get('/gathering-venues/{slug}', [PublicGatheringVenueController::class, 'show']);
+Route::get('/transports', [PublicTransportController::class, 'index']);
+Route::get('/transports/{slug}', [PublicTransportController::class, 'show']);
 
 Route::post('/webhooks/xendit', [XenditWebhookController::class, 'handle']);
 
@@ -105,6 +111,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::patch('/gathering-venues/{gatheringVenue}/slots/{slot}', [GatheringVenueSlotController::class, 'update']);
         Route::delete('/gathering-venues/{gatheringVenue}/slots/{slot}', [GatheringVenueSlotController::class, 'destroy']);
 
+        Route::apiResource('transports', MitraTransportController::class);
+        Route::post('/transports/{transport}/submit', [MitraTransportController::class, 'submit']);
+        Route::post('/transports/{transport}/images', [TransportImageController::class, 'store']);
+        Route::delete('/transports/{transport}/images/{image}', [TransportImageController::class, 'destroy']);
+
         Route::get('/bookings', [MitraBookingController::class, 'index']);
         Route::post('/bookings/{booking}/accept', [MitraBookingController::class, 'accept']);
         Route::post('/bookings/{booking}/reject', [MitraBookingController::class, 'reject']);
@@ -127,6 +138,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/gathering-venues', [GatheringVenueModerationController::class, 'index']);
         Route::post('/gathering-venues/{gatheringVenue}/approve', [GatheringVenueModerationController::class, 'approve']);
         Route::post('/gathering-venues/{gatheringVenue}/reject', [GatheringVenueModerationController::class, 'reject']);
+
+        Route::get('/transports', [TransportModerationController::class, 'index']);
+        Route::post('/transports/{transport}/approve', [TransportModerationController::class, 'approve']);
+        Route::post('/transports/{transport}/reject', [TransportModerationController::class, 'reject']);
 
         Route::get('/mitras', [MitraModerationController::class, 'index']);
         Route::post('/mitras/{mitra}/approve', [MitraModerationController::class, 'approve']);

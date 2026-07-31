@@ -64,6 +64,11 @@ class MitraProfile extends Model
         return $this->hasMany(GatheringVenue::class, 'mitra_id');
     }
 
+    public function transports(): HasMany
+    {
+        return $this->hasMany(Transport::class, 'mitra_id');
+    }
+
     public function payouts(): HasMany
     {
         return $this->hasMany(Payout::class, 'mitra_id');

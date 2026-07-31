@@ -5,6 +5,7 @@ const categories = [
   { to: '/villas', label: 'Villa' },
   { to: '/homestays', label: 'Homestay' },
   { to: '/gathering-venues', label: 'Lokasi Gathering' },
+  { to: '/transports', label: 'Transport' },
 ]
 </script>
 

@@ -71,6 +71,7 @@ async function handleLogout() {
             <li><NuxtLink to="/villas" class="hover:text-white">Cari Villa</NuxtLink></li>
             <li><NuxtLink to="/homestays" class="hover:text-white">Cari Homestay</NuxtLink></li>
             <li><NuxtLink to="/gathering-venues" class="hover:text-white">Cari Lokasi Gathering</NuxtLink></li>
+            <li><NuxtLink to="/transports" class="hover:text-white">Cari Transport</NuxtLink></li>
             <li><NuxtLink to="/berita" class="hover:text-white">Berita dan Artikel</NuxtLink></li>
             <li><NuxtLink to="/jadi-mitra" class="hover:text-white">Daftar Sebagai Mitra</NuxtLink></li>
           </ul>
