@@ -4,8 +4,18 @@ const router = useRouter()
 const route = useRoute()
 
 // The homepage hero has its own full-bleed background image, so the header
-// floats transparently on top of it there instead of showing a solid bar.
+// floats transparently on top of it there instead of showing a solid bar —
+// until the user scrolls past the hero, at which point it turns solid like
+// on every other page. The header is always `fixed` so it stays visible
+// while scrolling on every page (not just home).
 const isHome = computed(() => route.path === '/')
+
+const scrolled = ref(false)
+function onScroll() {
+  scrolled.value = window.scrollY > 80
+}
+onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 async function handleLogout() {
   await authStore.logout()
@@ -16,8 +26,8 @@ async function handleLogout() {
 <template>
   <div class="relative flex min-h-screen flex-col overflow-x-hidden bg-cream">
     <header
-      class="z-20 w-full transition-colors"
-      :class="isHome ? 'absolute inset-x-0 top-0 bg-transparent' : 'relative bg-brand-brown-dark'"
+      class="fixed inset-x-0 top-0 z-30 w-full transition-colors"
+      :class="isHome && !scrolled ? 'bg-transparent' : 'bg-brand-brown-dark shadow-md'"
     >
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <NuxtLink to="/" class="flex items-center gap-2 font-display text-xl font-bold">
@@ -71,7 +81,7 @@ async function handleLogout() {
       </div>
     </header>
 
-    <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+    <main class="mx-auto w-full max-w-6xl flex-1 px-4 pb-8" :class="isHome ? 'pt-8' : 'pt-32'">
       <slot />
     </main>
 
