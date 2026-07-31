@@ -44,7 +44,7 @@ onMounted(loadNotifications)
 <template>
   <div class="relative">
     <button
-      class="relative rounded p-1.5 text-gray-600 hover:bg-gray-100"
+      class="relative rounded p-1.5 text-white/85 hover:bg-white/10"
       aria-label="Notifikasi"
       @click="toggle"
     >

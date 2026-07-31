@@ -5,6 +5,18 @@ const authStore = useAuthStore()
 const api = useApi()
 const router = useRouter()
 
+type CategoryKey = 'villa' | 'homestay' | 'gathering_venue' | 'transport'
+
+const categoryTabs: { key: CategoryKey; label: string; path: string; countLabel: string; countParam: 'guests' | 'capacity' }[] = [
+  { key: 'villa', label: 'Villa', path: '/villas', countLabel: 'Jumlah Tamu', countParam: 'guests' },
+  { key: 'homestay', label: 'Homestay', path: '/homestays', countLabel: 'Jumlah Tamu', countParam: 'guests' },
+  { key: 'gathering_venue', label: 'Lokasi Gathering', path: '/gathering-venues', countLabel: 'Kapasitas', countParam: 'capacity' },
+  { key: 'transport', label: 'Transport', path: '/transports', countLabel: 'Kapasitas', countParam: 'capacity' },
+]
+
+const activeTab = ref<CategoryKey>('villa')
+const activeCategory = computed(() => categoryTabs.find(tab => tab.key === activeTab.value)!)
+
 const destination = ref('')
 const guestCount = ref('')
 
@@ -15,8 +27,8 @@ const loading = ref(true)
 async function search() {
   const query: Record<string, string> = {}
   if (destination.value) query.q = destination.value
-  if (guestCount.value) query.guests = guestCount.value
-  router.push({ path: '/villas', query })
+  if (guestCount.value) query[activeCategory.value.countParam] = guestCount.value
+  router.push({ path: activeCategory.value.path, query })
 }
 
 async function loadHomeData() {
@@ -34,8 +46,8 @@ onMounted(loadHomeData)
 </script>
 
 <template>
-  <div class="-mx-4 -mt-8">
-    <section class="relative overflow-hidden bg-gradient-to-br from-brand-brown-dark via-brand-brown to-brand-terracotta px-4 pb-24 pt-14 sm:pb-28 sm:pt-20">
+  <div class="-mt-8">
+    <section class="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-gradient-to-br from-brand-brown-dark via-brand-brown to-brand-terracotta px-4 pb-28 pt-32 sm:pb-36 sm:pt-44">
       <div
         class="absolute inset-0 bg-cover bg-center"
         style="background-image: url('/images/hero-banner.jpg')"
@@ -49,10 +61,10 @@ onMounted(loadHomeData)
 
       <div class="relative z-10 mx-auto max-w-3xl text-center">
         <h1 class="font-display text-3xl font-bold text-white sm:text-4xl">
-          Cari &amp; Booking Villa Impianmu
+          Pilihan Utama untuk Jelajahi Nusantara
         </h1>
         <p class="mx-auto mt-3 max-w-xl text-sm text-white/80 sm:text-base">
-          Marketplace booking villa/penginapan — temukan villa terbaik untuk liburanmu selanjutnya.
+          Villa, homestay, lokasi gathering, dan transport — temukan yang terbaik untuk liburan atau acaramu selanjutnya.
         </p>
 
         <template v-if="!authStore.isAuthenticated">
@@ -62,9 +74,24 @@ onMounted(loadHomeData)
           </div>
         </template>
       </div>
+    </section>
+
+    <div class="relative z-10 mx-auto -mt-16 max-w-3xl px-4 sm:-mt-20">
+      <div class="flex gap-1 overflow-x-auto px-2">
+        <button
+          v-for="tab in categoryTabs"
+          :key="tab.key"
+          type="button"
+          class="shrink-0 rounded-t-xl px-4 py-2 text-sm font-medium transition"
+          :class="activeTab === tab.key ? 'bg-white text-brand-brown-dark' : 'bg-white/40 text-white hover:bg-white/60'"
+          @click="activeTab = tab.key"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
 
       <form
-        class="card relative z-10 mx-auto mt-10 flex max-w-3xl flex-col gap-3 rounded-3xl p-4 sm:flex-row sm:items-center sm:p-3"
+        class="card flex flex-col gap-3 rounded-3xl rounded-tl-none p-4 sm:flex-row sm:items-center sm:p-3"
         @submit.prevent="search"
       >
         <div class="flex flex-1 items-center gap-2 px-2">
@@ -72,7 +99,7 @@ onMounted(loadHomeData)
           <input
             v-model="destination"
             type="text"
-            placeholder="Ke mana selanjutnya? (nama villa atau kota)"
+            placeholder="Ke mana selanjutnya? (nama atau kota)"
             class="w-full border-none bg-transparent py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-0"
           >
         </div>
@@ -82,17 +109,17 @@ onMounted(loadHomeData)
             v-model="guestCount"
             type="number"
             min="1"
-            placeholder="Jumlah tamu"
-            class="w-28 border-none bg-transparent py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-0"
+            :placeholder="activeCategory.countLabel"
+            class="w-32 border-none bg-transparent py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-0"
           >
         </div>
-        <button type="submit" class="btn-accent !rounded-full !p-3 sm:!p-3.5" aria-label="Cari villa">
+        <button type="submit" class="btn-accent !rounded-full !p-3 sm:!p-3.5" :aria-label="`Cari ${activeCategory.label}`">
           🔍
         </button>
       </form>
-    </section>
+    </div>
 
-    <section class="mx-auto mt-10 max-w-6xl px-4">
+    <section class="mx-auto mt-12 max-w-6xl px-4">
       <h2 class="font-display text-xl font-bold text-gray-900">Temukan Penginapan Sesuai Keinginan Anda</h2>
 
       <p v-if="loading" class="mt-6 text-gray-600">Memuat villa...</p>
