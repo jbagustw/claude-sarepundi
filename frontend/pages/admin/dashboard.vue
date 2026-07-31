@@ -94,6 +94,12 @@ onMounted(loadStats)
       <NuxtLink to="/admin/articles" class="btn-outline">
         Kelola Artikel
       </NuxtLink>
+      <NuxtLink to="/admin/coupons" class="btn-outline">
+        Kelola Kupon
+      </NuxtLink>
+      <NuxtLink to="/admin/banners" class="btn-outline">
+        Kelola Banner Iklan
+      </NuxtLink>
     </div>
   </div>
 </template>

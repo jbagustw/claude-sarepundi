@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import type { Article } from '~/types/article'
+import type { Banner } from '~/types/banner'
+import type { Coupon } from '~/types/coupon'
 import type { Facility, Villa } from '~/types/villa'
+import type { Homestay } from '~/types/homestay'
 
 const authStore = useAuthStore()
 const api = useApi()
@@ -20,9 +24,48 @@ const activeCategory = computed(() => categoryTabs.find(tab => tab.key === activ
 const destination = ref('')
 const guestCount = ref('')
 
-const villas = ref<Villa[]>([])
+interface FeaturedListing {
+  type: 'villa' | 'homestay'
+  id: number
+  name: string
+  slug: string
+  city: string
+  base_price: number
+  image: string | null
+  reviews_avg_rating: number | null
+  reviews_count: number
+}
+
+const coupons = ref<Coupon[]>([])
+const banners = ref<Banner[]>([])
+const featuredListings = ref<FeaturedListing[]>([])
+const articles = ref<Article[]>([])
 const facilities = ref<Facility[]>([])
 const loading = ref(true)
+const copiedCode = ref('')
+
+const whyChooseUs = [
+  {
+    title: 'Beragam Pilihan',
+    description: 'Villa, homestay, lokasi gathering, hingga transport — semua ada dalam satu platform.',
+    icon: 'variety',
+  },
+  {
+    title: 'Mitra Terverifikasi',
+    description: 'Setiap mitra melalui proses persetujuan admin sebelum bisa menerima booking.',
+    icon: 'verified',
+  },
+  {
+    title: 'Pembayaran Aman',
+    description: 'Transaksi diproses lewat payment gateway terpercaya, dana mitra baru cair setelah booking selesai.',
+    icon: 'secure',
+  },
+  {
+    title: 'Kebijakan Refund Jelas',
+    description: 'Aturan pembatalan dan refund transparan, baik untuk pembatalan dari user maupun mitra.',
+    icon: 'refund',
+  },
+]
 
 async function search() {
   const query: Record<string, string> = {}
@@ -31,14 +74,61 @@ async function search() {
   router.push({ path: activeCategory.value.path, query })
 }
 
+async function copyCode(coupon: Coupon) {
+  try {
+    await navigator.clipboard.writeText(coupon.code)
+    copiedCode.value = coupon.code
+    setTimeout(() => {
+      if (copiedCode.value === coupon.code) copiedCode.value = ''
+    }, 2000)
+  } catch {
+    // Clipboard API can be unavailable (e.g. insecure context) — silently ignore.
+  }
+}
+
+function discountLabel(coupon: Coupon): string {
+  return coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatRupiah(coupon.discount_value)
+}
+
 async function loadHomeData() {
   loading.value = true
-  const [villasRes, facilitiesRes] = await Promise.all([
+  const [villasRes, homestaysRes, facilitiesRes, articlesRes, couponsRes, bannersRes] = await Promise.all([
     api<{ data: Villa[] }>('/api/villas'),
+    api<{ data: Homestay[] }>('/api/homestays'),
     api<{ data: Facility[] }>('/api/facilities'),
+    api<{ data: Article[] }>('/api/articles'),
+    api<{ data: Coupon[] }>('/api/coupons'),
+    api<{ data: Banner[] }>('/api/banners'),
   ])
-  villas.value = villasRes.data.slice(0, 6)
+
+  const villaListings: FeaturedListing[] = villasRes.data.slice(0, 3).map(villa => ({
+    type: 'villa',
+    id: villa.id,
+    name: villa.name,
+    slug: villa.slug,
+    city: villa.city,
+    base_price: villa.base_price,
+    image: villa.images[0]?.url ?? null,
+    reviews_avg_rating: villa.reviews_avg_rating,
+    reviews_count: villa.reviews_count,
+  }))
+  const homestayListings: FeaturedListing[] = homestaysRes.data.slice(0, 3).map(homestay => ({
+    type: 'homestay',
+    id: homestay.id,
+    name: homestay.name,
+    slug: homestay.slug,
+    city: homestay.city,
+    base_price: homestay.base_price,
+    image: homestay.images[0]?.url ?? null,
+    reviews_avg_rating: homestay.reviews_avg_rating,
+    reviews_count: homestay.reviews_count,
+  }))
+  featuredListings.value = [...villaListings, ...homestayListings]
+
   facilities.value = facilitiesRes.data
+  articles.value = articlesRes.data.slice(0, 3)
+  coupons.value = couponsRes.data
+  banners.value = bannersRes.data
   loading.value = false
 }
 
@@ -119,43 +209,192 @@ onMounted(loadHomeData)
       </form>
     </div>
 
+    <!-- Coupon -->
+    <section v-if="coupons.length" class="mx-auto mt-10 max-w-6xl px-4">
+      <h2 class="font-display text-xl font-bold text-gray-900">Kupon Promo Untukmu</h2>
+      <div class="mt-4 flex gap-3 overflow-x-auto pb-2">
+        <div
+          v-for="coupon in coupons"
+          :key="coupon.id"
+          class="card flex w-72 shrink-0 items-center justify-between gap-3 border-l-4 border-l-brand-terracotta p-4"
+        >
+          <div class="min-w-0">
+            <p class="text-xs font-semibold uppercase tracking-wide text-brand-terracotta">Diskon {{ discountLabel(coupon) }}</p>
+            <p class="mt-1 truncate font-display font-semibold text-gray-900">{{ coupon.title }}</p>
+            <p v-if="coupon.description" class="mt-0.5 truncate text-xs text-gray-500">{{ coupon.description }}</p>
+            <p class="mt-2 font-mono text-sm font-bold text-gray-800">{{ coupon.code }}</p>
+          </div>
+          <button
+            type="button"
+            class="shrink-0 rounded-full border border-brand-brown/30 px-3 py-1.5 text-xs font-medium text-brand-brown transition hover:bg-brand-brown/5"
+            @click="copyCode(coupon)"
+          >
+            {{ copiedCode === coupon.code ? 'Tersalin!' : 'Salin' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Banner iklan -->
+    <section v-if="banners.length" class="mx-auto mt-10 max-w-6xl px-4">
+      <div class="flex gap-4 overflow-x-auto pb-2">
+        <component
+          :is="banner.link_url ? 'a' : 'div'"
+          v-for="banner in banners"
+          :key="banner.id"
+          :href="banner.link_url ?? undefined"
+          class="block w-full shrink-0 overflow-hidden rounded-2xl sm:w-auto"
+          :class="{ 'transition hover:opacity-90': banner.link_url }"
+        >
+          <img :src="banner.image ?? ''" :alt="banner.title" class="h-32 w-full object-cover sm:h-40 sm:w-[640px]">
+        </component>
+      </div>
+    </section>
+
+    <!-- Featured listing (Villa + Homestay) -->
     <section class="mx-auto mt-12 max-w-6xl px-4">
       <h2 class="font-display text-xl font-bold text-gray-900">Temukan Penginapan Sesuai Keinginan Anda</h2>
 
-      <p v-if="loading" class="mt-6 text-gray-600">Memuat villa...</p>
-      <p v-else-if="villas.length === 0" class="mt-6 text-gray-600">Belum ada villa yang dipublikasikan.</p>
+      <p v-if="loading" class="mt-6 text-gray-600">Memuat listing...</p>
+      <p v-else-if="featuredListings.length === 0" class="mt-6 text-gray-600">Belum ada villa atau homestay yang dipublikasikan.</p>
 
       <div v-else class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink
-          v-for="villa in villas"
-          :key="villa.id"
-          :to="`/villas/${villa.slug}`"
+          v-for="listing in featuredListings"
+          :key="`${listing.type}-${listing.id}`"
+          :to="`/${listing.type === 'homestay' ? 'homestays' : 'villas'}/${listing.slug}`"
           class="card block overflow-hidden transition hover:shadow-md"
         >
           <div class="relative">
             <img
-              v-if="villa.images[0]"
-              :src="villa.images[0].url"
+              v-if="listing.image"
+              :src="listing.image"
               class="h-44 w-full object-cover"
               alt=""
             >
             <div v-else class="flex h-44 w-full items-center justify-center bg-gray-100 text-sm text-gray-400">
               Belum ada foto
             </div>
-            <span class="badge absolute right-2 top-2 bg-black/60 text-white">{{ formatRupiah(villa.base_price) }}</span>
+            <span class="badge absolute left-2 top-2 bg-white/90 text-brand-brown-dark">
+              {{ listing.type === 'homestay' ? 'Homestay' : 'Villa' }}
+            </span>
+            <span class="badge absolute right-2 top-2 bg-black/60 text-white">{{ formatRupiah(listing.base_price) }}</span>
           </div>
           <div class="bg-brand-brown/90 p-3 text-white">
-            <p class="font-display font-semibold">{{ villa.name }}</p>
-            <p class="text-xs text-white/80">{{ villa.city }}</p>
-            <p v-if="villa.reviews_count > 0" class="mt-1 flex items-center gap-1 text-xs">
-              <span class="text-brand-gold">★</span> {{ villa.reviews_avg_rating }}
+            <p class="font-display font-semibold">{{ listing.name }}</p>
+            <p class="text-xs text-white/80">{{ listing.city }}</p>
+            <p v-if="listing.reviews_count > 0" class="mt-1 flex items-center gap-1 text-xs">
+              <span class="text-brand-gold">★</span> {{ listing.reviews_avg_rating }}
             </p>
           </div>
         </NuxtLink>
       </div>
 
-      <div class="mt-6 text-center">
+      <div class="mt-6 flex justify-center gap-3">
         <NuxtLink to="/villas" class="btn-outline">Lihat Semua Villa</NuxtLink>
+        <NuxtLink to="/homestays" class="btn-outline">Lihat Semua Homestay</NuxtLink>
+      </div>
+    </section>
+
+    <!-- Berita dan Artikel -->
+    <section v-if="articles.length" class="mx-auto mt-12 max-w-6xl px-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-display text-xl font-bold text-gray-900">Berita dan Artikel</h2>
+        <NuxtLink to="/berita" class="text-sm font-medium text-brand-brown hover:underline">Lihat Semua</NuxtLink>
+      </div>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <NuxtLink
+          v-for="article in articles"
+          :key="article.id"
+          :to="`/berita/${article.slug}`"
+          class="card block overflow-hidden transition hover:shadow-md"
+        >
+          <img
+            v-if="article.cover_image"
+            :src="article.cover_image"
+            class="h-40 w-full object-cover"
+            alt=""
+          >
+          <div v-else class="flex h-40 w-full items-center justify-center bg-gray-100 text-sm text-gray-400">
+            Belum ada gambar
+          </div>
+          <div class="p-4">
+            <span v-if="article.category" class="badge bg-brand-sage/20 text-brand-brown-dark">{{ article.category }}</span>
+            <h3 class="mt-2 font-display font-semibold text-gray-900">{{ article.title }}</h3>
+            <p v-if="article.excerpt" class="mt-1 line-clamp-2 text-sm text-gray-600">{{ article.excerpt }}</p>
+          </div>
+        </NuxtLink>
+      </div>
+    </section>
+
+    <!-- Kenapa Memilih Sarepundi -->
+    <section class="mx-auto mt-12 max-w-6xl px-4">
+      <h2 class="font-display text-xl font-bold text-gray-900">Kenapa Memilih Sarepundi</h2>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div v-for="reason in whyChooseUs" :key="reason.title" class="card p-5">
+          <div class="flex h-11 w-11 items-center justify-center rounded-full bg-brand-sage/15 text-brand-brown-dark">
+            <svg
+              v-if="reason.icon === 'variety'"
+              class="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4 21V9l8-6 8 6v12" />
+              <path d="M9 21v-6h6v6" />
+            </svg>
+            <svg
+              v-else-if="reason.icon === 'verified'"
+              class="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z" />
+              <path d="m9 12 2 2 4-4" />
+            </svg>
+            <svg
+              v-else-if="reason.icon === 'secure'"
+              class="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="4" y="10.5" width="16" height="9.5" rx="2" />
+              <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+            </svg>
+            <svg
+              v-else
+              class="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 12a9 9 0 1 1 3.5 7.1L3 20l1-3.4A8.96 8.96 0 0 1 3 12Z" />
+              <path d="M9 12h6M9 15h4" />
+            </svg>
+          </div>
+          <p class="mt-3 font-display font-semibold text-gray-900">{{ reason.title }}</p>
+          <p class="mt-1 text-sm text-gray-600">{{ reason.description }}</p>
+        </div>
       </div>
     </section>
 

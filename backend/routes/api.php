@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Admin\ArticleController as AdminArticleController;
+use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
+use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GatheringVenueModerationController;
 use App\Http\Controllers\Admin\HomestayModerationController;
@@ -31,6 +33,8 @@ use App\Http\Controllers\Mitra\VillaImageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Public\ArticleController as PublicArticleController;
+use App\Http\Controllers\Public\BannerController as PublicBannerController;
+use App\Http\Controllers\Public\CouponController as PublicCouponController;
 use App\Http\Controllers\Public\GatheringVenueAvailabilityController as PublicGatheringVenueAvailabilityController;
 use App\Http\Controllers\Public\GatheringVenueController as PublicGatheringVenueController;
 use App\Http\Controllers\Public\GatheringVenueReviewController as PublicGatheringVenueReviewController;
@@ -57,6 +61,8 @@ Route::get('/villas/{slug}/availability', PublicVillaAvailabilityController::cla
 Route::get('/villas/{slug}/reviews', [PublicReviewController::class, 'index']);
 Route::get('/articles', [PublicArticleController::class, 'index']);
 Route::get('/articles/{slug}', [PublicArticleController::class, 'show']);
+Route::get('/coupons', [PublicCouponController::class, 'index']);
+Route::get('/banners', [PublicBannerController::class, 'index']);
 Route::get('/homestays', [PublicHomestayController::class, 'index']);
 Route::get('/homestays/{slug}', [PublicHomestayController::class, 'show']);
 Route::get('/homestays/{slug}/availability', PublicHomestayAvailabilityController::class);
@@ -179,5 +185,18 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::post('/articles/{article}/publish', [AdminArticleController::class, 'publish']);
         Route::post('/articles/{article}/unpublish', [AdminArticleController::class, 'unpublish']);
         Route::post('/articles/{article}/cover', [AdminArticleController::class, 'uploadCover']);
+
+        Route::get('/coupons', [AdminCouponController::class, 'index']);
+        Route::post('/coupons', [AdminCouponController::class, 'store']);
+        Route::get('/coupons/{coupon}', [AdminCouponController::class, 'show']);
+        Route::patch('/coupons/{coupon}', [AdminCouponController::class, 'update']);
+        Route::delete('/coupons/{coupon}', [AdminCouponController::class, 'destroy']);
+
+        Route::get('/banners', [AdminBannerController::class, 'index']);
+        Route::post('/banners', [AdminBannerController::class, 'store']);
+        Route::get('/banners/{banner}', [AdminBannerController::class, 'show']);
+        Route::patch('/banners/{banner}', [AdminBannerController::class, 'update']);
+        Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy']);
+        Route::post('/banners/{banner}/image', [AdminBannerController::class, 'uploadImage']);
     });
 });
