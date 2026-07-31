@@ -30,7 +30,7 @@ export interface Booking {
     paid_at: string | null
   } | null
   bookable: {
-    type: 'villa' | 'homestay' | 'gathering_venue'
+    type: 'villa' | 'homestay' | 'gathering_venue' | 'transport'
     id: number
     name: string
     slug: string
@@ -43,6 +43,7 @@ export interface Booking {
     start_time: string
     end_time: string
   } | null
+  transport_with_driver: boolean | null
   review: Review | null
   created_at: string
 }

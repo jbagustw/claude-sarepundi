@@ -86,6 +86,7 @@ onMounted(loadBookings)
               </template>
               <template v-else>
                 {{ booking.check_in_date }} &rarr; {{ booking.check_out_date }}
+                <span v-if="booking.bookable.type === 'transport'">&middot; {{ booking.transport_with_driver ? 'Sopir' : 'Lepas Kunci' }}</span>
               </template>
             </td>
             <td class="px-3 py-2 text-right text-gray-900">{{ formatRupiah(booking.total_price) }}</td>

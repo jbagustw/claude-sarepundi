@@ -108,6 +108,10 @@ onMounted(loadBookings)
           <dd class="col-span-2 text-gray-900">{{ booking.check_out_date }}</dd>
           <dt class="text-gray-500">Tamu</dt>
           <dd class="col-span-2 text-gray-900">{{ booking.guest_count }}</dd>
+          <template v-if="booking.bookable.type === 'transport'">
+            <dt class="text-gray-500">Opsi</dt>
+            <dd class="col-span-2 text-gray-900">{{ booking.transport_with_driver ? 'Dengan Sopir' : 'Lepas Kunci' }}</dd>
+          </template>
         </dl>
 
         <p v-if="booking.status === 'menunggu_konfirmasi' && booking.mitra_confirmation_deadline" class="mt-2 text-xs text-yellow-700">

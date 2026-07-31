@@ -7,6 +7,14 @@ const api = useApi()
 const transport = ref<Transport | null>(null)
 const notFound = ref(false)
 
+const startingPrice = computed(() => {
+  if (!transport.value) return 0
+  const prices = [transport.value.price_per_day_self_drive, transport.value.price_per_day_with_driver].filter(
+    (p): p is number => p !== null
+  )
+  return prices.length ? Math.min(...prices) : 0
+})
+
 onMounted(async () => {
   try {
     const response = await api<{ data: Transport }>(`/api/transports/${route.params.slug}`)
@@ -26,6 +34,11 @@ onMounted(async () => {
         <h1 class="font-display text-2xl font-bold text-gray-900">{{ transport.name }}</h1>
         <p class="text-gray-600">{{ transport.vehicle_type }} &middot; {{ transport.city }}{{ transport.province ? `, ${transport.province}` : '' }}</p>
 
+        <div v-if="transport.reviews_count > 0" class="mt-1 flex items-center gap-2 text-sm">
+          <ReviewStars :rating="transport.reviews_avg_rating ?? 0" />
+          <span class="text-gray-700">{{ transport.reviews_avg_rating }} ({{ transport.reviews_count }} ulasan)</span>
+        </div>
+
         <div v-if="transport.images.length" class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <img
             v-for="image in transport.images"
@@ -43,27 +56,23 @@ onMounted(async () => {
         <p v-if="transport.description" class="mt-4 whitespace-pre-line text-gray-700">{{ transport.description }}</p>
 
         <p class="mt-4 text-sm text-gray-500">Dikelola oleh {{ transport.mitra.business_name }}</p>
+
+        <div class="mt-6">
+          <h2 class="font-display font-semibold text-gray-900">Ulasan</h2>
+          <div class="mt-3">
+            <ReviewList resource-type="transport" :resource-slug="transport.slug" />
+          </div>
+        </div>
       </div>
 
       <div>
-        <div class="card sticky top-4 p-4">
-          <p class="font-display font-semibold text-gray-900">Harga Sewa per Hari</p>
-
-          <div class="mt-3 space-y-2">
-            <div v-if="transport.price_per_day_self_drive" class="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2 text-sm">
-              <p class="font-medium text-gray-900">Lepas Kunci</p>
-              <p class="font-semibold text-gray-900">{{ formatRupiah(transport.price_per_day_self_drive) }}</p>
-            </div>
-            <div v-if="transport.price_per_day_with_driver" class="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2 text-sm">
-              <p class="font-medium text-gray-900">Dengan Supir</p>
-              <p class="font-semibold text-gray-900">{{ formatRupiah(transport.price_per_day_with_driver) }}</p>
-            </div>
-          </div>
-
-          <p class="mt-3 rounded-xl bg-brand-sage/15 p-3 text-sm text-brand-brown-dark">
-            Booking online segera hadir. Hubungi mitra melalui platform untuk info ketersediaan.
-          </p>
-        </div>
+        <BookingWidget
+          bookable-type="transport"
+          :bookable-slug="transport.slug"
+          :bookable-id="transport.id"
+          :base-price="startingPrice"
+          :transport-pricing="{ selfDrive: transport.price_per_day_self_drive, withDriver: transport.price_per_day_with_driver }"
+        />
       </div>
     </div>
   </div>

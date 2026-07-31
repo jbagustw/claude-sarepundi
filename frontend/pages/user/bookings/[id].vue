@@ -86,7 +86,9 @@ function onReviewSubmitted(review: Review) {
 
 const bookablePath = computed(() => {
   if (!booking.value) return ''
-  const segments: Record<string, string> = { homestay: 'homestays', gathering_venue: 'gathering-venues', villa: 'villas' }
+  const segments: Record<string, string> = {
+    homestay: 'homestays', gathering_venue: 'gathering-venues', transport: 'transports', villa: 'villas',
+  }
   return `/${segments[booking.value.bookable.type]}/${booking.value.bookable.slug}`
 })
 
@@ -143,6 +145,10 @@ onMounted(loadBooking)
           <dd class="text-gray-900">{{ booking.check_out_date }}</dd>
           <dt class="text-gray-500">Jumlah Tamu</dt>
           <dd class="text-gray-900">{{ booking.guest_count }}</dd>
+          <template v-if="booking.bookable.type === 'transport'">
+            <dt class="text-gray-500">Opsi</dt>
+            <dd class="text-gray-900">{{ booking.transport_with_driver ? 'Dengan Sopir' : 'Lepas Kunci' }}</dd>
+          </template>
         </dl>
 
         <div class="mt-4 border-t border-gray-200 pt-4">

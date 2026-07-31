@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
     'bookable_type',
     'bookable_id',
     'gathering_venue_slot_id',
+    'transport_with_driver',
     'check_in_date',
     'check_out_date',
     'guest_count',
@@ -41,12 +42,13 @@ class Booking extends Model
             'mitra_confirmed_at' => 'datetime',
             'mitra_confirmation_deadline' => 'datetime',
             'cancelled_at' => 'datetime',
+            'transport_with_driver' => 'boolean',
         ];
     }
 
     /**
-     * The listing being booked — Villa, Homestay, or GatheringVenue today,
-     * more categories (transport) as they become bookable.
+     * The listing being booked — Villa, Homestay, GatheringVenue, or
+     * Transport.
      */
     public function bookable(): MorphTo
     {
@@ -95,14 +97,13 @@ class Booking extends Model
     /**
      * Model classes that are currently bookable and carry a `mitra_id`
      * pointing at mitra_profiles — used by scopeForMitra to find every
-     * booking across a mitra's listings regardless of category. Extend
-     * this list as gathering venues / transport become bookable too.
+     * booking across a mitra's listings regardless of category.
      *
      * @return array<class-string>
      */
     public static function bookableTypes(): array
     {
-        return [Villa::class, Homestay::class, GatheringVenue::class];
+        return [Villa::class, Homestay::class, GatheringVenue::class, Transport::class];
     }
 
     /**

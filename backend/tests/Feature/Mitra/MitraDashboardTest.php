@@ -5,6 +5,7 @@ namespace Tests\Feature\Mitra;
 use App\Models\Booking;
 use App\Models\GatheringVenue;
 use App\Models\MitraProfile;
+use App\Models\Transport;
 use App\Models\User;
 use App\Models\Villa;
 use Carbon\Carbon;
@@ -189,6 +190,40 @@ class MitraDashboardTest extends TestCase
         $response->assertJsonPath('data.occupancy_rate', 0);
         $response->assertJsonPath('data.total_gathering_venues', 1);
         $response->assertJsonPath('data.published_gathering_venues', 1);
+    }
+
+    public function test_occupancy_rate_includes_confirmed_transport_bookings(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-15'));
+
+        $mitra = $this->approvedMitra();
+        $transport = $mitra->mitraProfile->transports()->create([
+            'name' => 'Hiace', 'slug' => 'hiace-'.uniqid(), 'vehicle_type' => 'Minibus',
+            'city' => 'Yogyakarta', 'capacity' => 15, 'price_per_day_self_drive' => 500000,
+            'status' => 'published',
+        ]);
+        // Only published listing is the transport -> 31 listing-days in July.
+        Booking::create([
+            'booking_code' => 'BK'.uniqid(),
+            'user_id' => User::factory()->create()->id,
+            'bookable_type' => Transport::class,
+            'bookable_id' => $transport->id,
+            'transport_with_driver' => false,
+            'check_in_date' => '2026-07-10',
+            'check_out_date' => '2026-07-15',
+            'guest_count' => 4,
+            'total_price' => 2500000,
+            'commission_amount' => 250000,
+            'mitra_payout_amount' => 2250000,
+            'status' => 'dikonfirmasi',
+        ]);
+
+        $response = $this->fromFrontend()->actingAs($mitra)->getJson('/api/mitra/stats');
+
+        // 5 / 31 * 100 = 16.1, same shape as the villa occupancy test.
+        $response->assertJsonPath('data.occupancy_rate', 16.1);
+        $response->assertJsonPath('data.total_transports', 1);
+        $response->assertJsonPath('data.published_transports', 1);
     }
 
     public function test_non_mitra_cannot_view_mitra_stats(): void

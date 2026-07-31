@@ -38,7 +38,9 @@ use App\Http\Controllers\Public\HomestayAvailabilityController as PublicHomestay
 use App\Http\Controllers\Public\HomestayController as PublicHomestayController;
 use App\Http\Controllers\Public\HomestayReviewController as PublicHomestayReviewController;
 use App\Http\Controllers\Public\ReviewController as PublicReviewController;
+use App\Http\Controllers\Public\TransportAvailabilityController as PublicTransportAvailabilityController;
 use App\Http\Controllers\Public\TransportController as PublicTransportController;
+use App\Http\Controllers\Public\TransportReviewController as PublicTransportReviewController;
 use App\Http\Controllers\Public\VillaAvailabilityController as PublicVillaAvailabilityController;
 use App\Http\Controllers\Public\VillaController as PublicVillaController;
 use App\Http\Controllers\ReviewController;
@@ -65,6 +67,8 @@ Route::get('/gathering-venues/{slug}/availability', PublicGatheringVenueAvailabi
 Route::get('/gathering-venues/{slug}/reviews', [PublicGatheringVenueReviewController::class, 'index']);
 Route::get('/transports', [PublicTransportController::class, 'index']);
 Route::get('/transports/{slug}', [PublicTransportController::class, 'show']);
+Route::get('/transports/{slug}/availability', PublicTransportAvailabilityController::class);
+Route::get('/transports/{slug}/reviews', [PublicTransportReviewController::class, 'index']);
 
 Route::post('/webhooks/xendit', [XenditWebhookController::class, 'handle']);
 

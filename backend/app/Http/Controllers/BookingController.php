@@ -8,10 +8,12 @@ use App\Models\Booking;
 use App\Models\GatheringVenue;
 use App\Models\GatheringVenueSlot;
 use App\Models\Homestay;
+use App\Models\Transport;
 use App\Models\Villa;
 use App\Services\BookingCancellationService;
 use App\Services\GatheringVenueAvailabilityService;
 use App\Services\HomestayAvailabilityService;
+use App\Services\TransportAvailabilityService;
 use App\Services\VillaAvailabilityService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -44,9 +46,11 @@ class BookingController extends Controller
         VillaAvailabilityService $villaService,
         HomestayAvailabilityService $homestayService,
         GatheringVenueAvailabilityService $gatheringVenueService,
+        TransportAvailabilityService $transportService,
     ) {
         $data = $request->validated();
         $slot = null;
+        $withDriver = null;
 
         if ($data['bookable_type'] === 'homestay') {
             $bookable = Homestay::publiclyVisible()->findOrFail($data['bookable_id']);
@@ -64,6 +68,16 @@ class BookingController extends Controller
                 $slot,
                 CarbonImmutable::parse($data['check_in_date']),
                 $data['guest_count'],
+            );
+        } elseif ($data['bookable_type'] === 'transport') {
+            $bookable = Transport::publiclyVisible()->findOrFail($data['bookable_id']);
+            $withDriver = $data['with_driver'];
+            $result = $transportService->evaluate(
+                $bookable,
+                CarbonImmutable::parse($data['check_in_date']),
+                CarbonImmutable::parse($data['check_out_date']),
+                $data['guest_count'],
+                $withDriver,
             );
         } else {
             $bookable = Villa::publiclyVisible()->findOrFail($data['bookable_id']);
@@ -85,6 +99,7 @@ class BookingController extends Controller
             'bookable_type' => $bookable::class,
             'bookable_id' => $bookable->id,
             'gathering_venue_slot_id' => $slot?->id,
+            'transport_with_driver' => $withDriver,
             'check_in_date' => $data['check_in_date'],
             'check_out_date' => $data['check_out_date'] ?? $data['check_in_date'],
             'guest_count' => $data['guest_count'],

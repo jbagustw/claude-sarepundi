@@ -2,10 +2,11 @@
 import type { AvailabilityResult } from '~/types/booking'
 
 const props = defineProps<{
-  bookableType: 'villa' | 'homestay'
+  bookableType: 'villa' | 'homestay' | 'transport'
   bookableSlug: string
   bookableId: number
   basePrice: number
+  transportPricing?: { selfDrive: number | null; withDriver: number | null }
 }>()
 
 const api = useApi()
@@ -17,13 +18,18 @@ const today = new Date().toISOString().slice(0, 10)
 const checkInDate = ref('')
 const checkOutDate = ref('')
 const guestCount = ref(2)
+const withDriver = ref(props.transportPricing?.selfDrive === null)
 
 const checking = ref(false)
 const booking = ref(false)
 const result = ref<AvailabilityResult | null>(null)
 const errorMessage = ref('')
 
-const resourcePathSegment = computed(() => (props.bookableType === 'homestay' ? 'homestays' : 'villas'))
+const resourcePathSegment = computed(() => {
+  if (props.bookableType === 'homestay') return 'homestays'
+  if (props.bookableType === 'transport') return 'transports'
+  return 'villas'
+})
 
 async function checkAvailability() {
   errorMessage.value = ''
@@ -36,13 +42,14 @@ async function checkAvailability() {
 
   checking.value = true
   try {
-    const response = await api<{ data: AvailabilityResult }>(`/api/${resourcePathSegment.value}/${props.bookableSlug}/availability`, {
-      query: {
-        check_in_date: checkInDate.value,
-        check_out_date: checkOutDate.value,
-        guest_count: guestCount.value,
-      },
-    })
+    const query: Record<string, string | number> = {
+      check_in_date: checkInDate.value,
+      check_out_date: checkOutDate.value,
+      guest_count: guestCount.value,
+    }
+    if (props.bookableType === 'transport') query.with_driver = withDriver.value ? 1 : 0
+
+    const response = await api<{ data: AvailabilityResult }>(`/api/${resourcePathSegment.value}/${props.bookableSlug}/availability`, { query })
     result.value = response.data
   } catch (error: any) {
     errorMessage.value = error?.data?.message || 'Gagal mengecek ketersediaan.'
@@ -56,16 +63,16 @@ async function createBooking() {
   errorMessage.value = ''
 
   try {
-    const response = await api<{ data: { id: number } }>('/api/bookings', {
-      method: 'POST',
-      body: {
-        bookable_type: props.bookableType,
-        bookable_id: props.bookableId,
-        check_in_date: checkInDate.value,
-        check_out_date: checkOutDate.value,
-        guest_count: guestCount.value,
-      },
-    })
+    const body: Record<string, unknown> = {
+      bookable_type: props.bookableType,
+      bookable_id: props.bookableId,
+      check_in_date: checkInDate.value,
+      check_out_date: checkOutDate.value,
+      guest_count: guestCount.value,
+    }
+    if (props.bookableType === 'transport') body.with_driver = withDriver.value
+
+    const response = await api<{ data: { id: number } }>('/api/bookings', { method: 'POST', body })
     router.push(`/user/bookings/${response.data.id}`)
   } catch (error: any) {
     errorMessage.value = error?.data?.errors?.check_in_date?.[0] || error?.data?.message || 'Gagal membuat booking.'
@@ -80,10 +87,33 @@ async function createBooking() {
   <div class="card sticky top-4 overflow-hidden">
     <div class="bg-brand-terracotta px-4 py-3 text-white">
       <p class="text-xs text-white/80">Mulai dari</p>
-      <p class="text-lg font-semibold">{{ formatRupiah(basePrice) }} <span class="text-sm font-normal text-white/80">/ malam</span></p>
+      <p class="text-lg font-semibold">{{ formatRupiah(basePrice) }} <span class="text-sm font-normal text-white/80">/ {{ bookableType === 'transport' ? 'hari' : 'malam' }}</span></p>
     </div>
 
     <div class="p-4">
+      <div v-if="bookableType === 'transport' && transportPricing" class="mb-3 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          class="rounded-xl border px-3 py-2 text-left text-sm transition"
+          :class="!withDriver ? 'border-brand-terracotta bg-brand-terracotta/10' : 'border-gray-200'"
+          :disabled="transportPricing.selfDrive === null"
+          @click="withDriver = false"
+        >
+          <p class="font-medium text-gray-900">Lepas Kunci</p>
+          <p class="text-xs text-gray-500">{{ transportPricing.selfDrive !== null ? formatRupiah(transportPricing.selfDrive) : 'Tidak tersedia' }}</p>
+        </button>
+        <button
+          type="button"
+          class="rounded-xl border px-3 py-2 text-left text-sm transition"
+          :class="withDriver ? 'border-brand-terracotta bg-brand-terracotta/10' : 'border-gray-200'"
+          :disabled="transportPricing.withDriver === null"
+          @click="withDriver = true"
+        >
+          <p class="font-medium text-gray-900">Dengan Sopir</p>
+          <p class="text-xs text-gray-500">{{ transportPricing.withDriver !== null ? formatRupiah(transportPricing.withDriver) : 'Tidak tersedia' }}</p>
+        </button>
+      </div>
+
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs font-medium text-gray-700" for="check-in">Check-in</label>
@@ -130,7 +160,7 @@ async function createBooking() {
 
       <div v-if="result">
         <div v-if="result.available" class="mt-4 space-y-1 rounded-xl bg-brand-sage/15 p-3 text-sm text-brand-brown-dark">
-          <p>Tersedia untuk {{ result.nights }} malam.</p>
+          <p>Tersedia untuk {{ result.nights }} {{ bookableType === 'transport' ? 'hari' : 'malam' }}.</p>
           <p class="font-semibold">Total: {{ formatRupiah(result.total_price) }}</p>
         </div>
         <p v-else class="mt-3 text-sm text-red-600">{{ result.reason }}</p>

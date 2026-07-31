@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\GatheringVenue;
 use App\Models\Homestay;
+use App\Models\Transport;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -50,6 +51,7 @@ class BookingResource extends JsonResource
                 'start_time' => substr((string) $this->slot->start_time, 0, 5),
                 'end_time' => substr((string) $this->slot->end_time, 0, 5),
             ] : null),
+            'transport_with_driver' => $this->transport_with_driver,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
@@ -59,6 +61,7 @@ class BookingResource extends JsonResource
         return match (true) {
             $this->bookable instanceof Homestay => 'homestay',
             $this->bookable instanceof GatheringVenue => 'gathering_venue',
+            $this->bookable instanceof Transport => 'transport',
             default => 'villa',
         };
     }

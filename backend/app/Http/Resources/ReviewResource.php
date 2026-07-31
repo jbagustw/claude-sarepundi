@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\GatheringVenue;
 use App\Models\Homestay;
+use App\Models\Transport;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,6 +28,7 @@ class ReviewResource extends JsonResource
                 'type' => match (true) {
                     $this->reviewable instanceof Homestay => 'homestay',
                     $this->reviewable instanceof GatheringVenue => 'gathering_venue',
+                    $this->reviewable instanceof Transport => 'transport',
                     default => 'villa',
                 },
                 'id' => $this->reviewable->id,

@@ -41,6 +41,7 @@ onMounted(loadBookings)
           </p>
           <p v-else class="text-sm text-gray-600">
             {{ booking.check_in_date }} &rarr; {{ booking.check_out_date }} &middot; {{ booking.guest_count }} tamu
+            <span v-if="booking.bookable.type === 'transport'">&middot; {{ booking.transport_with_driver ? 'Dengan Sopir' : 'Lepas Kunci' }}</span>
           </p>
           <p class="text-xs text-gray-500">{{ booking.booking_code }}</p>
         </div>
