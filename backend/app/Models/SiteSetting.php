@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
     'instagram_url',
     'facebook_url',
     'tiktok_url',
+    'hero_image_path',
 ])]
 class SiteSetting extends Model
 {

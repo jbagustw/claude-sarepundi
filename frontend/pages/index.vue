@@ -4,10 +4,16 @@ import type { Banner } from '~/types/banner'
 import type { Coupon } from '~/types/coupon'
 import type { Facility, Villa } from '~/types/villa'
 import type { Homestay } from '~/types/homestay'
+import type { SiteSettings } from '~/types/siteSettings'
 
 const authStore = useAuthStore()
 const api = useApi()
 const router = useRouter()
+
+const { data: siteSettings } = await useAsyncData('site-settings', () =>
+  useApi()<{ data: SiteSettings }>('/api/site-settings').then(res => res.data)
+)
+const heroImageUrl = computed(() => siteSettings.value?.hero_image_url || '/images/hero-banner.jpg')
 
 type CategoryKey = 'villa' | 'homestay' | 'gathering_venue' | 'transport'
 
@@ -140,7 +146,7 @@ onMounted(loadHomeData)
     <section class="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-gradient-to-br from-brand-brown-dark via-brand-brown to-brand-terracotta px-4 pb-28 pt-32 sm:pb-36 sm:pt-44">
       <div
         class="absolute inset-0 bg-cover bg-center"
-        style="background-image: url('/images/hero-banner.jpg')"
+        :style="{ backgroundImage: `url('${heroImageUrl}')` }"
         aria-hidden="true"
       />
       <div class="absolute inset-0 bg-gradient-to-br from-brand-brown-dark/85 via-brand-brown/75 to-brand-terracotta/70" />

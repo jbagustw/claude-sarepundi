@@ -4,6 +4,8 @@ namespace Tests\Feature\SiteSetting;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -51,6 +53,7 @@ class SiteSettingModuleTest extends TestCase
                 'instagram_url' => null,
                 'facebook_url' => null,
                 'tiktok_url' => null,
+                'hero_image_url' => null,
             ],
         ]);
     }
@@ -114,5 +117,73 @@ class SiteSettingModuleTest extends TestCase
         $this->fromFrontend()
             ->patchJson('/api/admin/site-settings', ['instagram_url' => 'https://instagram.com/sarepundi'])
             ->assertUnauthorized();
+    }
+
+    // --- Hero banner image ---
+
+    public function test_admin_can_upload_hero_image(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $response = $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/hero-image', ['image' => UploadedFile::fake()->image('hero.jpg')]);
+
+        $response->assertOk();
+        $this->assertNotNull($response->json('data.hero_image_url'));
+
+        $this->getJson('/api/site-settings')->assertJsonPath('data.hero_image_url', fn ($url) => ! is_null($url));
+    }
+
+    public function test_uploading_a_new_hero_image_replaces_and_deletes_the_old_file(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $first = $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/hero-image', ['image' => UploadedFile::fake()->image('hero-1.jpg')]);
+        $firstPath = \App\Models\SiteSetting::current()->hero_image_path;
+        Storage::disk('public')->assertExists($firstPath);
+
+        $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/hero-image', ['image' => UploadedFile::fake()->image('hero-2.jpg')]);
+
+        Storage::disk('public')->assertMissing($firstPath);
+        $this->assertNotEquals($firstPath, \App\Models\SiteSetting::current()->hero_image_path);
+    }
+
+    public function test_admin_can_remove_hero_image(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/hero-image', ['image' => UploadedFile::fake()->image('hero.jpg')]);
+
+        $response = $this->fromFrontend()->actingAs($admin)->deleteJson('/api/admin/site-settings/hero-image');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.hero_image_url', null);
+    }
+
+    public function test_hero_image_upload_rejects_non_image_files(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $response = $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/hero-image', ['image' => UploadedFile::fake()->create('hero.pdf', 100)]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors('image');
+    }
+
+    public function test_non_admin_cannot_upload_hero_image(): void
+    {
+        Storage::fake('public');
+
+        $this->fromFrontend()->actingAs($this->regularUser())
+            ->postJson('/api/admin/site-settings/hero-image', ['image' => UploadedFile::fake()->image('hero.jpg')])
+            ->assertForbidden();
     }
 }

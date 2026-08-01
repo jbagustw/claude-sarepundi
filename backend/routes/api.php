@@ -204,5 +204,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
         Route::get('/site-settings', [AdminSiteSettingController::class, 'show']);
         Route::patch('/site-settings', [AdminSiteSettingController::class, 'update']);
+        Route::post('/site-settings/hero-image', [AdminSiteSettingController::class, 'uploadHeroImage']);
+        Route::delete('/site-settings/hero-image', [AdminSiteSettingController::class, 'destroyHeroImage']);
     });
 });

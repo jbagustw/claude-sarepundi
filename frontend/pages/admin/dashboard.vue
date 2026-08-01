@@ -101,7 +101,7 @@ onMounted(loadStats)
         Kelola Banner Iklan
       </NuxtLink>
       <NuxtLink to="/admin/settings" class="btn-outline">
-        Media Sosial
+        Pengaturan Website
       </NuxtLink>
     </div>
   </div>
