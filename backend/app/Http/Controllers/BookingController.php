@@ -27,7 +27,7 @@ class BookingController extends Controller
         $this->authorize('viewAny', Booking::class);
 
         $bookings = $request->user()->bookings()
-            ->with(['bookable.images', 'slot', 'latestPayment'])
+            ->with(['bookable.images', 'slot', 'coupon', 'latestPayment'])
             ->latest()
             ->get();
 
@@ -38,7 +38,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        return new BookingResource($booking->load(['bookable.images', 'slot', 'latestPayment', 'review']));
+        return new BookingResource($booking->load(['bookable.images', 'slot', 'coupon', 'latestPayment', 'review']));
     }
 
     public function store(
@@ -51,6 +51,7 @@ class BookingController extends Controller
         $data = $request->validated();
         $slot = null;
         $withDriver = null;
+        $couponCode = $data['coupon_code'] ?? null;
 
         if ($data['bookable_type'] === 'homestay') {
             $bookable = Homestay::publiclyVisible()->findOrFail($data['bookable_id']);
@@ -59,6 +60,7 @@ class BookingController extends Controller
                 CarbonImmutable::parse($data['check_in_date']),
                 CarbonImmutable::parse($data['check_out_date']),
                 $data['guest_count'],
+                $couponCode,
             );
         } elseif ($data['bookable_type'] === 'gathering_venue') {
             $bookable = GatheringVenue::publiclyVisible()->findOrFail($data['bookable_id']);
@@ -68,6 +70,7 @@ class BookingController extends Controller
                 $slot,
                 CarbonImmutable::parse($data['check_in_date']),
                 $data['guest_count'],
+                $couponCode,
             );
         } elseif ($data['bookable_type'] === 'transport') {
             $bookable = Transport::publiclyVisible()->findOrFail($data['bookable_id']);
@@ -78,6 +81,7 @@ class BookingController extends Controller
                 CarbonImmutable::parse($data['check_out_date']),
                 $data['guest_count'],
                 $withDriver,
+                $couponCode,
             );
         } else {
             $bookable = Villa::publiclyVisible()->findOrFail($data['bookable_id']);
@@ -86,6 +90,7 @@ class BookingController extends Controller
                 CarbonImmutable::parse($data['check_in_date']),
                 CarbonImmutable::parse($data['check_out_date']),
                 $data['guest_count'],
+                $couponCode,
             );
         }
 
@@ -103,13 +108,16 @@ class BookingController extends Controller
             'check_in_date' => $data['check_in_date'],
             'check_out_date' => $data['check_out_date'] ?? $data['check_in_date'],
             'guest_count' => $data['guest_count'],
+            'subtotal' => $result['subtotal'],
+            'coupon_id' => $result['coupon_id'],
+            'discount_amount' => $result['discount_amount'],
             'total_price' => $result['total_price'],
             'commission_amount' => $result['commission_amount'],
             'mitra_payout_amount' => $result['mitra_payout_amount'],
             'status' => 'pending_payment',
         ]);
 
-        return (new BookingResource($booking->load(['bookable.images', 'slot'])))
+        return (new BookingResource($booking->load(['bookable.images', 'slot', 'coupon'])))
             ->response()
             ->setStatusCode(201);
     }
@@ -120,7 +128,7 @@ class BookingController extends Controller
 
         $cancellationService->cancelByUser($booking);
 
-        return new BookingResource($booking->fresh()->load(['bookable.images', 'slot', 'latestPayment']));
+        return new BookingResource($booking->fresh()->load(['bookable.images', 'slot', 'coupon', 'latestPayment']));
     }
 
     private function generateBookingCode(): string

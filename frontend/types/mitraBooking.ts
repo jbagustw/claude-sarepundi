@@ -6,6 +6,8 @@ export interface MitraBooking {
   check_in_date: string
   check_out_date: string
   guest_count: number
+  subtotal: number
+  discount_amount: number
   total_price: number
   mitra_payout_amount: number
   status: BookingStatus

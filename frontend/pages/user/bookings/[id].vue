@@ -152,7 +152,21 @@ onMounted(loadBooking)
         </dl>
 
         <div class="mt-4 border-t border-gray-200 pt-4">
-          <div class="flex justify-between text-sm">
+          <template v-if="booking.discount_amount > 0">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Subtotal</span>
+              <span class="text-gray-900">{{ formatRupiah(booking.subtotal) }}</span>
+            </div>
+            <div class="mt-1 flex justify-between text-sm">
+              <span class="text-gray-600">Diskon Kupon<span v-if="booking.coupon_code"> ({{ booking.coupon_code }})</span></span>
+              <span class="text-green-700">-{{ formatRupiah(booking.discount_amount) }}</span>
+            </div>
+            <div class="mt-2 flex justify-between border-t border-gray-100 pt-2 text-sm">
+              <span class="text-gray-600">Total Harga</span>
+              <span class="font-semibold text-gray-900">{{ formatRupiah(booking.total_price) }}</span>
+            </div>
+          </template>
+          <div v-else class="flex justify-between text-sm">
             <span class="text-gray-600">Total Harga</span>
             <span class="font-semibold text-gray-900">{{ formatRupiah(booking.total_price) }}</span>
           </div>

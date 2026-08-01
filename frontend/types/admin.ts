@@ -19,6 +19,9 @@ export interface AdminBooking {
   booking_code: string
   check_in_date: string
   check_out_date: string
+  subtotal: number
+  discount_amount: number
+  coupon_code: string | null
   total_price: number
   commission_amount: number
   mitra_payout_amount: number

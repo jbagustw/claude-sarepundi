@@ -20,6 +20,9 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
     'check_in_date',
     'check_out_date',
     'guest_count',
+    'coupon_id',
+    'subtotal',
+    'discount_amount',
     'total_price',
     'commission_amount',
     'mitra_payout_amount',
@@ -67,6 +70,11 @@ class Booking extends Model
     public function slot(): BelongsTo
     {
         return $this->belongsTo(GatheringVenueSlot::class, 'gathering_venue_slot_id');
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     public function payments(): HasMany

@@ -89,6 +89,7 @@ class TransportBookingModuleTest extends TestCase
             'check_in_date' => $checkIn->format('Y-m-d'),
             'check_out_date' => (clone $checkIn)->modify('+2 days')->format('Y-m-d'),
             'guest_count' => 4,
+            'subtotal' => 1200000,
             'total_price' => 1200000,
             'commission_amount' => 120000,
             'mitra_payout_amount' => 1080000,
@@ -312,7 +313,7 @@ class TransportBookingModuleTest extends TestCase
             'booking_code' => 'BK'.uniqid(), 'user_id' => $this->regularUser()->id,
             'bookable_type' => \App\Models\Villa::class, 'bookable_id' => $villa->id,
             'check_in_date' => '2026-06-01', 'check_out_date' => '2026-06-03', 'guest_count' => 2,
-            'total_price' => 2000000, 'commission_amount' => 200000, 'mitra_payout_amount' => 1800000,
+            'subtotal' => 2000000, 'total_price' => 2000000, 'commission_amount' => 200000, 'mitra_payout_amount' => 1800000,
             'status' => 'selesai',
         ]);
 

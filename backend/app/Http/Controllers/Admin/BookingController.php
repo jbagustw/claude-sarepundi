@@ -20,7 +20,7 @@ class BookingController extends Controller
             'search' => ['sometimes', 'string', 'max:255'],
         ]);
 
-        $bookings = Booking::with(['bookable.mitraProfile', 'slot', 'user', 'latestPayment'])
+        $bookings = Booking::with(['bookable.mitraProfile', 'slot', 'coupon', 'user', 'latestPayment'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->query('status')))
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->query('search');

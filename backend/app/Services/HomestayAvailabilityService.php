@@ -24,10 +24,14 @@ class HomestayAvailabilityService
         'selesai',
     ];
 
+    public function __construct(private CouponService $couponService)
+    {
+    }
+
     /**
-     * @return array{available: bool, reason: ?string, nights: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
+     * @return array{available: bool, reason: ?string, nights: int, subtotal: int, coupon_id: ?int, discount_amount: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
      */
-    public function evaluate(Homestay $homestay, CarbonImmutable $checkIn, CarbonImmutable $checkOut, int $guestCount): array
+    public function evaluate(Homestay $homestay, CarbonImmutable $checkIn, CarbonImmutable $checkOut, int $guestCount, ?string $couponCode = null): array
     {
         $nights = $checkIn->diffInDays($checkOut);
 
@@ -46,7 +50,10 @@ class HomestayAvailabilityService
             return $this->unavailable('Tanggal yang dipilih sudah dipesan.');
         }
 
-        $totalPrice = $nights * $homestay->base_price;
+        $subtotal = $nights * $homestay->base_price;
+
+        ['coupon_id' => $couponId, 'discount_amount' => $discountAmount] = $this->couponService->resolve($couponCode, $subtotal);
+        $totalPrice = $subtotal - $discountAmount;
 
         $commissionRate = $homestay->mitraProfile->effectiveCommissionRate();
         $commissionAmount = (int) round($totalPrice * $commissionRate / 100);
@@ -55,6 +62,9 @@ class HomestayAvailabilityService
             'available' => true,
             'reason' => null,
             'nights' => $nights,
+            'subtotal' => $subtotal,
+            'coupon_id' => $couponId,
+            'discount_amount' => $discountAmount,
             'total_price' => $totalPrice,
             'commission_amount' => $commissionAmount,
             'mitra_payout_amount' => $totalPrice - $commissionAmount,
@@ -62,7 +72,7 @@ class HomestayAvailabilityService
     }
 
     /**
-     * @return array{available: bool, reason: ?string, nights: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
+     * @return array{available: bool, reason: ?string, nights: int, subtotal: int, coupon_id: ?int, discount_amount: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
      */
     private function unavailable(string $reason): array
     {
@@ -70,6 +80,9 @@ class HomestayAvailabilityService
             'available' => false,
             'reason' => $reason,
             'nights' => 0,
+            'subtotal' => 0,
+            'coupon_id' => null,
+            'discount_amount' => 0,
             'total_price' => 0,
             'commission_amount' => 0,
             'mitra_payout_amount' => 0,

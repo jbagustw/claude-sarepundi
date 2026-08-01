@@ -21,6 +21,8 @@ class MitraBookingResource extends JsonResource
             'check_in_date' => $this->check_in_date->toDateString(),
             'check_out_date' => $this->check_out_date->toDateString(),
             'guest_count' => $this->guest_count,
+            'subtotal' => $this->subtotal,
+            'discount_amount' => $this->discount_amount,
             'total_price' => $this->total_price,
             'mitra_payout_amount' => $this->mitra_payout_amount,
             'status' => $this->status,

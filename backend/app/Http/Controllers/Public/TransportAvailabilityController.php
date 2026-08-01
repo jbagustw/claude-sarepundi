@@ -19,6 +19,7 @@ class TransportAvailabilityController extends Controller
             'check_out_date' => ['required', 'date', 'after:check_in_date'],
             'guest_count' => ['nullable', 'integer', 'min:1'],
             'with_driver' => ['required', 'boolean'],
+            'coupon_code' => ['nullable', 'string', 'max:50'],
         ]);
 
         $result = $service->evaluate(
@@ -27,6 +28,7 @@ class TransportAvailabilityController extends Controller
             CarbonImmutable::parse($data['check_out_date']),
             $data['guest_count'] ?? 1,
             $data['with_driver'],
+            $data['coupon_code'] ?? null,
         );
 
         return response()->json(['data' => $result]);

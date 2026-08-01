@@ -89,7 +89,12 @@ onMounted(loadBookings)
                 <span v-if="booking.bookable.type === 'transport'">&middot; {{ booking.transport_with_driver ? 'Sopir' : 'Lepas Kunci' }}</span>
               </template>
             </td>
-            <td class="px-3 py-2 text-right text-gray-900">{{ formatRupiah(booking.total_price) }}</td>
+            <td class="px-3 py-2 text-right text-gray-900">
+              {{ formatRupiah(booking.total_price) }}
+              <p v-if="booking.discount_amount > 0" class="text-xs text-green-700">
+                kupon {{ booking.coupon_code }} (-{{ formatRupiah(booking.discount_amount) }})
+              </p>
+            </td>
             <td class="px-3 py-2 text-right text-gray-600">{{ formatRupiah(booking.commission_amount) }}</td>
             <td class="px-3 py-2">
               <span class="rounded px-2 py-0.5 text-xs font-medium" :class="BOOKING_STATUS_COLOR[booking.status]">

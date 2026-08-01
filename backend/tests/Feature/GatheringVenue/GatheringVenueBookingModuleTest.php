@@ -98,6 +98,7 @@ class GatheringVenueBookingModuleTest extends TestCase
             'check_in_date' => $eventDate->format('Y-m-d'),
             'check_out_date' => $eventDate->format('Y-m-d'),
             'guest_count' => 20,
+            'subtotal' => $slot->price,
             'total_price' => $slot->price,
             'commission_amount' => (int) round($slot->price * 0.1),
             'mitra_payout_amount' => $slot->price - (int) round($slot->price * 0.1),
@@ -356,7 +357,7 @@ class GatheringVenueBookingModuleTest extends TestCase
             'booking_code' => 'BK'.uniqid(), 'user_id' => $this->regularUser()->id,
             'bookable_type' => \App\Models\Villa::class, 'bookable_id' => $villa->id,
             'check_in_date' => '2026-06-01', 'check_out_date' => '2026-06-03', 'guest_count' => 2,
-            'total_price' => 2000000, 'commission_amount' => 200000, 'mitra_payout_amount' => 1800000,
+            'subtotal' => 2000000, 'total_price' => 2000000, 'commission_amount' => 200000, 'mitra_payout_amount' => 1800000,
             'status' => 'selesai',
         ]);
 

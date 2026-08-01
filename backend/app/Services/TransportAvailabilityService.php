@@ -22,10 +22,14 @@ class TransportAvailabilityService
         'selesai',
     ];
 
+    public function __construct(private CouponService $couponService)
+    {
+    }
+
     /**
-     * @return array{available: bool, reason: ?string, nights: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
+     * @return array{available: bool, reason: ?string, nights: int, subtotal: int, coupon_id: ?int, discount_amount: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
      */
-    public function evaluate(Transport $transport, CarbonImmutable $checkIn, CarbonImmutable $checkOut, int $guestCount, bool $withDriver): array
+    public function evaluate(Transport $transport, CarbonImmutable $checkIn, CarbonImmutable $checkOut, int $guestCount, bool $withDriver, ?string $couponCode = null): array
     {
         $days = $checkIn->diffInDays($checkOut);
 
@@ -54,7 +58,10 @@ class TransportAvailabilityService
             return $this->unavailable('Tanggal yang dipilih sudah dipesan.');
         }
 
-        $totalPrice = $days * $pricePerDay;
+        $subtotal = $days * $pricePerDay;
+
+        ['coupon_id' => $couponId, 'discount_amount' => $discountAmount] = $this->couponService->resolve($couponCode, $subtotal);
+        $totalPrice = $subtotal - $discountAmount;
 
         $commissionRate = $transport->mitraProfile->effectiveCommissionRate();
         $commissionAmount = (int) round($totalPrice * $commissionRate / 100);
@@ -63,6 +70,9 @@ class TransportAvailabilityService
             'available' => true,
             'reason' => null,
             'nights' => $days,
+            'subtotal' => $subtotal,
+            'coupon_id' => $couponId,
+            'discount_amount' => $discountAmount,
             'total_price' => $totalPrice,
             'commission_amount' => $commissionAmount,
             'mitra_payout_amount' => $totalPrice - $commissionAmount,
@@ -70,7 +80,7 @@ class TransportAvailabilityService
     }
 
     /**
-     * @return array{available: bool, reason: ?string, nights: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
+     * @return array{available: bool, reason: ?string, nights: int, subtotal: int, coupon_id: ?int, discount_amount: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
      */
     private function unavailable(string $reason): array
     {
@@ -78,6 +88,9 @@ class TransportAvailabilityService
             'available' => false,
             'reason' => $reason,
             'nights' => 0,
+            'subtotal' => 0,
+            'coupon_id' => null,
+            'discount_amount' => 0,
             'total_price' => 0,
             'commission_amount' => 0,
             'mitra_payout_amount' => 0,

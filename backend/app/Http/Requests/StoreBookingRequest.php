@@ -29,6 +29,7 @@ class StoreBookingRequest extends FormRequest
             'bookable_id' => ['required', 'integer', Rule::exists($table, 'id')],
             'check_in_date' => ['required', 'date', 'after_or_equal:today'],
             'guest_count' => ['required', 'integer', 'min:1'],
+            'coupon_code' => ['nullable', 'string', 'max:50'],
         ];
 
         if ($this->input('bookable_type') === 'gathering_venue') {

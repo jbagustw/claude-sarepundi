@@ -23,9 +23,14 @@ class GatheringVenueAvailabilityService
         'selesai',
     ];
 
+    public function __construct(private CouponService $couponService)
+    {
+    }
+
     /**
      * Availability of every active slot for a given date — used to render
-     * the slot picker on the venue's public page.
+     * the slot picker on the venue's public page. No coupon here: there's
+     * no single price to discount until a specific slot is picked.
      *
      * @return array{date: string, slots: array<int, array{id: int, name: string, start_time: string, end_time: string, price: int, available: bool}>}
      */
@@ -56,9 +61,9 @@ class GatheringVenueAvailabilityService
      * Re-validate + price a specific slot+date at booking-creation time
      * (the picker's list can be stale by the time the user submits).
      *
-     * @return array{available: bool, reason: ?string, total_price: int, commission_amount: int, mitra_payout_amount: int}
+     * @return array{available: bool, reason: ?string, subtotal: int, coupon_id: ?int, discount_amount: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
      */
-    public function evaluate(GatheringVenue $venue, GatheringVenueSlot $slot, CarbonImmutable $date, int $guestCount): array
+    public function evaluate(GatheringVenue $venue, GatheringVenueSlot $slot, CarbonImmutable $date, int $guestCount, ?string $couponCode = null): array
     {
         if ($slot->gathering_venue_id !== $venue->id || ! $slot->is_active) {
             return $this->unavailable('Slot tidak ditemukan untuk lokasi ini.');
@@ -79,13 +84,20 @@ class GatheringVenueAvailabilityService
             return $this->unavailable('Slot ini sudah dipesan untuk tanggal tersebut.');
         }
 
-        $totalPrice = $slot->price;
+        $subtotal = $slot->price;
+
+        ['coupon_id' => $couponId, 'discount_amount' => $discountAmount] = $this->couponService->resolve($couponCode, $subtotal);
+        $totalPrice = $subtotal - $discountAmount;
+
         $commissionRate = $venue->mitraProfile->effectiveCommissionRate();
         $commissionAmount = (int) round($totalPrice * $commissionRate / 100);
 
         return [
             'available' => true,
             'reason' => null,
+            'subtotal' => $subtotal,
+            'coupon_id' => $couponId,
+            'discount_amount' => $discountAmount,
             'total_price' => $totalPrice,
             'commission_amount' => $commissionAmount,
             'mitra_payout_amount' => $totalPrice - $commissionAmount,
@@ -93,13 +105,16 @@ class GatheringVenueAvailabilityService
     }
 
     /**
-     * @return array{available: bool, reason: ?string, total_price: int, commission_amount: int, mitra_payout_amount: int}
+     * @return array{available: bool, reason: ?string, subtotal: int, coupon_id: ?int, discount_amount: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
      */
     private function unavailable(string $reason): array
     {
         return [
             'available' => false,
             'reason' => $reason,
+            'subtotal' => 0,
+            'coupon_id' => null,
+            'discount_amount' => 0,
             'total_price' => 0,
             'commission_amount' => 0,
             'mitra_payout_amount' => 0,

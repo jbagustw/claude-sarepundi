@@ -18,6 +18,7 @@ class HomestayAvailabilityController extends Controller
             'check_in_date' => ['required', 'date', 'after_or_equal:today'],
             'check_out_date' => ['required', 'date', 'after:check_in_date'],
             'guest_count' => ['nullable', 'integer', 'min:1'],
+            'coupon_code' => ['nullable', 'string', 'max:50'],
         ]);
 
         $result = $service->evaluate(
@@ -25,6 +26,7 @@ class HomestayAvailabilityController extends Controller
             CarbonImmutable::parse($data['check_in_date']),
             CarbonImmutable::parse($data['check_out_date']),
             $data['guest_count'] ?? 1,
+            $data['coupon_code'] ?? null,
         );
 
         return response()->json(['data' => $result]);

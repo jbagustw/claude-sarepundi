@@ -17,6 +17,7 @@ const today = new Date().toISOString().slice(0, 10)
 const date = ref('')
 const guestCount = ref(Math.min(10, props.capacity))
 const selectedSlotId = ref<number | null>(null)
+const couponCode = ref('')
 
 const checking = ref(false)
 const booking = ref(false)
@@ -57,19 +58,22 @@ async function createBooking() {
   errorMessage.value = ''
 
   try {
-    const response = await api<{ data: { id: number } }>('/api/bookings', {
-      method: 'POST',
-      body: {
-        bookable_type: 'gathering_venue',
-        bookable_id: props.venueId,
-        gathering_venue_slot_id: selectedSlotId.value,
-        check_in_date: date.value,
-        guest_count: guestCount.value,
-      },
-    })
+    const body: Record<string, unknown> = {
+      bookable_type: 'gathering_venue',
+      bookable_id: props.venueId,
+      gathering_venue_slot_id: selectedSlotId.value,
+      check_in_date: date.value,
+      guest_count: guestCount.value,
+    }
+    if (couponCode.value.trim()) body.coupon_code = couponCode.value.trim()
+
+    const response = await api<{ data: { id: number } }>('/api/bookings', { method: 'POST', body })
     router.push(`/user/bookings/${response.data.id}`)
   } catch (error: any) {
-    errorMessage.value = error?.data?.errors?.check_in_date?.[0] || error?.data?.message || 'Gagal membuat booking.'
+    errorMessage.value = error?.data?.errors?.check_in_date?.[0]
+      || error?.data?.errors?.coupon_code?.[0]
+      || error?.data?.message
+      || 'Gagal membuat booking.'
   } finally {
     booking.value = false
   }
@@ -152,9 +156,20 @@ async function createBooking() {
         </ul>
 
         <template v-if="selectedSlot">
+          <div v-if="authStore.role === 'user'" class="mt-4">
+            <label class="block text-xs font-medium text-gray-700" for="coupon-code">Kode Promo (opsional)</label>
+            <input
+              id="coupon-code"
+              v-model="couponCode"
+              type="text"
+              placeholder="mis. HEMAT15"
+              class="field-input mt-1 uppercase"
+            >
+          </div>
+
           <button
             v-if="authStore.role === 'user'"
-            class="btn-accent mt-4 w-full"
+            class="btn-accent mt-3 w-full"
             :disabled="booking"
             @click="createBooking"
           >

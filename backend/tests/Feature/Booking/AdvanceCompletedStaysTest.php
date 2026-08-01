@@ -59,6 +59,7 @@ class AdvanceCompletedStaysTest extends TestCase
             'check_in_date' => $checkIn,
             'check_out_date' => $checkOut,
             'guest_count' => 2,
+            'subtotal' => 2000000,
             'total_price' => 2000000,
             'commission_amount' => 200000,
             'mitra_payout_amount' => 1800000,

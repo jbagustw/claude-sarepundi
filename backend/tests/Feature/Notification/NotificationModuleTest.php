@@ -169,6 +169,7 @@ class NotificationModuleTest extends TestCase
             'check_in_date' => now()->addDays(10)->format('Y-m-d'),
             'check_out_date' => now()->addDays(13)->format('Y-m-d'),
             'guest_count' => 2,
+            'subtotal' => 3000000,
             'total_price' => 3000000,
             'commission_amount' => 300000,
             'mitra_payout_amount' => 2700000,

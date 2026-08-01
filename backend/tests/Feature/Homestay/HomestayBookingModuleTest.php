@@ -89,6 +89,7 @@ class HomestayBookingModuleTest extends TestCase
             'check_in_date' => $checkIn->format('Y-m-d'),
             'check_out_date' => (clone $checkIn)->modify('+3 days')->format('Y-m-d'),
             'guest_count' => 2,
+            'subtotal' => 1500000,
             'total_price' => 1500000,
             'commission_amount' => 150000,
             'mitra_payout_amount' => 1350000,
@@ -395,14 +396,14 @@ class HomestayBookingModuleTest extends TestCase
             'booking_code' => 'BK'.uniqid(), 'user_id' => $this->regularUser()->id,
             'bookable_type' => Villa::class, 'bookable_id' => $villa->id,
             'check_in_date' => '2026-06-01', 'check_out_date' => '2026-06-03', 'guest_count' => 2,
-            'total_price' => 2000000, 'commission_amount' => 200000, 'mitra_payout_amount' => 1800000,
+            'subtotal' => 2000000, 'total_price' => 2000000, 'commission_amount' => 200000, 'mitra_payout_amount' => 1800000,
             'status' => 'selesai',
         ]);
         Booking::create([
             'booking_code' => 'BK'.uniqid(), 'user_id' => $this->regularUser()->id,
             'bookable_type' => Homestay::class, 'bookable_id' => $homestay->id,
             'check_in_date' => '2026-06-01', 'check_out_date' => '2026-06-03', 'guest_count' => 2,
-            'total_price' => 1000000, 'commission_amount' => 100000, 'mitra_payout_amount' => 900000,
+            'subtotal' => 1000000, 'total_price' => 1000000, 'commission_amount' => 100000, 'mitra_payout_amount' => 900000,
             'status' => 'selesai',
         ]);
 

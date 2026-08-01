@@ -66,6 +66,7 @@ class UserCancellationTest extends TestCase
             'check_in_date' => $checkIn->format('Y-m-d'),
             'check_out_date' => (clone $checkIn)->modify('+3 days')->format('Y-m-d'),
             'guest_count' => 2,
+            'subtotal' => 3000000,
             'total_price' => 3000000,
             'commission_amount' => 300000,
             'mitra_payout_amount' => 2700000,

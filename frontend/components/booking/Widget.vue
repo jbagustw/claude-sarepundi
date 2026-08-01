@@ -18,6 +18,7 @@ const today = new Date().toISOString().slice(0, 10)
 const checkInDate = ref('')
 const checkOutDate = ref('')
 const guestCount = ref(2)
+const couponCode = ref('')
 const withDriver = ref(props.transportPricing?.selfDrive === null)
 
 const checking = ref(false)
@@ -48,11 +49,12 @@ async function checkAvailability() {
       guest_count: guestCount.value,
     }
     if (props.bookableType === 'transport') query.with_driver = withDriver.value ? 1 : 0
+    if (couponCode.value.trim()) query.coupon_code = couponCode.value.trim()
 
     const response = await api<{ data: AvailabilityResult }>(`/api/${resourcePathSegment.value}/${props.bookableSlug}/availability`, { query })
     result.value = response.data
   } catch (error: any) {
-    errorMessage.value = error?.data?.message || 'Gagal mengecek ketersediaan.'
+    errorMessage.value = error?.data?.errors?.coupon_code?.[0] || error?.data?.message || 'Gagal mengecek ketersediaan.'
   } finally {
     checking.value = false
   }
@@ -71,11 +73,15 @@ async function createBooking() {
       guest_count: guestCount.value,
     }
     if (props.bookableType === 'transport') body.with_driver = withDriver.value
+    if (couponCode.value.trim()) body.coupon_code = couponCode.value.trim()
 
     const response = await api<{ data: { id: number } }>('/api/bookings', { method: 'POST', body })
     router.push(`/user/bookings/${response.data.id}`)
   } catch (error: any) {
-    errorMessage.value = error?.data?.errors?.check_in_date?.[0] || error?.data?.message || 'Gagal membuat booking.'
+    errorMessage.value = error?.data?.errors?.check_in_date?.[0]
+      || error?.data?.errors?.coupon_code?.[0]
+      || error?.data?.message
+      || 'Gagal membuat booking.'
     result.value = null
   } finally {
     booking.value = false
@@ -148,6 +154,17 @@ async function createBooking() {
         >
       </div>
 
+      <div class="mt-3">
+        <label class="block text-xs font-medium text-gray-700" for="coupon-code">Kode Promo (opsional)</label>
+        <input
+          id="coupon-code"
+          v-model="couponCode"
+          type="text"
+          placeholder="mis. HEMAT15"
+          class="field-input mt-1 uppercase"
+        >
+      </div>
+
       <button
         class="btn-outline mt-4 w-full"
         :disabled="checking"
@@ -161,6 +178,10 @@ async function createBooking() {
       <div v-if="result">
         <div v-if="result.available" class="mt-4 space-y-1 rounded-xl bg-brand-sage/15 p-3 text-sm text-brand-brown-dark">
           <p>Tersedia untuk {{ result.nights }} {{ bookableType === 'transport' ? 'hari' : 'malam' }}.</p>
+          <template v-if="result.discount_amount > 0">
+            <p class="text-xs text-brand-brown-dark/70 line-through">{{ formatRupiah(result.subtotal) }}</p>
+            <p class="text-xs">Diskon kupon: -{{ formatRupiah(result.discount_amount) }}</p>
+          </template>
           <p class="font-semibold">Total: {{ formatRupiah(result.total_price) }}</p>
         </div>
         <p v-else class="mt-3 text-sm text-red-600">{{ result.reason }}</p>

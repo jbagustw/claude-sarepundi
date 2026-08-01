@@ -63,6 +63,7 @@ class ReviewModuleTest extends TestCase
             'check_in_date' => now()->subDays(10)->format('Y-m-d'),
             'check_out_date' => now()->subDays(7)->format('Y-m-d'),
             'guest_count' => 2,
+            'subtotal' => 2000000,
             'total_price' => 2000000,
             'commission_amount' => 200000,
             'mitra_payout_amount' => 1800000,

@@ -15,6 +15,9 @@ export interface Booking {
   check_in_date: string
   check_out_date: string
   guest_count: number
+  subtotal: number
+  discount_amount: number
+  coupon_code: string | null
   total_price: number
   commission_amount: number
   mitra_payout_amount: number
@@ -52,6 +55,8 @@ export interface AvailabilityResult {
   available: boolean
   reason: string | null
   nights: number
+  subtotal: number
+  discount_amount: number
   total_price: number
   commission_amount: number
   mitra_payout_amount: number

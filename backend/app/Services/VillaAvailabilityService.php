@@ -20,14 +20,18 @@ class VillaAvailabilityService
         'selesai',
     ];
 
+    public function __construct(private CouponService $couponService)
+    {
+    }
+
     /**
      * Check whether [checkIn, checkOut) is bookable for the given villa and,
      * if so, price it out. Used by both the public availability-check
      * endpoint and booking creation, so the two can never disagree.
      *
-     * @return array{available: bool, reason: ?string, nights: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
+     * @return array{available: bool, reason: ?string, nights: int, subtotal: int, coupon_id: ?int, discount_amount: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
      */
-    public function evaluate(Villa $villa, CarbonImmutable $checkIn, CarbonImmutable $checkOut, int $guestCount): array
+    public function evaluate(Villa $villa, CarbonImmutable $checkIn, CarbonImmutable $checkOut, int $guestCount, ?string $couponCode = null): array
     {
         $nights = $checkIn->diffInDays($checkOut);
 
@@ -46,7 +50,7 @@ class VillaAvailabilityService
             return $this->unavailable("Minimum menginap {$checkInOverride->min_stay} malam untuk tanggal check-in ini.");
         }
 
-        $totalPrice = 0;
+        $subtotal = 0;
         for ($date = $checkIn; $date->lt($checkOut); $date = $date->addDay()) {
             $override = $overrides->get($date->toDateString());
 
@@ -54,7 +58,7 @@ class VillaAvailabilityService
                 return $this->unavailable("Tanggal {$date->toDateString()} tidak tersedia.");
             }
 
-            $totalPrice += $override?->custom_price ?? $villa->base_price;
+            $subtotal += $override?->custom_price ?? $villa->base_price;
         }
 
         $hasConflict = Booking::where('bookable_type', Villa::class)
@@ -68,8 +72,13 @@ class VillaAvailabilityService
             return $this->unavailable('Tanggal yang dipilih sudah dipesan.');
         }
 
+        ['coupon_id' => $couponId, 'discount_amount' => $discountAmount] = $this->couponService->resolve($couponCode, $subtotal);
+        $totalPrice = $subtotal - $discountAmount;
+
         // Platform commission defaults to 10% (CLAUDE.md) but an admin may
-        // override it per mitra from the dashboard.
+        // override it per mitra from the dashboard. Computed on the
+        // post-discount total — the platform absorbs the coupon's cost via
+        // its own commission share, mitra earnings are untouched by promos.
         $commissionRate = $villa->mitraProfile->effectiveCommissionRate();
         $commissionAmount = (int) round($totalPrice * $commissionRate / 100);
 
@@ -77,6 +86,9 @@ class VillaAvailabilityService
             'available' => true,
             'reason' => null,
             'nights' => $nights,
+            'subtotal' => $subtotal,
+            'coupon_id' => $couponId,
+            'discount_amount' => $discountAmount,
             'total_price' => $totalPrice,
             'commission_amount' => $commissionAmount,
             'mitra_payout_amount' => $totalPrice - $commissionAmount,
@@ -84,7 +96,7 @@ class VillaAvailabilityService
     }
 
     /**
-     * @return array{available: bool, reason: ?string, nights: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
+     * @return array{available: bool, reason: ?string, nights: int, subtotal: int, coupon_id: ?int, discount_amount: int, total_price: int, commission_amount: int, mitra_payout_amount: int}
      */
     private function unavailable(string $reason): array
     {
@@ -92,6 +104,9 @@ class VillaAvailabilityService
             'available' => false,
             'reason' => $reason,
             'nights' => 0,
+            'subtotal' => 0,
+            'coupon_id' => null,
+            'discount_amount' => 0,
             'total_price' => 0,
             'commission_amount' => 0,
             'mitra_payout_amount' => 0,
