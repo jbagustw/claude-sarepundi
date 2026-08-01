@@ -23,7 +23,10 @@ class GatheringVenueController extends Controller
             ->with(['images', 'facilities', 'slots'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
-            ->when($request->filled('q'), fn ($q) => $q->where('name', 'like', '%'.$request->query('q').'%'))
+            ->when($request->filled('q'), fn ($q) => $q->where(fn ($qq) => $qq
+                ->where('name', 'like', '%'.$request->query('q').'%')
+                ->orWhere('city', 'like', '%'.$request->query('q').'%')
+            ))
             ->when($request->filled('city'), fn ($q) => $q->where('city', 'like', '%'.$request->query('city').'%'))
             ->when($request->filled('capacity'), fn ($q) => $q->where('capacity', '>=', $request->integer('capacity')))
             ->when($request->filled('facility_ids'), fn ($q) => $q->whereHas(

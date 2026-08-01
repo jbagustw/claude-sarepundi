@@ -236,6 +236,31 @@ class VillaModuleTest extends TestCase
         $this->assertFalse($names->contains('Villa From Unapproved Mitra'));
     }
 
+    public function test_public_index_search_matches_city_as_well_as_name(): void
+    {
+        $mitra = $this->approvedMitra();
+        $mitra->mitraProfile->villas()->create($this->villaPayload([
+            'name' => 'Villa Kertajaya',
+            'slug' => 'villa-kertajaya',
+            'city' => 'Surabaya',
+            'status' => 'published',
+        ]));
+        $mitra->mitraProfile->villas()->create($this->villaPayload([
+            'name' => 'Villa Damai',
+            'slug' => 'villa-damai',
+            'city' => 'Yogyakarta',
+            'status' => 'published',
+        ]));
+
+        $response = $this->fromFrontend()->getJson('/api/villas?q=surabaya');
+
+        $response->assertOk();
+        $names = collect($response->json('data'))->pluck('name');
+
+        $this->assertTrue($names->contains('Villa Kertajaya'));
+        $this->assertFalse($names->contains('Villa Damai'));
+    }
+
     public function test_public_show_returns_404_for_non_published_villa(): void
     {
         $mitra = $this->approvedMitra();

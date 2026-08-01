@@ -25,7 +25,10 @@ class HomestayController extends Controller
             ->with(['images', 'facilities'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
-            ->when($request->filled('q'), fn ($q) => $q->where('name', 'like', '%'.$request->query('q').'%'))
+            ->when($request->filled('q'), fn ($q) => $q->where(fn ($qq) => $qq
+                ->where('name', 'like', '%'.$request->query('q').'%')
+                ->orWhere('city', 'like', '%'.$request->query('q').'%')
+            ))
             ->when($request->filled('city'), fn ($q) => $q->where('city', 'like', '%'.$request->query('city').'%'))
             ->when($request->filled('guests'), fn ($q) => $q->where('capacity_guest', '>=', $request->integer('guests')))
             ->when($request->filled('min_price'), fn ($q) => $q->where('base_price', '>=', $request->integer('min_price')))
