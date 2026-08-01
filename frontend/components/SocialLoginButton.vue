@@ -10,21 +10,34 @@ const labels: Record<string, string> = {
 }
 
 const label = labels[props.provider]
+
+// Hanya Google yang sudah tersambung ke backend (Laravel Socialite). Facebook
+// butuh app review, Apple butuh akun developer berbayar — keduanya tetap
+// nonaktif sampai kredensial OAuth-nya disiapkan.
+const isEnabled = props.provider === 'google'
+
+const config = useRuntimeConfig()
+const redirectUrl = `${config.public.apiBase}/auth/${props.provider}/redirect`
 </script>
 
 <template>
+  <a
+    v-if="isEnabled"
+    :href="redirectUrl"
+    class="inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+  >
+    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-blue-600">G</span>
+    {{ label }}
+  </a>
   <button
+    v-else
     type="button"
     disabled
     title="Login sosial segera hadir"
     class="inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2.5 text-sm font-medium text-white opacity-90 cursor-not-allowed"
   >
     <span
-      v-if="provider === 'google'"
-      class="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-blue-600"
-    >G</span>
-    <span
-      v-else-if="provider === 'facebook'"
+      v-if="provider === 'facebook'"
       class="flex h-5 w-5 items-center justify-center rounded-full bg-[#1877F2] text-xs font-bold text-white"
     >f</span>
     <svg v-else class="h-4 w-4" viewBox="0 0 24 24" fill="white" aria-hidden="true">

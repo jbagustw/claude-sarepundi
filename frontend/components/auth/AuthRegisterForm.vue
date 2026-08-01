@@ -134,17 +134,19 @@ async function handleSubmit() {
       >
     </div>
 
-    <div class="flex items-center gap-3 text-xs text-gray-400">
-      <span class="h-px flex-1 bg-gray-200" />
-      atau
-      <span class="h-px flex-1 bg-gray-200" />
-    </div>
+    <template v-if="role === 'user'">
+      <div class="flex items-center gap-3 text-xs text-gray-400">
+        <span class="h-px flex-1 bg-gray-200" />
+        atau
+        <span class="h-px flex-1 bg-gray-200" />
+      </div>
 
-    <div class="flex flex-wrap justify-center gap-2">
-      <SocialLoginButton provider="google" />
-      <SocialLoginButton provider="facebook" />
-      <SocialLoginButton provider="apple" />
-    </div>
+      <div class="flex flex-wrap justify-center gap-2">
+        <SocialLoginButton provider="google" />
+        <SocialLoginButton provider="facebook" />
+        <SocialLoginButton provider="apple" />
+      </div>
+    </template>
 
     <p v-if="generalError" class="text-sm text-red-600">{{ generalError }}</p>
 

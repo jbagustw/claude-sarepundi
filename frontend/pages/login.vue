@@ -12,6 +12,13 @@ const errors = ref<Record<string, string[]>>({})
 const generalError = ref('')
 const submitting = ref(false)
 
+const socialErrorMessages: Record<string, string> = {
+  1: 'Login sosial gagal atau dibatalkan. Silakan coba lagi.',
+  no_email: 'Akun Google-mu tidak memiliki email publik. Gunakan akun lain atau login dengan email & password.',
+  suspended: 'Akun ini telah disuspend. Hubungi admin.',
+}
+const socialError = typeof route.query.social_error === 'string' ? socialErrorMessages[route.query.social_error] || socialErrorMessages['1'] : ''
+
 async function handleSubmit() {
   errors.value = {}
   generalError.value = ''
@@ -39,6 +46,8 @@ async function handleSubmit() {
     title="Masuk ke Akun Anda"
     subtitle="Yuk masuk dan mulai cari villa terbaik untuk liburanmu selanjutnya!"
   >
+    <p v-if="socialError" class="mt-4 rounded bg-red-50 p-3 text-sm text-red-700">{{ socialError }}</p>
+
     <div class="mt-6 flex flex-wrap justify-center gap-2">
       <SocialLoginButton provider="google" />
       <SocialLoginButton provider="facebook" />
