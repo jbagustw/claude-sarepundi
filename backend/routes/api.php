@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\GatheringVenueModerationController;
 use App\Http\Controllers\Admin\HomestayModerationController;
 use App\Http\Controllers\Admin\MitraModerationController;
 use App\Http\Controllers\Admin\PayoutController as AdminPayoutController;
+use App\Http\Controllers\Admin\SiteSettingController as AdminSiteSettingController;
 use App\Http\Controllers\Admin\TransportModerationController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VillaModerationController;
@@ -42,6 +43,7 @@ use App\Http\Controllers\Public\HomestayAvailabilityController as PublicHomestay
 use App\Http\Controllers\Public\HomestayController as PublicHomestayController;
 use App\Http\Controllers\Public\HomestayReviewController as PublicHomestayReviewController;
 use App\Http\Controllers\Public\ReviewController as PublicReviewController;
+use App\Http\Controllers\Public\SiteSettingController as PublicSiteSettingController;
 use App\Http\Controllers\Public\TransportAvailabilityController as PublicTransportAvailabilityController;
 use App\Http\Controllers\Public\TransportController as PublicTransportController;
 use App\Http\Controllers\Public\TransportReviewController as PublicTransportReviewController;
@@ -63,6 +65,7 @@ Route::get('/articles', [PublicArticleController::class, 'index']);
 Route::get('/articles/{slug}', [PublicArticleController::class, 'show']);
 Route::get('/coupons', [PublicCouponController::class, 'index']);
 Route::get('/banners', [PublicBannerController::class, 'index']);
+Route::get('/site-settings', [PublicSiteSettingController::class, 'show']);
 Route::get('/homestays', [PublicHomestayController::class, 'index']);
 Route::get('/homestays/{slug}', [PublicHomestayController::class, 'show']);
 Route::get('/homestays/{slug}/availability', PublicHomestayAvailabilityController::class);
@@ -198,5 +201,8 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::patch('/banners/{banner}', [AdminBannerController::class, 'update']);
         Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy']);
         Route::post('/banners/{banner}/image', [AdminBannerController::class, 'uploadImage']);
+
+        Route::get('/site-settings', [AdminSiteSettingController::class, 'show']);
+        Route::patch('/site-settings', [AdminSiteSettingController::class, 'update']);
     });
 });

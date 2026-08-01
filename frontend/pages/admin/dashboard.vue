@@ -100,6 +100,9 @@ onMounted(loadStats)
       <NuxtLink to="/admin/banners" class="btn-outline">
         Kelola Banner Iklan
       </NuxtLink>
+      <NuxtLink to="/admin/settings" class="btn-outline">
+        Media Sosial
+      </NuxtLink>
     </div>
   </div>
 </template>
