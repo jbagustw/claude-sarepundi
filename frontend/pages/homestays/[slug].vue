@@ -31,15 +31,7 @@ onMounted(async () => {
           <span class="text-gray-700">{{ homestay.reviews_avg_rating }} ({{ homestay.reviews_count }} ulasan)</span>
         </div>
 
-        <div v-if="homestay.images.length" class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <img
-            v-for="image in homestay.images"
-            :key="image.id"
-            :src="image.url"
-            class="h-32 w-full rounded-xl object-cover"
-            alt=""
-          >
-        </div>
+        <ImageGallery :images="homestay.images" />
 
         <div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-700">
           <span>{{ homestay.capacity_guest }} tamu</span>

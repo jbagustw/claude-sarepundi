@@ -31,15 +31,7 @@ onMounted(async () => {
           <span class="text-gray-700">{{ villa.reviews_avg_rating }} ({{ villa.reviews_count }} ulasan)</span>
         </div>
 
-        <div v-if="villa.images.length" class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <img
-            v-for="image in villa.images"
-            :key="image.id"
-            :src="image.url"
-            class="h-32 w-full rounded-xl object-cover"
-            alt=""
-          >
-        </div>
+        <ImageGallery :images="villa.images" />
 
         <div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-700">
           <span>{{ villa.capacity_guest }} tamu</span>
