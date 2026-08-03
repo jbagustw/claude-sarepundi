@@ -438,7 +438,7 @@ onMounted(loadHomeData)
     <section class="mx-auto mt-12 max-w-6xl px-4">
       <h2 class="font-display text-xl font-bold text-gray-900">Mitra Pembayaran</h2>
       <p class="mt-1 text-sm text-gray-600">
-        Bayar dengan cara yang paling nyaman untukmu — didukung berbagai metode pembayaran populer di Indonesia.
+        Sarepundi didukung berbagai metode pembayaran populer di Indonesia.
       </p>
 
       <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
