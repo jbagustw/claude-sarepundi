@@ -8,10 +8,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// CLAUDE.md: check every 15-30 minutes for bookings a mitra never
-// responded to within the 24-hour confirmation window.
-Schedule::command('bookings:auto-cancel-expired')->everyFifteenMinutes();
-
 // Advances confirmed bookings through checked_in -> selesai as their
 // dates pass — this is what feeds the payout run below.
 Schedule::command('bookings:advance-completed-stays')->daily();

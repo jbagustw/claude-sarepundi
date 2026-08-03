@@ -6,7 +6,7 @@ export interface AdminStats {
   villas: { pending_review: number; published: number; total: number }
   bookings: {
     total: number
-    awaiting_mitra_confirmation: number
+    awaiting_payment: number
     confirmed: number
     completed: number
     cancelled: number

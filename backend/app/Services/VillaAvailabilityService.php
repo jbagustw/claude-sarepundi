@@ -14,7 +14,6 @@ class VillaAvailabilityService
      */
     private const BLOCKING_STATUSES = [
         'pending_payment',
-        'menunggu_konfirmasi',
         'dikonfirmasi',
         'checked_in',
         'selesai',

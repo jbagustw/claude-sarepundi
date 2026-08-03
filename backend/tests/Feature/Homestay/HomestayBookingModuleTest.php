@@ -94,7 +94,6 @@ class HomestayBookingModuleTest extends TestCase
             'commission_amount' => 150000,
             'mitra_payout_amount' => 1350000,
             'status' => $status,
-            'mitra_confirmation_deadline' => $status === 'menunggu_konfirmasi' ? now()->addHours(24) : null,
             'mitra_confirmed_at' => $status === 'dikonfirmasi' ? now() : null,
         ]);
 
@@ -239,58 +238,14 @@ class HomestayBookingModuleTest extends TestCase
 
         $response->assertOk();
         $booking = Booking::find($bookingId);
-        $this->assertSame('menunggu_konfirmasi', $booking->status);
-        $this->assertNotNull($booking->mitra_confirmation_deadline);
-    }
-
-    // --- Mitra confirmation ---
-
-    public function test_mitra_can_accept_a_homestay_booking(): void
-    {
-        $mitra = $this->approvedMitra();
-        $homestay = $this->publishedHomestay($mitra);
-        $booking = $this->paidBooking($this->regularUser(), $homestay, 'menunggu_konfirmasi', now()->addDays(10));
-
-        $response = $this->fromFrontend()->actingAs($mitra)
-            ->postJson("/api/mitra/bookings/{$booking->id}/accept");
-
-        $response->assertOk();
-        $this->assertSame('dikonfirmasi', $booking->fresh()->status);
-    }
-
-    public function test_mitra_reject_cancels_homestay_booking_and_triggers_full_refund(): void
-    {
-        Http::fake([
-            'api.xendit.co/refunds' => Http::response(['id' => 'rfd_homestay_1', 'status' => 'SUCCEEDED'], 200),
-        ]);
-        $mitra = $this->approvedMitra();
-        $homestay = $this->publishedHomestay($mitra);
-        $booking = $this->paidBooking($this->regularUser(), $homestay, 'menunggu_konfirmasi', now()->addDays(10));
-
-        $this->fromFrontend()->actingAs($mitra)
-            ->postJson("/api/mitra/bookings/{$booking->id}/reject")
-            ->assertOk();
-
-        $booking->refresh();
-        $this->assertSame('dibatalkan_mitra', $booking->status);
-        $this->assertSame(100, $booking->refund_percentage);
-    }
-
-    public function test_mitra_cannot_accept_another_mitras_homestay_booking(): void
-    {
-        $owner = $this->approvedMitra();
-        $homestay = $this->publishedHomestay($owner);
-        $booking = $this->paidBooking($this->regularUser(), $homestay, 'menunggu_konfirmasi', now()->addDays(10));
-        $otherMitra = $this->approvedMitra();
-
-        $this->fromFrontend()->actingAs($otherMitra)
-            ->postJson("/api/mitra/bookings/{$booking->id}/accept")
-            ->assertForbidden();
+        // Mitra never approves/rejects — a paid booking is confirmed immediately.
+        $this->assertSame('dikonfirmasi', $booking->status);
+        $this->assertNotNull($booking->mitra_confirmed_at);
     }
 
     // --- User cancellation refund tiers ---
 
-    public function test_user_cancelling_awaiting_confirmation_homestay_booking_gets_full_refund(): void
+    public function test_user_cancelling_confirmed_homestay_booking_h2_or_more_gets_85_percent_refund(): void
     {
         Http::fake([
             'api.xendit.co/refunds' => Http::response(['id' => 'rfd_homestay_2', 'status' => 'SUCCEEDED'], 200),
@@ -298,7 +253,7 @@ class HomestayBookingModuleTest extends TestCase
         $mitra = $this->approvedMitra();
         $homestay = $this->publishedHomestay($mitra);
         $user = $this->regularUser();
-        $booking = $this->paidBooking($user, $homestay, 'menunggu_konfirmasi', now()->addDays(10));
+        $booking = $this->paidBooking($user, $homestay, 'dikonfirmasi', now()->addDays(10));
 
         $this->fromFrontend()->actingAs($user)
             ->postJson("/api/bookings/{$booking->id}/cancel")
@@ -306,7 +261,7 @@ class HomestayBookingModuleTest extends TestCase
 
         $booking->refresh();
         $this->assertSame('dibatalkan_user', $booking->status);
-        $this->assertSame(100, $booking->refund_percentage);
+        $this->assertSame(85, $booking->refund_percentage);
     }
 
     public function test_user_cancelling_confirmed_homestay_booking_within_h2_gets_zero_refund(): void

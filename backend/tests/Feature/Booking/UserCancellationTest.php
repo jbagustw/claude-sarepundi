@@ -56,6 +56,10 @@ class UserCancellationTest extends TestCase
         ]);
     }
 
+    /**
+     * Mitra never approves/rejects a booking, so 'dikonfirmasi' is the only
+     * cancellable status a paid booking can ever be in (see BookingPolicy).
+     */
     private function paidBooking(User $user, string $status, \DateTimeInterface $checkIn): Booking
     {
         $booking = Booking::create([
@@ -71,7 +75,6 @@ class UserCancellationTest extends TestCase
             'commission_amount' => 300000,
             'mitra_payout_amount' => 2700000,
             'status' => $status,
-            'mitra_confirmation_deadline' => $status === 'menunggu_konfirmasi' ? now()->addHours(24) : null,
             'mitra_confirmed_at' => $status === 'dikonfirmasi' ? now() : null,
         ]);
 
@@ -91,29 +94,6 @@ class UserCancellationTest extends TestCase
         Http::fake([
             'api.xendit.co/refunds' => Http::response(['id' => 'rfd_test', 'status' => 'SUCCEEDED'], 200),
         ]);
-    }
-
-    public function test_user_can_cancel_booking_awaiting_confirmation_with_full_refund(): void
-    {
-        $this->fakeRefundSuccess();
-        $user = $this->regularUser();
-        $booking = $this->paidBooking($user, 'menunggu_konfirmasi', now()->addDays(10));
-
-        $response = $this->fromFrontend()->actingAs($user)->postJson("/api/bookings/{$booking->id}/cancel");
-
-        $response->assertOk();
-        $booking->refresh();
-        $this->assertSame('dibatalkan_user', $booking->status);
-        $this->assertSame('user_cancel_pending', $booking->cancellation_reason);
-        $this->assertSame(100, $booking->refund_percentage);
-        $this->assertSame($booking->total_price, $booking->refund_amount);
-        $this->assertDatabaseHas('refunds', [
-            'booking_id' => $booking->id,
-            'reason' => 'user_cancel_pending',
-            'percentage' => 100,
-            'status' => 'succeeded',
-        ]);
-        $this->assertSame('refunded', $booking->payments()->latest()->first()->status);
     }
 
     public function test_user_can_cancel_confirmed_booking_at_or_beyond_h2_with_85_percent_refund(): void
@@ -179,21 +159,21 @@ class UserCancellationTest extends TestCase
     public function test_user_cannot_cancel_another_users_booking(): void
     {
         $owner = $this->regularUser();
-        $booking = $this->paidBooking($owner, 'menunggu_konfirmasi', now()->addDays(10));
+        $booking = $this->paidBooking($owner, 'dikonfirmasi', now()->addDays(10));
         $other = $this->regularUser();
 
         $this->fromFrontend()->actingAs($other)
             ->postJson("/api/bookings/{$booking->id}/cancel")
             ->assertForbidden();
 
-        $this->assertSame('menunggu_konfirmasi', $booking->fresh()->status);
+        $this->assertSame('dikonfirmasi', $booking->fresh()->status);
     }
 
     public function test_refund_failure_during_user_cancellation_still_cancels_booking(): void
     {
         Http::fake(['api.xendit.co/refunds' => Http::response(['message' => 'error'], 500)]);
         $user = $this->regularUser();
-        $booking = $this->paidBooking($user, 'menunggu_konfirmasi', now()->addDays(10));
+        $booking = $this->paidBooking($user, 'dikonfirmasi', now()->addDays(10));
 
         $this->fromFrontend()->actingAs($user)
             ->postJson("/api/bookings/{$booking->id}/cancel")
@@ -207,7 +187,7 @@ class UserCancellationTest extends TestCase
     public function test_mitra_role_cannot_hit_user_cancel_endpoint(): void
     {
         $user = $this->regularUser();
-        $booking = $this->paidBooking($user, 'menunggu_konfirmasi', now()->addDays(10));
+        $booking = $this->paidBooking($user, 'dikonfirmasi', now()->addDays(10));
 
         $mitra = User::factory()->create();
         $mitra->assignRole('mitra');

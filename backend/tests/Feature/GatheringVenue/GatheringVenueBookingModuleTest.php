@@ -103,7 +103,6 @@ class GatheringVenueBookingModuleTest extends TestCase
             'commission_amount' => (int) round($slot->price * 0.1),
             'mitra_payout_amount' => $slot->price - (int) round($slot->price * 0.1),
             'status' => $status,
-            'mitra_confirmation_deadline' => $status === 'menunggu_konfirmasi' ? now()->addHours(24) : null,
             'mitra_confirmed_at' => $status === 'dikonfirmasi' ? now() : null,
         ]);
 
@@ -191,7 +190,7 @@ class GatheringVenueBookingModuleTest extends TestCase
         $mitra = $this->approvedMitra();
         $venue = $this->publishedVenue($mitra);
         $slot = $this->slot($venue);
-        $this->paidBooking($this->regularUser(), $venue, $slot, 'menunggu_konfirmasi', now()->addDays(10));
+        $this->paidBooking($this->regularUser(), $venue, $slot, 'dikonfirmasi', now()->addDays(10));
 
         $response = $this->fromFrontend()->actingAs($this->regularUser())->postJson('/api/bookings', [
             'bookable_type' => 'gathering_venue',
@@ -232,41 +231,6 @@ class GatheringVenueBookingModuleTest extends TestCase
             'check_in_date' => '2026-09-01',
             'guest_count' => 5,
         ])->assertStatus(422);
-    }
-
-    // --- Mitra confirmation & cancellation (reusing the shared pipeline) ---
-
-    public function test_mitra_can_accept_a_gathering_venue_booking(): void
-    {
-        $mitra = $this->approvedMitra();
-        $venue = $this->publishedVenue($mitra);
-        $slot = $this->slot($venue);
-        $booking = $this->paidBooking($this->regularUser(), $venue, $slot, 'menunggu_konfirmasi', now()->addDays(10));
-
-        $this->fromFrontend()->actingAs($mitra)
-            ->postJson("/api/mitra/bookings/{$booking->id}/accept")
-            ->assertOk();
-
-        $this->assertSame('dikonfirmasi', $booking->fresh()->status);
-    }
-
-    public function test_mitra_reject_triggers_full_refund_for_gathering_venue_booking(): void
-    {
-        Http::fake([
-            'api.xendit.co/refunds' => Http::response(['id' => 'rfd_gv_1', 'status' => 'SUCCEEDED'], 200),
-        ]);
-        $mitra = $this->approvedMitra();
-        $venue = $this->publishedVenue($mitra);
-        $slot = $this->slot($venue);
-        $booking = $this->paidBooking($this->regularUser(), $venue, $slot, 'menunggu_konfirmasi', now()->addDays(10));
-
-        $this->fromFrontend()->actingAs($mitra)
-            ->postJson("/api/mitra/bookings/{$booking->id}/reject")
-            ->assertOk();
-
-        $booking->refresh();
-        $this->assertSame('dibatalkan_mitra', $booking->status);
-        $this->assertSame(100, $booking->refund_percentage);
     }
 
     // --- Review ---
@@ -315,7 +279,7 @@ class GatheringVenueBookingModuleTest extends TestCase
         $mitra = $this->approvedMitra();
         $venue = $this->publishedVenue($mitra);
         $slot = $this->slot($venue);
-        $this->paidBooking($this->regularUser(), $venue, $slot, 'menunggu_konfirmasi', now()->addDays(10));
+        $this->paidBooking($this->regularUser(), $venue, $slot, 'dikonfirmasi', now()->addDays(10));
 
         $this->fromFrontend()->actingAs($mitra)
             ->deleteJson("/api/mitra/gathering-venues/{$venue->id}/slots/{$slot->id}")

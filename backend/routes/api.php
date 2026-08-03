@@ -140,8 +140,6 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::delete('/transports/{transport}/images/{image}', [TransportImageController::class, 'destroy']);
 
         Route::get('/bookings', [MitraBookingController::class, 'index']);
-        Route::post('/bookings/{booking}/accept', [MitraBookingController::class, 'accept']);
-        Route::post('/bookings/{booking}/reject', [MitraBookingController::class, 'reject']);
 
         Route::get('/reviews', [MitraReviewController::class, 'index']);
         Route::post('/reviews/{review}/reply', [MitraReviewController::class, 'reply']);

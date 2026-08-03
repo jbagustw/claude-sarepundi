@@ -136,7 +136,7 @@ class PaymentModuleTest extends TestCase
     {
         $user = $this->regularUser();
         $booking = $this->pendingPaymentBooking($user);
-        $booking->update(['status' => 'menunggu_konfirmasi']);
+        $booking->update(['status' => 'dikonfirmasi']);
 
         $this->fromFrontend()->actingAs($user)
             ->postJson("/api/bookings/{$booking->id}/pay")
@@ -197,13 +197,10 @@ class PaymentModuleTest extends TestCase
         $this->assertSame('success', $payment->status);
         $this->assertSame('BANK_TRANSFER', $payment->payment_method);
         $this->assertNotNull($payment->paid_at);
-        $this->assertSame('menunggu_konfirmasi', $booking->status);
-        $this->assertNotNull($booking->mitra_confirmation_deadline);
-        $this->assertEqualsWithDelta(
-            now()->addHours(24)->timestamp,
-            $booking->mitra_confirmation_deadline->timestamp,
-            5
-        );
+        // Mitra never approves/rejects a booking — a successful payment
+        // confirms it immediately (posted availability is their commitment).
+        $this->assertSame('dikonfirmasi', $booking->status);
+        $this->assertNotNull($booking->mitra_confirmed_at);
     }
 
     public function test_webhook_rejects_invalid_callback_token(): void
@@ -234,16 +231,16 @@ class PaymentModuleTest extends TestCase
             'status' => 'success',
             'paid_at' => now()->subHour(),
         ]);
-        $booking->update(['status' => 'menunggu_konfirmasi', 'mitra_confirmation_deadline' => now()->addHours(24)]);
-        $originalDeadline = $booking->mitra_confirmation_deadline;
+        $booking->update(['status' => 'dikonfirmasi', 'mitra_confirmed_at' => now()->subHour()]);
+        $originalConfirmedAt = $booking->mitra_confirmed_at;
 
         $this->withHeaders(['x-callback-token' => self::CALLBACK_TOKEN])
             ->postJson('/api/webhooks/xendit', ['id' => 'inv_test_idem', 'status' => 'PAID'])
             ->assertOk();
 
         $booking->refresh();
-        $this->assertSame('menunggu_konfirmasi', $booking->status);
-        $this->assertEquals($originalDeadline, $booking->mitra_confirmation_deadline);
+        $this->assertSame('dikonfirmasi', $booking->status);
+        $this->assertEquals($originalConfirmedAt, $booking->mitra_confirmed_at);
     }
 
     public function test_webhook_marks_payment_failed_on_expired_invoice(): void

@@ -17,52 +17,16 @@ class BookingCancellationService
     }
 
     /**
-     * A mitra rejecting a booking or letting it time out are both "not the
-     * user's fault" per CLAUDE.md, so both always carry a 100% refund and
-     * land the booking in the same dibatalkan_mitra status — this is the
-     * one place that logic lives so the two callers (the reject endpoint
-     * and the auto-cancel scheduled command) can't drift apart.
-     */
-    public function cancelByMitra(Booking $booking, string $reason): void
-    {
-        $booking->update([
-            'status' => 'dibatalkan_mitra',
-            'cancellation_reason' => $reason,
-            'cancelled_at' => now(),
-            'refund_percentage' => 100,
-            'refund_amount' => $booking->total_price,
-        ]);
-
-        $this->refundIfOwed($booking, $booking->total_price, $reason);
-
-        $reasonLabel = $reason === 'mitra_timeout'
-            ? 'mitra tidak merespon dalam 24 jam'
-            : 'mitra menolak booking';
-
-        $this->notifications->notify(
-            $booking->user,
-            'booking_cancelled_by_mitra',
-            'Booking dibatalkan',
-            "Booking {$booking->booking_code} dibatalkan karena {$reasonLabel}. Refund 100% sedang diproses."
-        );
-    }
-
-    /**
-     * User-initiated cancellation. CLAUDE.md's refund policy depends on
-     * whether the mitra had already committed to the booking:
-     *   - still menunggu_konfirmasi (mitra hasn't decided) -> 100% refund,
-     *     the user hasn't been let down by anyone yet.
-     *   - already dikonfirmasi -> H-2 rule: >= 2 days before check-in,
-     *     85% refund; otherwise 0%.
-     * Any other status (not yet paid, already resolved, already checked
-     * in, etc.) isn't cancellable here — the caller must check via
-     * BookingPolicy::cancel before calling this.
+     * User-initiated cancellation — the only kind there is (mitra never
+     * approves/rejects a booking, so there's no mitra-side cancellation
+     * path). Per CLAUDE.md's H-2 rule: >= 2 days before check-in, 85%
+     * refund; otherwise 0%. The caller must check BookingPolicy::cancel
+     * (status must be dikonfirmasi) before calling this.
      */
     public function cancelByUser(Booking $booking): void
     {
-        [$percentage, $reason] = $booking->status === 'menunggu_konfirmasi'
-            ? [100, 'user_cancel_pending']
-            : [$this->confirmedRefundPercentage($booking), 'user_cancel_confirmed'];
+        $percentage = $this->confirmedRefundPercentage($booking);
+        $reason = 'user_cancel_confirmed';
 
         $amount = (int) round($booking->total_price * $percentage / 100);
 

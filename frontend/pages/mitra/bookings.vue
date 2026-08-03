@@ -6,15 +6,12 @@ definePageMeta({ role: 'mitra' })
 const api = useApi()
 const bookings = ref<MitraBooking[]>([])
 const loading = ref(true)
-const actingOn = ref<number | null>(null)
 const statusFilter = ref('')
 
 const statusOptions = [
   { value: '', label: 'Semua Status' },
   { value: 'pending_payment', label: 'Menunggu Pembayaran' },
-  { value: 'menunggu_konfirmasi', label: 'Menunggu Konfirmasi' },
   { value: 'dikonfirmasi', label: 'Dikonfirmasi' },
-  { value: 'dibatalkan_mitra', label: 'Dibatalkan Mitra' },
   { value: 'dibatalkan_user', label: 'Dibatalkan User' },
   { value: 'checked_in', label: 'Check-in' },
   { value: 'selesai', label: 'Selesai' },
@@ -30,32 +27,6 @@ async function loadBookings() {
   loading.value = false
 }
 
-async function accept(booking: MitraBooking) {
-  actingOn.value = booking.id
-  try {
-    await api(`/api/mitra/bookings/${booking.id}/accept`, { method: 'POST' })
-    await loadBookings()
-  } catch (error: any) {
-    alert(error?.data?.message || 'Gagal menerima booking.')
-  } finally {
-    actingOn.value = null
-  }
-}
-
-async function reject(booking: MitraBooking) {
-  if (!confirm(`Tolak booking ${booking.booking_code}? User akan menerima refund 100%.`)) return
-
-  actingOn.value = booking.id
-  try {
-    await api(`/api/mitra/bookings/${booking.id}/reject`, { method: 'POST' })
-    await loadBookings()
-  } catch (error: any) {
-    alert(error?.data?.message || 'Gagal menolak booking.')
-  } finally {
-    actingOn.value = null
-  }
-}
-
 onMounted(loadBookings)
 </script>
 
@@ -63,8 +34,7 @@ onMounted(loadBookings)
   <div>
     <h1 class="font-display text-2xl font-bold text-gray-900">Kelola Booking</h1>
     <p class="mt-1 text-sm text-gray-600">
-      Semua booking untuk listing kamu. Booking yang menunggu konfirmasi wajib direspon dalam
-      24 jam, jika tidak booking otomatis dibatalkan dan user direfund 100%.
+      Semua booking untuk listing kamu. Booking otomatis dikonfirmasi begitu user selesai bayar — jadwal yang sudah kamu buka di kalender ketersediaan adalah komitmenmu, jadi tidak perlu direspon manual lagi.
     </p>
 
     <form class="mt-4 flex gap-3" @submit.prevent="loadBookings">
@@ -113,27 +83,6 @@ onMounted(loadBookings)
             <dd class="col-span-2 text-gray-900">{{ booking.transport_with_driver ? 'Dengan Sopir' : 'Lepas Kunci' }}</dd>
           </template>
         </dl>
-
-        <p v-if="booking.status === 'menunggu_konfirmasi' && booking.mitra_confirmation_deadline" class="mt-2 text-xs text-yellow-700">
-          Batas konfirmasi: {{ new Date(booking.mitra_confirmation_deadline).toLocaleString('id-ID') }}
-        </p>
-
-        <div v-if="booking.status === 'menunggu_konfirmasi'" class="mt-3 flex gap-2">
-          <button
-            class="rounded-full bg-green-700 px-3 py-1.5 text-sm text-white hover:bg-green-800 disabled:opacity-50"
-            :disabled="actingOn === booking.id"
-            @click="accept(booking)"
-          >
-            Terima
-          </button>
-          <button
-            class="rounded-full bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-50"
-            :disabled="actingOn === booking.id"
-            @click="reject(booking)"
-          >
-            Tolak
-          </button>
-        </div>
       </div>
     </div>
   </div>

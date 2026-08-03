@@ -209,7 +209,7 @@ class BookingModuleTest extends TestCase
             'total_price' => 3000000,
             'commission_amount' => 300000,
             'mitra_payout_amount' => 2700000,
-            'status' => 'menunggu_konfirmasi',
+            'status' => 'dikonfirmasi',
         ]);
 
         $response = $this->fromFrontend()->actingAs($this->regularUser())->postJson('/api/bookings', [

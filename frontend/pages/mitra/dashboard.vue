@@ -59,8 +59,8 @@ onMounted(loadStats)
         <p class="text-xs text-gray-400">dari booking selesai</p>
       </div>
       <div class="card p-4">
-        <p class="text-xs text-gray-500">Menunggu Konfirmasi</p>
-        <p class="mt-1 text-xl font-semibold text-gray-900">{{ stats.booking_counts.menunggu_konfirmasi ?? 0 }}</p>
+        <p class="text-xs text-gray-500">Booking Terkonfirmasi</p>
+        <p class="mt-1 text-xl font-semibold text-gray-900">{{ stats.booking_counts.dikonfirmasi ?? 0 }}</p>
       </div>
       <div class="card p-4">
         <p class="text-xs text-gray-500">Villa Dipublikasikan</p>

@@ -18,7 +18,7 @@ Detail fitur lengkap & alur bisnis ada di `PRD-Platform-Booking-Villa.md` di roo
 - Database: MySQL
 - Payment Gateway: **Xendit** (Invoice API untuk pembayaran, Refund API, Disbursement API untuk payout mitra)
 - File Storage: local / S3-compatible
-- Scheduled Job: Laravel Scheduler (untuk auto-cancel booking yang tidak dikonfirmasi mitra)
+- Scheduled Job: Laravel Scheduler (advance booking checked_in → selesai, payout run tanggal 1 & 15, reminder H-1 check-in)
 - Notifikasi: Email (SMTP) + WhatsApp API opsional (Fonnte/Wablas via n8n)
 
 ## Aturan Bisnis Kunci (Wajib Dipatuhi di Semua Implementasi)
@@ -28,33 +28,31 @@ Detail fitur lengkap & alur bisnis ada di `PRD-Platform-Booking-Villa.md` di roo
 - **90%** menjadi hak mitra (`mitra_payout_amount`)
 - Hitung & simpan kedua nilai ini saat booking dibuat, jangan hitung ulang secara implisit di tempat lain
 
-### Konfirmasi Booking oleh Mitra
-- Setelah pembayaran user berhasil (webhook Xendit sukses), status booking → `menunggu_konfirmasi`
-- Mitra **wajib konfirmasi manual** (terima/tolak) dalam batas waktu **24 jam** sejak status `menunggu_konfirmasi`
-- Jika mitra tolak, ATAU tidak merespon sampai deadline (24 jam) → booking otomatis `dibatalkan_mitra` + **refund 100%** ke user (bukan kesalahan user)
-- Gunakan Laravel Scheduler + Queue Job (jalan berkala, misal tiap 15-30 menit) untuk cek booking yang sudah lewat `mitra_confirmation_deadline` dan belum ada keputusan mitra
+### Konfirmasi Booking (Update: mitra tidak lagi approve manual per booking)
+> **Perubahan kebijakan bisnis** (permintaan investor, menggantikan desain awal di bawah): mitra **tidak pernah** approve/tolak booking satu per satu. Peran mitra hanya menyediakan **jadwal ketersediaan** di awal (villa availability calendar / slot lokasi gathering / dst) — begitu jadwal itu terposting, itu adalah komitmen mitra. Mitra **tidak boleh menolak atau membatalkan** booking yang sudah dibayar.
+>
+> Alur: Mitra buka jadwal available → User booking (`pending_payment`) → User bayar, webhook Xendit sukses → status langsung `dikonfirmasi` (otomatis, tanpa keputusan mitra, asalkan jadwalnya memang tersedia saat booking dibuat).
+>
+> Konsekuensi: tidak ada lagi status `menunggu_konfirmasi`/`dibatalkan_mitra`, tidak ada lagi batas waktu 24 jam, tidak ada lagi job terjadwal untuk auto-cancel akibat mitra tidak merespon. Satu-satunya pihak yang bisa membatalkan booking setelah dikonfirmasi adalah **user**.
 
 ### Kebijakan Cancellation oleh User
 
-Ada dua skenario berbeda tergantung status booking saat user cancel:
+Karena booking selalu langsung `dikonfirmasi` setelah bayar, hanya ada satu aturan refund untuk pembatalan oleh user:
 
 | Status booking saat cancel | Kebijakan Refund |
 |---|---|
-| `menunggu_konfirmasi` (mitra belum putuskan) | **Refund 100%** — belum ada komitmen dari mitra, user tidak dirugikan menunggu |
-| `dikonfirmasi` (mitra sudah terima) | Hitung selisih hari ke `check_in_date`: **≥ H-2 → refund 85%**, **< H-2 → refund 0%** |
+| `dikonfirmasi` | Hitung selisih hari ke `check_in_date`: **≥ H-2 → refund 85%**, **< H-2 → refund 0%** |
 
-> Catatan implementasi: kondisi `menunggu_konfirmasi` → refund 100% ini asumsi wajar (belum ada layanan yang dikonfirmasi mitra, jadi user tidak seharusnya kena penalti). Konfirmasi ke product owner kalau ini perlu diubah, tapi ini default yang aman untuk mulai development.
-
-Pembatalan oleh **mitra** (tolak/timeout) selalu refund 100% dan statusnya `dibatalkan_mitra` — beda alur & beda status dengan pembatalan oleh **user** (`dibatalkan_user`). Jangan campur logic keduanya.
-
-Simpan `refund_percentage`, `refund_amount`, dan `cancellation_reason` (enum: `user_cancel_pending` / `user_cancel_confirmed` / `mitra_reject` / `mitra_timeout`) di record terkait untuk audit.
+Simpan `refund_percentage`, `refund_amount`, dan `cancellation_reason` (`user_cancel_confirmed`) di record terkait untuk audit.
 
 ### Status Booking (gunakan enum ini secara konsisten)
 ```
-pending_payment → menunggu_konfirmasi → dikonfirmasi → checked_in → selesai
-                        ↓         ↓            ↓
-              dibatalkan_user  dibatalkan_mitra  dibatalkan_user
+pending_payment → dikonfirmasi → checked_in → selesai
+                        ↓
+                 dibatalkan_user
 ```
+
+> Nilai enum `menunggu_konfirmasi`, `dibatalkan_mitra`, dan alasan pembatalan `mitra_reject`/`mitra_timeout`/`user_cancel_pending` masih ada di skema database (kolom `status`/`cancellation_reason`) untuk kompatibilitas mundur, tapi kode aplikasi tidak pernah lagi memproduksinya — jangan pakai nilai-nilai itu di kode baru.
 
 ### Payout ke Mitra
 - **Otomatis via Xendit Disbursement API** — tidak manual
@@ -98,7 +96,7 @@ Saat membuat migration baru, cek dulu skema ini supaya konsisten dengan relasi y
 
 - Kerjakan **satu modul per sesi** (lihat urutan milestone di PRD bagian 7), jangan minta banyak modul sekaligus
 - Sebelum mulai modul baru, jelaskan dulu ke Claude Code modul apa yang mau dikerjakan + rujuk bagian PRD yang relevan
-- Setelah fitur selesai, minta dibuatkan test dasar (khususnya untuk logic komisi, refund, dan auto-cancel timeout — ini rawan bug kalau tidak ditest)
+- Setelah fitur selesai, minta dibuatkan test dasar (khususnya untuk logic komisi dan refund — ini rawan bug kalau tidak ditest)
 - Commit di titik-titik stabil (per fitur selesai), bukan di tengah pekerjaan setengah jadi
 
 ## Referensi Desain (Figma)
@@ -109,5 +107,4 @@ Saat membuat migration baru, cek dulu skema ini supaya konsisten dengan relasi y
 
 ## Yang Masih Perlu Dikonfirmasi
 
-- [ ] Apakah refund 100% untuk cancel saat status `menunggu_konfirmasi` sudah sesuai keinginan bisnis? (ini asumsi default, belum eksplisit kamu tentukan — cek bagian "Kebijakan Cancellation oleh User" di atas)
 - [ ] Jadwal payout otomatis: tiap tanggal berapa? (draft ini asumsikan tiap tanggal 1 & 15)

@@ -42,9 +42,12 @@ class XenditWebhookController extends Controller
                     'paid_at' => $request->input('paid_at') ?? now(),
                 ]);
 
+                // Mitra no longer approves/rejects per booking — availability
+                // they've already posted is the commitment, so a successful
+                // payment confirms the booking immediately.
                 $payment->booking->update([
-                    'status' => 'menunggu_konfirmasi',
-                    'mitra_confirmation_deadline' => now()->addHours(24),
+                    'status' => 'dikonfirmasi',
+                    'mitra_confirmed_at' => now(),
                 ]);
             });
 
@@ -54,13 +57,13 @@ class XenditWebhookController extends Controller
                 $booking->user,
                 'payment_success',
                 'Pembayaran berhasil',
-                "Pembayaran untuk booking {$booking->booking_code} berhasil. Menunggu konfirmasi dari mitra dalam 24 jam."
+                "Pembayaran untuk booking {$booking->booking_code} berhasil dan booking kamu sudah dikonfirmasi."
             );
             $notifications->notify(
                 $booking->bookable->mitraProfile->user,
-                'booking_awaiting_confirmation',
-                'Booking baru menunggu konfirmasi',
-                "Booking {$booking->booking_code} untuk {$booking->bookable->name} sudah dibayar dan menunggu konfirmasi kamu dalam 24 jam."
+                'booking_confirmed',
+                'Booking baru dikonfirmasi',
+                "Booking {$booking->booking_code} untuk {$booking->bookable->name} sudah dibayar dan otomatis dikonfirmasi."
             );
         } elseif (in_array($status, ['EXPIRED', 'FAILED'], true)) {
             $payment->update(['status' => 'failed']);

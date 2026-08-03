@@ -448,10 +448,10 @@ class DemoDataSeeder extends Seeder
             'user_id' => $users[1]->id, 'bookable_type' => Villa::class, 'bookable_id' => $villas['seminyak']->id,
             'check_in_date' => now()->addDays(15), 'check_out_date' => now()->addDays(19), 'guest_count' => 5,
             'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'menunggu_konfirmasi', 'mitra_confirmation_deadline' => now()->addHours(20),
+            'status' => 'dikonfirmasi', 'mitra_confirmed_at' => now()->subHours(4),
         ]);
         $this->makePayment($booking, 'success', now()->subHours(4));
-        $bookings['villa_awaiting'] = $booking;
+        $bookings['villa_confirmed_recent'] = $booking;
 
         [$total, $commission, $payout] = $this->pricing($villas['ubud']->base_price, 3);
         $booking = $this->makeBooking([
@@ -507,18 +507,6 @@ class DemoDataSeeder extends Seeder
         Refund::create(['booking_id' => $booking->id, 'payment_id' => $payment->id, 'amount' => $refundAmount, 'percentage' => 85, 'reason' => 'user_cancel_confirmed', 'xendit_refund_id' => 'demo_rfd_'.Str::random(10), 'status' => 'succeeded', 'processed_at' => now()->subDay()]);
         $bookings['villa_cancelled_user'] = $booking;
 
-        [$total, $commission, $payout] = $this->pricing($villas['seminyak']->base_price, 2);
-        $booking = $this->makeBooking([
-            'user_id' => $users[3]->id, 'bookable_type' => Villa::class, 'bookable_id' => $villas['seminyak']->id,
-            'check_in_date' => now()->addDays(3), 'check_out_date' => now()->addDays(5), 'guest_count' => 2,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'dibatalkan_mitra', 'cancellation_reason' => 'mitra_timeout', 'cancelled_at' => now()->subHours(6),
-            'refund_amount' => $total, 'refund_percentage' => 100,
-        ]);
-        $payment = $this->makePayment($booking, 'refunded', now()->subDays(1));
-        Refund::create(['booking_id' => $booking->id, 'payment_id' => $payment->id, 'amount' => $total, 'percentage' => 100, 'reason' => 'mitra_timeout', 'xendit_refund_id' => 'demo_rfd_'.Str::random(10), 'status' => 'succeeded', 'processed_at' => now()->subHours(5)]);
-        $bookings['villa_cancelled_mitra'] = $booking;
-
         // --- Homestay bookings (Jogja Homestay Nusantara) ---
         [$total, $commission, $payout] = $this->pricing($homestays['malioboro']->base_price, 2);
         $bookings['homestay_pending_payment'] = $this->makeBooking([
@@ -533,10 +521,10 @@ class DemoDataSeeder extends Seeder
             'user_id' => $users[5]->id, 'bookable_type' => Homestay::class, 'bookable_id' => $homestays['malioboro']->id,
             'check_in_date' => now()->addDays(9), 'check_out_date' => now()->addDays(12), 'guest_count' => 3,
             'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'menunggu_konfirmasi', 'mitra_confirmation_deadline' => now()->addHours(18),
+            'status' => 'dikonfirmasi', 'mitra_confirmed_at' => now()->subHours(6),
         ]);
         $this->makePayment($booking, 'success', now()->subHours(6));
-        $bookings['homestay_awaiting'] = $booking;
+        $bookings['homestay_confirmed_recent'] = $booking;
 
         [$total, $commission, $payout] = $this->pricing($homestays['prawirotaman']->base_price, 2);
         $booking = $this->makeBooking([
@@ -559,15 +547,16 @@ class DemoDataSeeder extends Seeder
         $bookings['homestay_done'] = $booking;
 
         [$total, $commission, $payout] = $this->pricing($homestays['prawirotaman']->base_price, 2);
+        $refundAmount = (int) round($total * 0.85);
         $booking = $this->makeBooking([
             'user_id' => $users[5]->id, 'bookable_type' => Homestay::class, 'bookable_id' => $homestays['prawirotaman']->id,
             'check_in_date' => now()->addDays(11), 'check_out_date' => now()->addDays(13), 'guest_count' => 2,
             'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'dibatalkan_user', 'cancellation_reason' => 'user_cancel_pending', 'cancelled_at' => now()->subHours(3),
-            'refund_amount' => $total, 'refund_percentage' => 100,
+            'status' => 'dibatalkan_user', 'cancellation_reason' => 'user_cancel_confirmed', 'cancelled_at' => now()->subHours(3),
+            'refund_amount' => $refundAmount, 'refund_percentage' => 85,
         ]);
         $payment = $this->makePayment($booking, 'refunded', now()->subDays(1));
-        Refund::create(['booking_id' => $booking->id, 'payment_id' => $payment->id, 'amount' => $total, 'percentage' => 100, 'reason' => 'user_cancel_pending', 'xendit_refund_id' => 'demo_rfd_'.Str::random(10), 'status' => 'succeeded', 'processed_at' => now()->subHours(2)]);
+        Refund::create(['booking_id' => $booking->id, 'payment_id' => $payment->id, 'amount' => $refundAmount, 'percentage' => 85, 'reason' => 'user_cancel_confirmed', 'xendit_refund_id' => 'demo_rfd_'.Str::random(10), 'status' => 'succeeded', 'processed_at' => now()->subHours(2)]);
         $bookings['homestay_cancelled_user'] = $booking;
 
         // --- Gathering venue bookings (slot-based) ---
@@ -583,10 +572,10 @@ class DemoDataSeeder extends Seeder
             'gathering_venue_slot_id' => $morningSlot->id,
             'check_in_date' => now()->addDays(25), 'check_out_date' => now()->addDays(25), 'guest_count' => 150,
             'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'menunggu_konfirmasi', 'mitra_confirmation_deadline' => now()->addHours(22),
+            'status' => 'dikonfirmasi', 'mitra_confirmed_at' => now()->subHours(2),
         ]);
         $this->makePayment($booking, 'success', now()->subHours(2));
-        $bookings['gathering_awaiting'] = $booking;
+        $bookings['gathering_confirmed_recent'] = $booking;
 
         [$total, $commission, $payout] = $this->pricing($eveningSlot->price, 1);
         $booking = $this->makeBooking([
@@ -609,19 +598,6 @@ class DemoDataSeeder extends Seeder
         ]);
         $this->makePayment($booking, 'success', now()->subDays(18));
         $bookings['gathering_done'] = $booking;
-
-        [$total, $commission, $payout] = $this->pricing($afternoonSlot->price, 1);
-        $booking = $this->makeBooking([
-            'user_id' => $users[2]->id, 'bookable_type' => GatheringVenue::class, 'bookable_id' => $gatheringVenues['ballroom']->id,
-            'gathering_venue_slot_id' => $afternoonSlot->id,
-            'check_in_date' => now()->addDays(5), 'check_out_date' => now()->addDays(5), 'guest_count' => 100,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'dibatalkan_mitra', 'cancellation_reason' => 'mitra_reject', 'cancelled_at' => now()->subDay(),
-            'refund_amount' => $total, 'refund_percentage' => 100,
-        ]);
-        $payment = $this->makePayment($booking, 'refunded', now()->subDays(2));
-        Refund::create(['booking_id' => $booking->id, 'payment_id' => $payment->id, 'amount' => $total, 'percentage' => 100, 'reason' => 'mitra_reject', 'xendit_refund_id' => 'demo_rfd_'.Str::random(10), 'status' => 'succeeded', 'processed_at' => now()->subDay()]);
-        $bookings['gathering_cancelled_mitra'] = $booking;
 
         [$total, $commission, $payout] = $this->pricing($fullDaySlot->price, 1);
         $bookings['gathering_pending_payment'] = $this->makeBooking([
@@ -648,10 +624,10 @@ class DemoDataSeeder extends Seeder
             'transport_with_driver' => true,
             'check_in_date' => now()->addDays(8), 'check_out_date' => now()->addDays(11), 'guest_count' => 5,
             'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'menunggu_konfirmasi', 'mitra_confirmation_deadline' => now()->addHours(16),
+            'status' => 'dikonfirmasi', 'mitra_confirmed_at' => now()->subHours(8),
         ]);
         $this->makePayment($booking, 'success', now()->subHours(8));
-        $bookings['transport_awaiting'] = $booking;
+        $bookings['transport_confirmed_recent'] = $booking;
 
         [$total, $commission, $payout] = $this->pricing($transports['xenia']->price_per_day_self_drive, 4);
         $booking = $this->makeBooking([
@@ -750,12 +726,12 @@ class DemoDataSeeder extends Seeder
 
     private function createNotifications(array $users, array $mitras): void
     {
-        Notification::create(['user_id' => $users[1]->id, 'type' => 'payment_success', 'title' => 'Pembayaran berhasil', 'message' => 'Pembayaran untuk booking Villa Sunset Seminyak berhasil. Menunggu konfirmasi dari mitra dalam 24 jam.', 'is_read' => false]);
-        Notification::create(['user_id' => $users[2]->id, 'type' => 'booking_confirmed', 'title' => 'Booking dikonfirmasi', 'message' => 'Booking kamu di Villa Ubud Hijau telah dikonfirmasi oleh mitra.', 'is_read' => false]);
+        Notification::create(['user_id' => $users[1]->id, 'type' => 'payment_success', 'title' => 'Pembayaran berhasil', 'message' => 'Pembayaran untuk booking Villa Sunset Seminyak berhasil dan booking kamu sudah dikonfirmasi.', 'is_read' => false]);
+        Notification::create(['user_id' => $users[2]->id, 'type' => 'booking_confirmed', 'title' => 'Booking dikonfirmasi', 'message' => 'Booking kamu di Villa Ubud Hijau sudah dikonfirmasi.', 'is_read' => false]);
         Notification::create(['user_id' => $users[0]->id, 'type' => 'booking_completed', 'title' => 'Terima kasih sudah menginap!', 'message' => 'Booking kamu di Villa Sunset Seminyak sudah selesai. Yuk beri review!', 'is_read' => true]);
 
         $baliUser = $mitras['bali']->user;
-        Notification::create(['user_id' => $baliUser->id, 'type' => 'booking_awaiting_confirmation', 'title' => 'Booking baru menunggu konfirmasi', 'message' => 'Ada booking baru untuk Villa Sunset Seminyak yang menunggu konfirmasi kamu dalam 24 jam.', 'is_read' => false]);
+        Notification::create(['user_id' => $baliUser->id, 'type' => 'booking_confirmed', 'title' => 'Booking baru dikonfirmasi', 'message' => 'Ada booking baru untuk Villa Sunset Seminyak yang sudah dibayar dan otomatis dikonfirmasi.', 'is_read' => false]);
         Notification::create(['user_id' => $baliUser->id, 'type' => 'new_review', 'title' => 'Review baru untuk villa kamu', 'message' => 'Dewi Anggraini memberi rating 5/5 untuk Villa Sunset Seminyak.', 'is_read' => false]);
     }
 

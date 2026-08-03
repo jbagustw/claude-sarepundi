@@ -37,8 +37,8 @@ onMounted(loadStats)
         <p class="mt-1 text-2xl font-semibold text-gray-900">{{ stats.villas.pending_review }}</p>
       </div>
       <div class="card p-4">
-        <p class="text-xs text-gray-500">Booking Menunggu Konfirmasi</p>
-        <p class="mt-1 text-2xl font-semibold text-gray-900">{{ stats.bookings.awaiting_mitra_confirmation }}</p>
+        <p class="text-xs text-gray-500">Booking Menunggu Pembayaran</p>
+        <p class="mt-1 text-2xl font-semibold text-gray-900">{{ stats.bookings.awaiting_payment }}</p>
       </div>
       <div class="card p-4">
         <p class="text-xs text-gray-500">Komisi Terkumpul</p>

@@ -133,7 +133,7 @@ class PayoutModuleTest extends TestCase
             'total_price' => 2000000,
             'commission_amount' => 200000,
             'mitra_payout_amount' => 1800000,
-            'status' => 'menunggu_konfirmasi',
+            'status' => 'dikonfirmasi',
         ]);
 
         $response = $this->fromFrontend()->actingAs($this->admin())->postJson('/api/admin/payouts/run');

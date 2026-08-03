@@ -23,25 +23,16 @@ class BookingPolicy
     }
 
     /**
-     * Whether this mitra owns the villa the booking is for, and so may
-     * accept/reject it.
-     */
-    public function respondAsMitra(User $user, Booking $booking): bool
-    {
-        return $user->hasRole('mitra')
-            && $booking->bookable->mitraProfile?->user_id === $user->id;
-    }
-
-    /**
-     * A booking is only cancellable by its owner while it's still awaiting
-     * a mitra decision or already confirmed — not before payment (nothing
-     * to cancel yet) and not once it's already resolved, checked in, or
-     * finished.
+     * A booking is only cancellable by its owner while it's confirmed —
+     * not before payment (nothing to cancel yet) and not once it's already
+     * resolved, checked in, or finished. Mitra never approves/rejects a
+     * booking (posted availability is their commitment), so cancellation is
+     * user-initiated only.
      */
     public function cancel(User $user, Booking $booking): bool
     {
         return $user->hasRole('user')
             && $booking->user_id === $user->id
-            && in_array($booking->status, ['menunggu_konfirmasi', 'dikonfirmasi'], true);
+            && $booking->status === 'dikonfirmasi';
     }
 }

@@ -12,9 +12,7 @@ const search = ref('')
 const statusOptions = [
   { value: '', label: 'Semua Status' },
   { value: 'pending_payment', label: 'Menunggu Pembayaran' },
-  { value: 'menunggu_konfirmasi', label: 'Menunggu Konfirmasi' },
   { value: 'dikonfirmasi', label: 'Dikonfirmasi' },
-  { value: 'dibatalkan_mitra', label: 'Dibatalkan Mitra' },
   { value: 'dibatalkan_user', label: 'Dibatalkan User' },
   { value: 'checked_in', label: 'Check-in' },
   { value: 'selesai', label: 'Selesai' },

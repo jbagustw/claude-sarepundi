@@ -17,10 +17,7 @@ const cancelError = ref('')
 const paymentReturnStatus = typeof route.query.payment === 'string' ? route.query.payment : null
 
 const cancellationReasonLabel: Record<string, string> = {
-  mitra_reject: 'Mitra menolak booking ini',
-  mitra_timeout: 'Mitra tidak merespon dalam 24 jam',
-  user_cancel_pending: 'Dibatalkan olehmu sebelum dikonfirmasi mitra',
-  user_cancel_confirmed: 'Dibatalkan olehmu setelah dikonfirmasi mitra',
+  user_cancel_confirmed: 'Dibatalkan olehmu',
 }
 
 async function loadBooking() {
@@ -48,13 +45,10 @@ async function payNow() {
   }
 }
 
-const canCancel = computed(() =>
-  booking.value && ['menunggu_konfirmasi', 'dikonfirmasi'].includes(booking.value.status)
-)
+const canCancel = computed(() => booking.value?.status === 'dikonfirmasi')
 
 const refundPreview = computed(() => {
   if (!booking.value) return ''
-  if (booking.value.status === 'menunggu_konfirmasi') return 'kamu akan menerima refund 100%'
 
   const daysUntilCheckIn = Math.floor(
     (new Date(booking.value.check_in_date).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000
@@ -183,18 +177,11 @@ onMounted(loadBooking)
           <p v-if="payError" class="mt-2 text-sm text-red-600">{{ payError }}</p>
         </template>
 
-        <p v-if="booking.status === 'menunggu_konfirmasi'" class="mt-4 rounded bg-blue-50 p-3 text-sm text-blue-800">
-          Pembayaran berhasil. Booking menunggu konfirmasi dari mitra
-          <span v-if="booking.mitra_confirmation_deadline">
-            (batas waktu {{ new Date(booking.mitra_confirmation_deadline).toLocaleString('id-ID') }}).
-          </span>
-        </p>
-
         <p v-if="booking.status === 'dikonfirmasi'" class="mt-4 rounded bg-green-50 p-3 text-sm text-green-800">
-          Booking dikonfirmasi oleh mitra. Sampai jumpa di tanggal check-in!
+          Pembayaran berhasil, booking kamu sudah dikonfirmasi. Sampai jumpa di tanggal check-in!
         </p>
 
-        <div v-if="booking.status === 'dibatalkan_mitra' || booking.status === 'dibatalkan_user'" class="mt-4 rounded bg-red-50 p-3 text-sm text-red-700">
+        <div v-if="booking.status === 'dibatalkan_user'" class="mt-4 rounded bg-red-50 p-3 text-sm text-red-700">
           <p>{{ cancellationReasonLabel[booking.cancellation_reason ?? ''] ?? 'Booking dibatalkan.' }}.</p>
           <p v-if="booking.refund_amount" class="mt-1 font-medium">
             Refund {{ booking.refund_percentage }}% ({{ formatRupiah(booking.refund_amount) }}) sedang diproses ke metode pembayaranmu.

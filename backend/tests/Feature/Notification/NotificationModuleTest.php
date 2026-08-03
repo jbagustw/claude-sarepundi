@@ -5,6 +5,7 @@ namespace Tests\Feature\Notification;
 use App\Models\Booking;
 use App\Models\MitraProfile;
 use App\Models\Notification;
+use App\Models\Payment;
 use App\Models\User;
 use App\Models\Villa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,6 +16,8 @@ class NotificationModuleTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const CALLBACK_TOKEN = 'test-callback-token';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -22,6 +25,8 @@ class NotificationModuleTest extends TestCase
         foreach (['user', 'mitra', 'admin'] as $role) {
             Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
         }
+
+        config(['services.xendit.callback_token' => self::CALLBACK_TOKEN]);
     }
 
     private function fromFrontend(): static
@@ -149,7 +154,7 @@ class NotificationModuleTest extends TestCase
         ]);
     }
 
-    public function test_mitra_confirming_a_booking_notifies_the_user(): void
+    public function test_successful_payment_webhook_notifies_both_user_and_mitra(): void
     {
         $mitra = $this->mitraUser();
         $villa = $mitra->mitraProfile->villas()->create([
@@ -173,16 +178,29 @@ class NotificationModuleTest extends TestCase
             'total_price' => 3000000,
             'commission_amount' => 300000,
             'mitra_payout_amount' => 2700000,
-            'status' => 'menunggu_konfirmasi',
-            'mitra_confirmation_deadline' => now()->addHours(24),
+            'status' => 'pending_payment',
+        ]);
+        Payment::create([
+            'booking_id' => $booking->id,
+            'xendit_invoice_id' => 'inv_'.uniqid(),
+            'amount' => $booking->total_price,
+            'status' => 'pending',
         ]);
 
-        $this->fromFrontend()->actingAs($mitra)
-            ->postJson("/api/mitra/bookings/{$booking->id}/accept")
+        $this->withHeaders(['x-callback-token' => self::CALLBACK_TOKEN])
+            ->postJson('/api/webhooks/xendit', [
+                'id' => $booking->payments()->first()->xendit_invoice_id,
+                'status' => 'PAID',
+            ])
             ->assertOk();
 
+        $this->assertSame('dikonfirmasi', $booking->fresh()->status);
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
+            'type' => 'payment_success',
+        ]);
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $mitra->id,
             'type' => 'booking_confirmed',
         ]);
     }

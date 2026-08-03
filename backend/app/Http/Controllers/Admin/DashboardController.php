@@ -29,7 +29,7 @@ class DashboardController extends Controller
             ],
             'bookings' => [
                 'total' => Booking::count(),
-                'awaiting_mitra_confirmation' => Booking::where('status', 'menunggu_konfirmasi')->count(),
+                'awaiting_payment' => Booking::where('status', 'pending_payment')->count(),
                 'confirmed' => Booking::where('status', 'dikonfirmasi')->count(),
                 'completed' => Booking::where('status', 'selesai')->count(),
                 'cancelled' => Booking::whereIn('status', ['dibatalkan_mitra', 'dibatalkan_user'])->count(),

@@ -81,7 +81,7 @@ class MitraDashboardTest extends TestCase
         $mitra = $this->approvedMitra();
         $villa = $this->villa($mitra);
         $this->booking($villa, 'selesai', '2026-06-01', '2026-06-03');
-        $this->booking($villa, 'menunggu_konfirmasi', '2026-08-01', '2026-08-03');
+        $this->booking($villa, 'pending_payment', '2026-08-01', '2026-08-03');
 
         $response = $this->fromFrontend()->actingAs($mitra)->getJson('/api/mitra/stats');
 
@@ -89,7 +89,7 @@ class MitraDashboardTest extends TestCase
         $response->assertJsonPath('data.total_villas', 1);
         $response->assertJsonPath('data.published_villas', 1);
         $response->assertJsonPath('data.booking_counts.selesai', 1);
-        $response->assertJsonPath('data.booking_counts.menunggu_konfirmasi', 1);
+        $response->assertJsonPath('data.booking_counts.pending_payment', 1);
     }
 
     public function test_stats_only_count_own_villas(): void
@@ -130,7 +130,7 @@ class MitraDashboardTest extends TestCase
         // 5 nights fully inside July: booked nights = 5
         $this->booking($villa, 'dikonfirmasi', '2026-07-10', '2026-07-15');
         // pending booking shouldn't count toward occupancy
-        $this->booking($villa, 'menunggu_konfirmasi', '2026-07-20', '2026-07-25');
+        $this->booking($villa, 'pending_payment', '2026-07-20', '2026-07-25');
 
         $response = $this->fromFrontend()->actingAs($mitra)->getJson('/api/mitra/stats');
 
