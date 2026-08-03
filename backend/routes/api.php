@@ -42,6 +42,7 @@ use App\Http\Controllers\Public\GatheringVenueReviewController as PublicGatherin
 use App\Http\Controllers\Public\HomestayAvailabilityController as PublicHomestayAvailabilityController;
 use App\Http\Controllers\Public\HomestayController as PublicHomestayController;
 use App\Http\Controllers\Public\HomestayReviewController as PublicHomestayReviewController;
+use App\Http\Controllers\Public\NewsletterController as PublicNewsletterController;
 use App\Http\Controllers\Public\ReviewController as PublicReviewController;
 use App\Http\Controllers\Public\SiteSettingController as PublicSiteSettingController;
 use App\Http\Controllers\Public\TransportAvailabilityController as PublicTransportAvailabilityController;
@@ -66,6 +67,7 @@ Route::get('/articles/{slug}', [PublicArticleController::class, 'show']);
 Route::get('/coupons', [PublicCouponController::class, 'index']);
 Route::get('/banners', [PublicBannerController::class, 'index']);
 Route::get('/site-settings', [PublicSiteSettingController::class, 'show']);
+Route::post('/newsletter/subscribe', [PublicNewsletterController::class, 'subscribe']);
 Route::get('/homestays', [PublicHomestayController::class, 'index']);
 Route::get('/homestays/{slug}', [PublicHomestayController::class, 'show']);
 Route::get('/homestays/{slug}/availability', PublicHomestayAvailabilityController::class);

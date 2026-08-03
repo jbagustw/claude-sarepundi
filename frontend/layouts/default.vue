@@ -102,7 +102,27 @@ async function handleLogout() {
     </main>
 
     <footer class="mt-auto bg-brand-footer text-gray-200">
-      <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-5">
+        <div class="sm:col-span-2 lg:col-span-1">
+          <NuxtLink to="/" class="inline-flex items-center gap-2 font-display text-xl font-bold">
+            <img
+              v-if="siteSettings?.logo_url"
+              :src="siteSettings.logo_url"
+              class="h-[43px] w-[135px] object-contain object-left"
+              alt="sarepundi"
+            >
+            <template v-else>
+              <svg class="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 2 3 8v13a1 1 0 001 1h5v-7h6v7h5a1 1 0 001-1V8z" fill="currentColor" />
+                <path d="M9 4.5 12 2l3 2.5" stroke="#F1CE33" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span class="text-white">sare<span class="text-brand-gold">pundi</span></span>
+            </template>
+          </NuxtLink>
+          <p class="mt-3 text-sm text-gray-300">
+            Platform booking villa, homestay, lokasi gathering, dan transport terpercaya di Indonesia.
+          </p>
+        </div>
         <div>
           <h3 class="font-display text-sm font-semibold text-white">Jelajahi</h3>
           <ul class="mt-3 space-y-2 text-sm text-gray-300">

@@ -41,7 +41,8 @@ interface FeaturedListing {
 
 const coupons = ref<Coupon[]>([])
 const banners = ref<Banner[]>([])
-const featuredListings = ref<FeaturedListing[]>([])
+const allListings = ref<FeaturedListing[]>([])
+const selectedCity = ref<string | null>(null)
 const articles = ref<Article[]>([])
 const facilities = ref<Facility[]>([])
 const loading = ref(true)
@@ -110,6 +111,29 @@ async function search() {
   router.push({ path: activeCategory.value.path, query })
 }
 
+const newsletterEmail = ref('')
+const subscribing = ref(false)
+const newsletterMessage = ref('')
+const newsletterError = ref(false)
+
+async function subscribeNewsletter() {
+  newsletterMessage.value = ''
+  newsletterError.value = false
+  subscribing.value = true
+
+  try {
+    await api('/sanctum/csrf-cookie')
+    await api('/api/newsletter/subscribe', { method: 'POST', body: { email: newsletterEmail.value } })
+    newsletterMessage.value = 'Terima kasih! Kamu berhasil berlangganan newsletter kami.'
+    newsletterEmail.value = ''
+  } catch (error: any) {
+    newsletterError.value = true
+    newsletterMessage.value = error?.data?.errors?.email?.[0] || 'Gagal berlangganan. Silakan coba lagi.'
+  } finally {
+    subscribing.value = false
+  }
+}
+
 async function copyCode(coupon: Coupon) {
   try {
     await navigator.clipboard.writeText(coupon.code)
@@ -126,6 +150,23 @@ function discountLabel(coupon: Coupon): string {
   return coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatRupiah(coupon.discount_value)
 }
 
+const cityOptions = computed(() => {
+  const counts = new Map<string, number>()
+  for (const listing of allListings.value) {
+    counts.set(listing.city, (counts.get(listing.city) ?? 0) + 1)
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([city]) => city)
+})
+
+const displayedListings = computed(() =>
+  selectedCity.value
+    ? allListings.value.filter(listing => listing.city === selectedCity.value)
+    : allListings.value.slice(0, 6)
+)
+
 async function loadHomeData() {
   loading.value = true
   const [villasRes, homestaysRes, facilitiesRes, articlesRes, couponsRes, bannersRes] = await Promise.all([
@@ -137,7 +178,7 @@ async function loadHomeData() {
     api<{ data: Banner[] }>('/api/banners'),
   ])
 
-  const villaListings: FeaturedListing[] = villasRes.data.slice(0, 3).map(villa => ({
+  const villaListings: FeaturedListing[] = villasRes.data.map(villa => ({
     type: 'villa',
     id: villa.id,
     name: villa.name,
@@ -148,7 +189,7 @@ async function loadHomeData() {
     reviews_avg_rating: villa.reviews_avg_rating,
     reviews_count: villa.reviews_count,
   }))
-  const homestayListings: FeaturedListing[] = homestaysRes.data.slice(0, 3).map(homestay => ({
+  const homestayListings: FeaturedListing[] = homestaysRes.data.map(homestay => ({
     type: 'homestay',
     id: homestay.id,
     name: homestay.name,
@@ -159,7 +200,7 @@ async function loadHomeData() {
     reviews_avg_rating: homestay.reviews_avg_rating,
     reviews_count: homestay.reviews_count,
   }))
-  featuredListings.value = [...villaListings, ...homestayListings]
+  allListings.value = [...villaListings, ...homestayListings]
 
   facilities.value = facilitiesRes.data
   articles.value = articlesRes.data.slice(0, 3)
@@ -291,12 +332,35 @@ onMounted(loadHomeData)
     <section class="mx-auto mt-12 max-w-6xl px-4">
       <h2 class="font-display text-xl font-bold text-gray-900">Temukan Penginapan Sesuai Keinginan Anda</h2>
 
+      <div v-if="cityOptions.length" class="mt-4 flex gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          class="shrink-0"
+          :class="selectedCity === null ? 'chip-active' : 'chip'"
+          @click="selectedCity = null"
+        >
+          Semua
+        </button>
+        <button
+          v-for="city in cityOptions"
+          :key="city"
+          type="button"
+          class="shrink-0"
+          :class="selectedCity === city ? 'chip-active' : 'chip'"
+          @click="selectedCity = city"
+        >
+          {{ city }}
+        </button>
+      </div>
+
       <p v-if="loading" class="mt-6 text-gray-600">Memuat listing...</p>
-      <p v-else-if="featuredListings.length === 0" class="mt-6 text-gray-600">Belum ada villa atau homestay yang dipublikasikan.</p>
+      <p v-else-if="displayedListings.length === 0" class="mt-6 text-gray-600">
+        {{ selectedCity ? `Belum ada villa atau homestay di ${selectedCity}.` : 'Belum ada villa atau homestay yang dipublikasikan.' }}
+      </p>
 
       <div v-else class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink
-          v-for="listing in featuredListings"
+          v-for="listing in displayedListings"
           :key="`${listing.type}-${listing.id}`"
           :to="`/${listing.type === 'homestay' ? 'homestays' : 'villas'}/${listing.slug}`"
           class="card block overflow-hidden transition hover:shadow-md"
@@ -561,25 +625,35 @@ onMounted(loadHomeData)
       </div>
     </section>
 
-    <section class="mx-auto mt-12 max-w-6xl px-4 pb-4">
-      <div class="rounded-2xl bg-brand-footer px-6 py-10 text-center text-white sm:px-12">
-        <p class="text-xs uppercase tracking-widest text-white/60">Newsletter</p>
+    <section class="relative left-1/2 right-1/2 -mx-[50vw] mt-12 w-screen overflow-hidden px-4 py-16 sm:py-20">
+      <div
+        class="absolute inset-0 bg-cover bg-center"
+        :style="{ backgroundImage: `url('${heroImageUrl}')` }"
+        aria-hidden="true"
+      />
+      <div class="absolute inset-0 bg-brand-navy/80" />
+
+      <div class="relative mx-auto max-w-md text-center text-white">
+        <p class="text-xs uppercase tracking-widest text-white/70">Newsletter</p>
         <h2 class="mt-2 font-display text-xl font-bold sm:text-2xl">Dapatkan Promo Rahasia Anda!</h2>
-        <p class="mx-auto mt-2 max-w-md text-sm text-white/70">
+        <p class="mt-2 text-sm text-white/80">
           Berlangganan newsletter kami dan jadilah yang pertama menerima diskon eksklusif dan info properti terbaru.
         </p>
-        <form class="mx-auto mt-5 flex max-w-md gap-2" @submit.prevent>
+        <form class="mt-5 flex gap-2" @submit.prevent="subscribeNewsletter">
           <input
+            v-model="newsletterEmail"
             type="email"
-            disabled
-            title="Newsletter segera hadir"
+            required
             placeholder="Masukkan Emailmu"
-            class="w-full rounded-full border-0 px-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-70"
+            class="w-full rounded-full border-0 px-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400"
           >
-          <button type="submit" disabled title="Newsletter segera hadir" class="btn-primary shrink-0 disabled:opacity-70">
-            Subscribe
+          <button type="submit" :disabled="subscribing" class="btn-primary shrink-0 disabled:opacity-70">
+            {{ subscribing ? 'Memproses...' : 'Subscribe' }}
           </button>
         </form>
+        <p v-if="newsletterMessage" class="mt-3 text-sm" :class="newsletterError ? 'text-red-300' : 'text-green-300'">
+          {{ newsletterMessage }}
+        </p>
       </div>
     </section>
   </div>
