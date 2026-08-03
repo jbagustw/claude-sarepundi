@@ -70,6 +70,39 @@ const whyChooseUs = [
   },
 ]
 
+const paymentPartners = [
+  {
+    title: 'Transfer Bank',
+    icon: 'bank',
+    methods: ['BCA', 'BNI', 'BRI', 'BSI', 'Mandiri', 'CIMB Niaga', 'Permata', 'Bank Sampoerna'],
+  },
+  {
+    title: 'Kartu Kredit & Debit',
+    icon: 'card',
+    methods: ['Visa', 'Mastercard', 'JCB'],
+  },
+  {
+    title: 'E-Wallet',
+    icon: 'wallet',
+    methods: ['OVO', 'DANA', 'LinkAja', 'ShopeePay', 'AstraPay', 'Jenius Pay'],
+  },
+  {
+    title: 'QRIS',
+    icon: 'qr',
+    methods: ['Semua e-wallet & bank pendukung QRIS'],
+  },
+  {
+    title: 'Gerai Retail',
+    icon: 'store',
+    methods: ['Alfamart', 'Indomaret'],
+  },
+  {
+    title: 'PayLater',
+    icon: 'paylater',
+    methods: ['Kredivo', 'Atome', 'Indodana', 'Akulaku'],
+  },
+]
+
 async function search() {
   const query: Record<string, string> = {}
   if (destination.value) query.q = destination.value
@@ -397,6 +430,119 @@ onMounted(loadHomeData)
           </div>
           <p class="mt-3 font-display font-semibold text-gray-900">{{ reason.title }}</p>
           <p class="mt-1 text-sm text-gray-600">{{ reason.description }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mitra Pembayaran -->
+    <section class="mx-auto mt-12 max-w-6xl px-4">
+      <h2 class="font-display text-xl font-bold text-gray-900">Mitra Pembayaran</h2>
+      <p class="mt-1 text-sm text-gray-600">
+        Bayar dengan cara yang paling nyaman untukmu — didukung berbagai metode pembayaran populer di Indonesia.
+      </p>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div v-for="partner in paymentPartners" :key="partner.title" class="card p-5">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-navy/10 text-brand-navy">
+              <svg
+                v-if="partner.icon === 'bank'"
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M2 9l10-6 10 6" />
+                <path d="M4 9v10M8 9v10M12 9v10M16 9v10M20 9v10" />
+                <path d="M2 21h20" />
+              </svg>
+              <svg
+                v-else-if="partner.icon === 'card'"
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="2" y="6" width="20" height="14" rx="2" />
+                <path d="M2 10h20" />
+              </svg>
+              <svg
+                v-else-if="partner.icon === 'wallet'"
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+                <rect x="13" y="11" width="8" height="6" rx="1" />
+                <circle cx="16.5" cy="14" r="0.8" fill="currentColor" stroke="none" />
+              </svg>
+              <svg
+                v-else-if="partner.icon === 'qr'"
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z" fill="currentColor" stroke="none" />
+              </svg>
+              <svg
+                v-else-if="partner.icon === 'store'"
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 9l1-5h16l1 5" />
+                <path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9" />
+                <path d="M9 20v-6h6v6" />
+              </svg>
+              <svg
+                v-else
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="13" r="8" />
+                <path d="M12 9v4l3 2" />
+                <path d="M9 2h6" />
+              </svg>
+            </div>
+            <p class="font-display font-semibold text-gray-900">{{ partner.title }}</p>
+          </div>
+          <div class="mt-3 flex flex-wrap gap-1.5">
+            <span v-for="method in partner.methods" :key="method" class="chip !cursor-default hover:!bg-white">
+              {{ method }}
+            </span>
+          </div>
         </div>
       </div>
     </section>
