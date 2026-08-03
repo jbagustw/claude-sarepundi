@@ -55,6 +55,7 @@ class SiteSettingModuleTest extends TestCase
                 'tiktok_url' => null,
                 'hero_image_url' => null,
                 'logo_url' => null,
+                'favicon_url' => null,
             ],
         ]);
     }
@@ -253,6 +254,74 @@ class SiteSettingModuleTest extends TestCase
 
         $this->fromFrontend()->actingAs($this->regularUser())
             ->postJson('/api/admin/site-settings/logo', ['image' => UploadedFile::fake()->image('logo.png')])
+            ->assertForbidden();
+    }
+
+    // --- Favicon ---
+
+    public function test_admin_can_upload_favicon(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $response = $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/favicon', ['image' => UploadedFile::fake()->image('favicon.png')]);
+
+        $response->assertOk();
+        $this->assertNotNull($response->json('data.favicon_url'));
+
+        $this->getJson('/api/site-settings')->assertJsonPath('data.favicon_url', fn ($url) => ! is_null($url));
+    }
+
+    public function test_uploading_a_new_favicon_replaces_and_deletes_the_old_file(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/favicon', ['image' => UploadedFile::fake()->image('favicon-1.png')]);
+        $firstPath = \App\Models\SiteSetting::current()->favicon_path;
+        Storage::disk('public')->assertExists($firstPath);
+
+        $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/favicon', ['image' => UploadedFile::fake()->image('favicon-2.png')]);
+
+        Storage::disk('public')->assertMissing($firstPath);
+        $this->assertNotEquals($firstPath, \App\Models\SiteSetting::current()->favicon_path);
+    }
+
+    public function test_admin_can_remove_favicon(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/favicon', ['image' => UploadedFile::fake()->image('favicon.png')]);
+
+        $response = $this->fromFrontend()->actingAs($admin)->deleteJson('/api/admin/site-settings/favicon');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.favicon_url', null);
+    }
+
+    public function test_favicon_upload_rejects_non_image_files(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $response = $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/favicon', ['image' => UploadedFile::fake()->create('favicon.pdf', 100)]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors('image');
+    }
+
+    public function test_non_admin_cannot_upload_favicon(): void
+    {
+        Storage::fake('public');
+
+        $this->fromFrontend()->actingAs($this->regularUser())
+            ->postJson('/api/admin/site-settings/favicon', ['image' => UploadedFile::fake()->image('favicon.png')])
             ->assertForbidden();
     }
 }

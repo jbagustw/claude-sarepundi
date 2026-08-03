@@ -10,11 +10,14 @@ const uploadingHero = ref(false)
 const removingHero = ref(false)
 const uploadingLogo = ref(false)
 const removingLogo = ref(false)
+const uploadingFavicon = ref(false)
+const removingFavicon = ref(false)
 const errors = ref<Record<string, string[]>>({})
 const savedMessage = ref('')
 
 const heroImageUrl = ref<string | null>(null)
 const logoUrl = ref<string | null>(null)
+const faviconUrl = ref<string | null>(null)
 
 const form = reactive({
   instagram_url: '',
@@ -30,6 +33,7 @@ async function loadSettings() {
   form.tiktok_url = response.data.tiktok_url ?? ''
   heroImageUrl.value = response.data.hero_image_url
   logoUrl.value = response.data.logo_url
+  faviconUrl.value = response.data.favicon_url
   loading.value = false
 }
 
@@ -122,6 +126,39 @@ async function removeLogo() {
   }
 }
 
+async function handleFaviconUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  uploadingFavicon.value = true
+  try {
+    const body = new FormData()
+    body.append('image', file)
+    const response = await api<{ data: SiteSettings }>('/api/admin/site-settings/favicon', { method: 'POST', body })
+    faviconUrl.value = response.data.favicon_url
+  } catch {
+    alert('Gagal mengunggah favicon.')
+  } finally {
+    uploadingFavicon.value = false
+    input.value = ''
+  }
+}
+
+async function removeFavicon() {
+  if (!confirm('Hapus favicon? Tab browser akan kembali memakai ikon bawaan.')) return
+
+  removingFavicon.value = true
+  try {
+    const response = await api<{ data: SiteSettings }>('/api/admin/site-settings/favicon', { method: 'DELETE' })
+    faviconUrl.value = response.data.favicon_url
+  } catch {
+    alert('Gagal menghapus favicon.')
+  } finally {
+    removingFavicon.value = false
+  }
+}
+
 onMounted(loadSettings)
 </script>
 
@@ -135,7 +172,7 @@ onMounted(loadSettings)
       <div class="mt-6">
         <h2 class="text-sm font-semibold text-gray-900">Logo</h2>
         <p class="mt-1 text-sm text-gray-600">
-          Tampil di header semua halaman dan sebagai favicon (ikon tab browser). Kosongkan (hapus) untuk kembali memakai ikon &amp; teks "sarepundi" bawaan. Rekomendasi: PNG/SVG latar transparan, persegi atau mendekati persegi, di bawah 2MB.
+          Tampil di header semua halaman (kiri atas), ukuran ditampilkan sekitar 135×43px. Kosongkan (hapus) untuk kembali memakai ikon &amp; teks "sarepundi" bawaan. Rekomendasi: PNG/SVG latar transparan, proporsi lebar (mis. 135×43), di bawah 2MB.
         </p>
 
         <div class="mt-3">
@@ -163,6 +200,41 @@ onMounted(loadSettings)
             @click="removeLogo"
           >
             {{ removingLogo ? 'Menghapus...' : 'Hapus Logo' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-8 border-t border-gray-200 pt-6">
+        <h2 class="text-sm font-semibold text-gray-900">Icon / Favicon</h2>
+        <p class="mt-1 text-sm text-gray-600">
+          Ikon kecil yang muncul di tab browser. Diupload terpisah dari logo di atas supaya tidak gepeng — pakai gambar dengan proporsi <strong>1:1 (persegi)</strong>, mis. 512×512px, di bawah 1MB.
+        </p>
+
+        <div class="mt-3">
+          <div class="flex h-24 w-24 items-center justify-center rounded-xl bg-brand-navy">
+            <img
+              v-if="faviconUrl"
+              :src="faviconUrl"
+              class="h-16 w-16 object-contain"
+              alt=""
+            >
+            <span v-else class="px-2 text-center text-xs text-white/60">Belum ada favicon kustom</span>
+          </div>
+        </div>
+
+        <div class="mt-3 flex items-center gap-4">
+          <label class="cursor-pointer text-sm text-brand-brown underline">
+            {{ uploadingFavicon ? 'Mengunggah...' : (faviconUrl ? '+ Ganti Favicon' : '+ Unggah Favicon') }}
+            <input type="file" accept="image/*" class="hidden" :disabled="uploadingFavicon" @change="handleFaviconUpload">
+          </label>
+          <button
+            v-if="faviconUrl"
+            type="button"
+            class="text-sm text-red-600 underline disabled:opacity-50"
+            :disabled="removingFavicon"
+            @click="removeFavicon"
+          >
+            {{ removingFavicon ? 'Menghapus...' : 'Hapus Favicon' }}
           </button>
         </div>
       </div>

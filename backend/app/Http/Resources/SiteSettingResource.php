@@ -19,6 +19,7 @@ class SiteSettingResource extends JsonResource
             'tiktok_url' => $this->tiktok_url,
             'hero_image_url' => $this->hero_image_path ? Storage::disk('public')->url($this->hero_image_path) : null,
             'logo_url' => $this->logo_path ? Storage::disk('public')->url($this->logo_path) : null,
+            'favicon_url' => $this->favicon_path ? Storage::disk('public')->url($this->favicon_path) : null,
         ];
     }
 }

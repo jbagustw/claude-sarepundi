@@ -4,4 +4,5 @@ export interface SiteSettings {
   tiktok_url: string | null
   hero_image_url: string | null
   logo_url: string | null
+  favicon_url: string | null
 }

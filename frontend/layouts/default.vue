@@ -7,7 +7,7 @@ const { data: siteSettings } = await useSiteSettings()
 
 useHead({
   link: computed(() =>
-    siteSettings.value?.logo_url ? [{ rel: 'icon', href: siteSettings.value.logo_url }] : []
+    siteSettings.value?.favicon_url ? [{ rel: 'icon', href: siteSettings.value.favicon_url }] : []
   ),
 })
 

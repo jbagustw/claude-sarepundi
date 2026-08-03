@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
     'tiktok_url',
     'hero_image_path',
     'logo_path',
+    'favicon_path',
 ])]
 class SiteSetting extends Model
 {

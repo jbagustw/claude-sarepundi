@@ -208,5 +208,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::delete('/site-settings/hero-image', [AdminSiteSettingController::class, 'destroyHeroImage']);
         Route::post('/site-settings/logo', [AdminSiteSettingController::class, 'uploadLogo']);
         Route::delete('/site-settings/logo', [AdminSiteSettingController::class, 'destroyLogo']);
+        Route::post('/site-settings/favicon', [AdminSiteSettingController::class, 'uploadFavicon']);
+        Route::delete('/site-settings/favicon', [AdminSiteSettingController::class, 'destroyFavicon']);
     });
 });
