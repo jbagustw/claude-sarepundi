@@ -8,10 +8,13 @@ const loading = ref(true)
 const saving = ref(false)
 const uploadingHero = ref(false)
 const removingHero = ref(false)
+const uploadingLogo = ref(false)
+const removingLogo = ref(false)
 const errors = ref<Record<string, string[]>>({})
 const savedMessage = ref('')
 
 const heroImageUrl = ref<string | null>(null)
+const logoUrl = ref<string | null>(null)
 
 const form = reactive({
   instagram_url: '',
@@ -26,6 +29,7 @@ async function loadSettings() {
   form.facebook_url = response.data.facebook_url ?? ''
   form.tiktok_url = response.data.tiktok_url ?? ''
   heroImageUrl.value = response.data.hero_image_url
+  logoUrl.value = response.data.logo_url
   loading.value = false
 }
 
@@ -85,6 +89,39 @@ async function removeHeroImage() {
   }
 }
 
+async function handleLogoUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  uploadingLogo.value = true
+  try {
+    const body = new FormData()
+    body.append('image', file)
+    const response = await api<{ data: SiteSettings }>('/api/admin/site-settings/logo', { method: 'POST', body })
+    logoUrl.value = response.data.logo_url
+  } catch {
+    alert('Gagal mengunggah logo.')
+  } finally {
+    uploadingLogo.value = false
+    input.value = ''
+  }
+}
+
+async function removeLogo() {
+  if (!confirm('Hapus logo? Header akan kembali memakai ikon & teks bawaan.')) return
+
+  removingLogo.value = true
+  try {
+    const response = await api<{ data: SiteSettings }>('/api/admin/site-settings/logo', { method: 'DELETE' })
+    logoUrl.value = response.data.logo_url
+  } catch {
+    alert('Gagal menghapus logo.')
+  } finally {
+    removingLogo.value = false
+  }
+}
+
 onMounted(loadSettings)
 </script>
 
@@ -96,6 +133,41 @@ onMounted(loadSettings)
 
     <template v-else>
       <div class="mt-6">
+        <h2 class="text-sm font-semibold text-gray-900">Logo</h2>
+        <p class="mt-1 text-sm text-gray-600">
+          Tampil di header semua halaman dan sebagai favicon (ikon tab browser). Kosongkan (hapus) untuk kembali memakai ikon &amp; teks "sarepundi" bawaan. Rekomendasi: PNG/SVG latar transparan, persegi atau mendekati persegi, di bawah 2MB.
+        </p>
+
+        <div class="mt-3">
+          <div class="flex h-24 w-full items-center rounded-xl bg-brand-navy px-6">
+            <img
+              v-if="logoUrl"
+              :src="logoUrl"
+              class="h-12 w-auto object-contain"
+              alt=""
+            >
+            <span v-else class="text-sm text-white/60">Belum ada logo kustom — header memakai ikon &amp; teks bawaan</span>
+          </div>
+        </div>
+
+        <div class="mt-3 flex items-center gap-4">
+          <label class="cursor-pointer text-sm text-brand-brown underline">
+            {{ uploadingLogo ? 'Mengunggah...' : (logoUrl ? '+ Ganti Logo' : '+ Unggah Logo') }}
+            <input type="file" accept="image/*" class="hidden" :disabled="uploadingLogo" @change="handleLogoUpload">
+          </label>
+          <button
+            v-if="logoUrl"
+            type="button"
+            class="text-sm text-red-600 underline disabled:opacity-50"
+            :disabled="removingLogo"
+            @click="removeLogo"
+          >
+            {{ removingLogo ? 'Menghapus...' : 'Hapus Logo' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-8 border-t border-gray-200 pt-6">
         <h2 class="text-sm font-semibold text-gray-900">Hero Banner Homepage</h2>
         <p class="mt-1 text-sm text-gray-600">
           Gambar latar besar di paling atas homepage. Kosongkan (hapus) untuk kembali memakai gambar bawaan. Rekomendasi: foto landscape minimal 1920×1080, di bawah 6MB.

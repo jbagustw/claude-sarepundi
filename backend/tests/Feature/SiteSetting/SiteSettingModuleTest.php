@@ -54,6 +54,7 @@ class SiteSettingModuleTest extends TestCase
                 'facebook_url' => null,
                 'tiktok_url' => null,
                 'hero_image_url' => null,
+                'logo_url' => null,
             ],
         ]);
     }
@@ -184,6 +185,74 @@ class SiteSettingModuleTest extends TestCase
 
         $this->fromFrontend()->actingAs($this->regularUser())
             ->postJson('/api/admin/site-settings/hero-image', ['image' => UploadedFile::fake()->image('hero.jpg')])
+            ->assertForbidden();
+    }
+
+    // --- Logo ---
+
+    public function test_admin_can_upload_logo(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $response = $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/logo', ['image' => UploadedFile::fake()->image('logo.png')]);
+
+        $response->assertOk();
+        $this->assertNotNull($response->json('data.logo_url'));
+
+        $this->getJson('/api/site-settings')->assertJsonPath('data.logo_url', fn ($url) => ! is_null($url));
+    }
+
+    public function test_uploading_a_new_logo_replaces_and_deletes_the_old_file(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/logo', ['image' => UploadedFile::fake()->image('logo-1.png')]);
+        $firstPath = \App\Models\SiteSetting::current()->logo_path;
+        Storage::disk('public')->assertExists($firstPath);
+
+        $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/logo', ['image' => UploadedFile::fake()->image('logo-2.png')]);
+
+        Storage::disk('public')->assertMissing($firstPath);
+        $this->assertNotEquals($firstPath, \App\Models\SiteSetting::current()->logo_path);
+    }
+
+    public function test_admin_can_remove_logo(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/logo', ['image' => UploadedFile::fake()->image('logo.png')]);
+
+        $response = $this->fromFrontend()->actingAs($admin)->deleteJson('/api/admin/site-settings/logo');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.logo_url', null);
+    }
+
+    public function test_logo_upload_rejects_non_image_files(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $response = $this->fromFrontend()->actingAs($admin)
+            ->postJson('/api/admin/site-settings/logo', ['image' => UploadedFile::fake()->create('logo.pdf', 100)]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors('image');
+    }
+
+    public function test_non_admin_cannot_upload_logo(): void
+    {
+        Storage::fake('public');
+
+        $this->fromFrontend()->actingAs($this->regularUser())
+            ->postJson('/api/admin/site-settings/logo', ['image' => UploadedFile::fake()->image('logo.png')])
             ->assertForbidden();
     }
 }

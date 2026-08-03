@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateSiteSettingRequest;
 use App\Http\Requests\Admin\UploadHeroImageRequest;
+use App\Http\Requests\Admin\UploadLogoRequest;
 use App\Http\Resources\SiteSettingResource;
 use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Storage;
@@ -46,6 +47,33 @@ class SiteSettingController extends Controller
         if ($setting->hero_image_path) {
             Storage::disk('public')->delete($setting->hero_image_path);
             $setting->update(['hero_image_path' => null]);
+        }
+
+        return new SiteSettingResource($setting);
+    }
+
+    public function uploadLogo(UploadLogoRequest $request): SiteSettingResource
+    {
+        $setting = SiteSetting::current();
+
+        if ($setting->logo_path) {
+            Storage::disk('public')->delete($setting->logo_path);
+        }
+
+        $path = $request->file('image')->store('logo', 'public');
+
+        $setting->update(['logo_path' => $path]);
+
+        return new SiteSettingResource($setting);
+    }
+
+    public function destroyLogo(): SiteSettingResource
+    {
+        $setting = SiteSetting::current();
+
+        if ($setting->logo_path) {
+            Storage::disk('public')->delete($setting->logo_path);
+            $setting->update(['logo_path' => null]);
         }
 
         return new SiteSettingResource($setting);

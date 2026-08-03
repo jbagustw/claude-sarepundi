@@ -3,4 +3,5 @@ export interface SiteSettings {
   facebook_url: string | null
   tiktok_url: string | null
   hero_image_url: string | null
+  logo_url: string | null
 }

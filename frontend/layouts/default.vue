@@ -5,6 +5,12 @@ const route = useRoute()
 
 const { data: siteSettings } = await useSiteSettings()
 
+useHead({
+  link: computed(() =>
+    siteSettings.value?.logo_url ? [{ rel: 'icon', href: siteSettings.value.logo_url }] : []
+  ),
+})
+
 // The homepage hero has its own full-bleed background image, so the header
 // floats transparently on top of it there instead of showing a solid bar —
 // until the user scrolls past the hero, at which point it turns solid like
@@ -33,11 +39,19 @@ async function handleLogout() {
     >
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <NuxtLink to="/" class="flex items-center gap-2 font-display text-xl font-bold">
-          <svg class="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 2 3 8v13a1 1 0 001 1h5v-7h6v7h5a1 1 0 001-1V8z" fill="currentColor" />
-            <path d="M9 4.5 12 2l3 2.5" stroke="#F1CE33" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          <span class="text-white">sare<span class="text-brand-gold">pundi</span></span>
+          <img
+            v-if="siteSettings?.logo_url"
+            :src="siteSettings.logo_url"
+            class="h-9 w-auto object-contain"
+            alt="sarepundi"
+          >
+          <template v-else>
+            <svg class="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2 3 8v13a1 1 0 001 1h5v-7h6v7h5a1 1 0 001-1V8z" fill="currentColor" />
+              <path d="M9 4.5 12 2l3 2.5" stroke="#F1CE33" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="text-white">sare<span class="text-brand-gold">pundi</span></span>
+          </template>
         </NuxtLink>
 
         <nav class="hidden items-center gap-6 sm:flex">
