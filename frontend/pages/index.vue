@@ -4,15 +4,12 @@ import type { Banner } from '~/types/banner'
 import type { Coupon } from '~/types/coupon'
 import type { Facility, Villa } from '~/types/villa'
 import type { Homestay } from '~/types/homestay'
-import type { SiteSettings } from '~/types/siteSettings'
 
 const authStore = useAuthStore()
 const api = useApi()
 const router = useRouter()
 
-const { data: siteSettings } = await useAsyncData('site-settings', () =>
-  useApi()<{ data: SiteSettings }>('/api/site-settings').then(res => res.data)
-)
+const { data: siteSettings } = await useSiteSettings()
 const heroImageUrl = computed(() => siteSettings.value?.hero_image_url || '/images/hero-banner.jpg')
 
 type CategoryKey = 'villa' | 'homestay' | 'gathering_venue' | 'transport'
@@ -143,13 +140,13 @@ onMounted(loadHomeData)
 
 <template>
   <div class="-mt-8">
-    <section class="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-gradient-to-br from-brand-brown-dark via-brand-brown to-brand-terracotta px-4 pb-28 pt-32 sm:pb-36 sm:pt-44">
+    <section class="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-brand-navy px-4 pb-28 pt-32 sm:pb-36 sm:pt-44">
       <div
         class="absolute inset-0 bg-cover bg-center"
         :style="{ backgroundImage: `url('${heroImageUrl}')` }"
         aria-hidden="true"
       />
-      <div class="absolute inset-0 bg-gradient-to-br from-brand-brown-dark/85 via-brand-brown/75 to-brand-terracotta/70" />
+      <div class="absolute inset-0 bg-gradient-to-br from-brand-navy/90 via-brand-navy/75 to-brand-navy/60" />
       <div class="pointer-events-none absolute inset-0 opacity-30">
         <div class="absolute -left-16 -top-16 h-72 w-72 rounded-full bg-brand-gold blur-3xl" />
         <div class="absolute -right-10 bottom-0 h-72 w-72 rounded-full bg-brand-sage blur-3xl" />

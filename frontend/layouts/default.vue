@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import type { SiteSettings } from '~/types/siteSettings'
-
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
-const { data: siteSettings } = await useAsyncData('site-settings', () =>
-  useApi()<{ data: SiteSettings }>('/api/site-settings').then(res => res.data)
-)
+const { data: siteSettings } = await useSiteSettings()
 
 // The homepage hero has its own full-bleed background image, so the header
 // floats transparently on top of it there instead of showing a solid bar —
