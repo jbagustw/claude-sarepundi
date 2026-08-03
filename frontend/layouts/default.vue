@@ -38,11 +38,11 @@ async function handleLogout() {
       :class="isHome && !scrolled ? 'bg-transparent' : 'bg-brand-brown-dark shadow-md'"
     >
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <NuxtLink to="/" class="flex items-center gap-2 font-display text-xl font-bold">
+        <NuxtLink to="/" class="flex shrink-0 items-center gap-2 font-display text-xl font-bold">
           <img
             v-if="siteSettings?.logo_url"
             :src="siteSettings.logo_url"
-            class="h-9 w-auto object-contain"
+            class="h-[43px] w-[135px] object-contain object-left"
             alt="sarepundi"
           >
           <template v-else>
@@ -54,39 +54,39 @@ async function handleLogout() {
           </template>
         </NuxtLink>
 
-        <nav class="hidden items-center gap-6 sm:flex">
-          <NuxtLink to="/berita" class="text-sm font-medium text-white/80 hover:text-white">
-            Berita dan Artikel
-          </NuxtLink>
-          <NuxtLink v-if="!authStore.isAuthenticated" to="/jadi-mitra" class="text-sm font-medium text-white/80 hover:text-white">
-            Daftar Sebagai Mitra
-          </NuxtLink>
-        </nav>
+        <div class="flex items-center gap-6">
+          <nav class="hidden items-center gap-6 sm:flex">
+            <NuxtLink to="/berita" class="text-sm font-medium text-white/80 hover:text-white">
+              Berita dan Artikel
+            </NuxtLink>
+            <NuxtLink v-if="!authStore.isAuthenticated" to="/jadi-mitra" class="text-sm font-medium text-white/80 hover:text-white">
+              Daftar Sebagai Mitra
+            </NuxtLink>
+          </nav>
 
-        <div class="flex-1" />
-
-        <div v-if="authStore.isAuthenticated" class="flex items-center gap-3 text-sm">
-          <NotificationBell />
-          <NuxtLink
-            :to="ROLE_HOME[authStore.role as keyof typeof ROLE_HOME]"
-            class="hidden text-sm font-medium text-white/80 hover:text-white sm:block"
-          >
-            Dashboard
-          </NuxtLink>
-          <span class="hidden items-center gap-1.5 text-white/90 sm:flex">
-            {{ authStore.user?.name }}
-            <span class="badge bg-white/10 uppercase tracking-wide text-white">
-              {{ authStore.role }}
+          <div v-if="authStore.isAuthenticated" class="flex items-center gap-3 text-sm">
+            <NotificationBell />
+            <NuxtLink
+              :to="ROLE_HOME[authStore.role as keyof typeof ROLE_HOME]"
+              class="hidden text-sm font-medium text-white/80 hover:text-white sm:block"
+            >
+              Dashboard
+            </NuxtLink>
+            <span class="hidden items-center gap-1.5 text-white/90 sm:flex">
+              {{ authStore.user?.name }}
+              <span class="badge bg-white/10 uppercase tracking-wide text-white">
+                {{ authStore.role }}
+              </span>
             </span>
-          </span>
-          <button class="btn-outline !border-white/30 !text-white hover:!bg-white/10 !px-4 !py-1.5" @click="handleLogout">
-            Keluar
-          </button>
-        </div>
+            <button class="btn-outline !border-white/30 !text-white hover:!bg-white/10 !px-4 !py-1.5" @click="handleLogout">
+              Keluar
+            </button>
+          </div>
 
-        <div v-else class="flex items-center gap-2">
-          <NuxtLink to="/login" class="btn-secondary !px-5 !py-2">Masuk</NuxtLink>
-          <NuxtLink to="/register" class="btn-accent !px-5 !py-2">Daftar</NuxtLink>
+          <div v-else class="flex items-center gap-2">
+            <NuxtLink to="/login" class="btn-secondary !px-5 !py-2">Masuk</NuxtLink>
+            <NuxtLink to="/register" class="btn-accent !px-5 !py-2">Daftar</NuxtLink>
+          </div>
         </div>
       </div>
 
