@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Payment;
 
+use App\Mail\BookingPaymentConfirmed;
 use App\Models\MitraProfile;
 use App\Models\Payment;
 use App\Models\User;
@@ -9,6 +10,7 @@ use App\Models\Villa;
 use App\Models\Booking;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -201,6 +203,33 @@ class PaymentModuleTest extends TestCase
         // confirms it immediately (posted availability is their commitment).
         $this->assertSame('dikonfirmasi', $booking->status);
         $this->assertNotNull($booking->mitra_confirmed_at);
+    }
+
+    public function test_webhook_emails_voucher_and_receipt_on_paid(): void
+    {
+        Mail::fake();
+
+        $booking = $this->pendingPaymentBooking();
+        Payment::create([
+            'booking_id' => $booking->id,
+            'xendit_invoice_id' => 'inv_test_docs',
+            'amount' => $booking->total_price,
+            'status' => 'pending',
+        ]);
+
+        $this->withHeaders(['x-callback-token' => self::CALLBACK_TOKEN])
+            ->postJson('/api/webhooks/xendit', ['id' => 'inv_test_docs', 'status' => 'PAID'])
+            ->assertOk();
+
+        Mail::assertSent(BookingPaymentConfirmed::class, function (BookingPaymentConfirmed $mail) use ($booking) {
+            if ($mail->booking->id !== $booking->id) {
+                return false;
+            }
+
+            $attachments = $mail->attachments();
+
+            return count($attachments) === 2;
+        });
     }
 
     public function test_webhook_rejects_invalid_callback_token(): void

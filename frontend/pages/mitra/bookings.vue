@@ -4,6 +4,7 @@ import type { MitraBooking } from '~/types/mitraBooking'
 definePageMeta({ role: 'mitra' })
 
 const api = useApi()
+const apiBase = useRuntimeConfig().public.apiBase
 const bookings = ref<MitraBooking[]>([])
 const loading = ref(true)
 const statusFilter = ref('')
@@ -83,6 +84,15 @@ onMounted(loadBookings)
             <dd class="col-span-2 text-gray-900">{{ booking.transport_with_driver ? 'Dengan Sopir' : 'Lepas Kunci' }}</dd>
           </template>
         </dl>
+
+        <div v-if="booking.status !== 'pending_payment'" class="mt-3 flex gap-3 border-t border-gray-100 pt-3 text-sm">
+          <a :href="`${apiBase}/api/bookings/${booking.id}/voucher`" class="font-medium text-brand-brown underline">
+            Unduh Voucher (PDF)
+          </a>
+          <a :href="`${apiBase}/api/bookings/${booking.id}/receipt`" class="font-medium text-brand-brown underline">
+            Unduh Receipt (PDF)
+          </a>
+        </div>
       </div>
     </div>
   </div>

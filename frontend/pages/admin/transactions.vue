@@ -4,6 +4,7 @@ import type { AdminBooking } from '~/types/admin'
 definePageMeta({ role: 'admin' })
 
 const api = useApi()
+const apiBase = useRuntimeConfig().public.apiBase
 const bookings = ref<AdminBooking[]>([])
 const loading = ref(true)
 const statusFilter = ref('')
@@ -65,6 +66,7 @@ onMounted(loadBookings)
             <th class="px-3 py-2 text-right">Total</th>
             <th class="px-3 py-2 text-right">Komisi</th>
             <th class="px-3 py-2">Status</th>
+            <th class="px-3 py-2">Dokumen</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -98,6 +100,17 @@ onMounted(loadBookings)
               <span class="rounded px-2 py-0.5 text-xs font-medium" :class="BOOKING_STATUS_COLOR[booking.status]">
                 {{ BOOKING_STATUS_LABEL[booking.status] }}
               </span>
+            </td>
+            <td class="px-3 py-2">
+              <div v-if="booking.status !== 'pending_payment'" class="flex flex-col gap-1 text-xs">
+                <a :href="`${apiBase}/api/bookings/${booking.id}/voucher`" class="font-medium text-brand-brown underline">
+                  Voucher
+                </a>
+                <a :href="`${apiBase}/api/bookings/${booking.id}/receipt`" class="font-medium text-brand-brown underline">
+                  Receipt
+                </a>
+              </div>
+              <span v-else class="text-xs text-gray-400">&mdash;</span>
             </td>
           </tr>
         </tbody>

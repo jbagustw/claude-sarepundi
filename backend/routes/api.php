@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VillaModerationController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\BookingDocumentController;
 use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\Mitra\BookingController as MitraBookingController;
 use App\Http\Controllers\Mitra\DashboardController as MitraDashboardController;
@@ -100,6 +101,12 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+
+    // Shared across user/mitra/admin — access is gated per-role inside
+    // BookingPolicy::viewDocument(), not by route middleware, since all
+    // three roles can legitimately need the same booking's documents.
+    Route::get('/bookings/{booking}/voucher', [BookingDocumentController::class, 'voucher']);
+    Route::get('/bookings/{booking}/receipt', [BookingDocumentController::class, 'receipt']);
 
     Route::middleware('role:user')->group(function () {
         Route::get('/user/ping', fn () => response()->json(['message' => 'pong from user area']));

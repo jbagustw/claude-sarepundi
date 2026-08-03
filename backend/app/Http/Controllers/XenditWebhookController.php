@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BookingPaymentConfirmed;
 use App\Models\Payment;
 use App\Services\NotificationService;
 use App\Services\Xendit\XenditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class XenditWebhookController extends Controller
 {
@@ -57,8 +59,24 @@ class XenditWebhookController extends Controller
                 $booking->user,
                 'payment_success',
                 'Pembayaran berhasil',
-                "Pembayaran untuk booking {$booking->booking_code} berhasil dan booking kamu sudah dikonfirmasi."
+                "Pembayaran untuk booking {$booking->booking_code} berhasil dan booking kamu sudah dikonfirmasi.",
+                sendEmail: false,
             );
+
+            try {
+                Mail::to($booking->user->email)->send(new BookingPaymentConfirmed($booking));
+            } catch (\Throwable $e) {
+                // Same reasoning as NotificationService::sendEmail() — the
+                // in-app notification above already landed and the
+                // voucher/receipt PDFs stay downloadable from the dashboard
+                // regardless, so a mail transport hiccup here shouldn't
+                // fail the webhook.
+                Log::warning('Failed to send booking confirmation email', [
+                    'booking_id' => $booking->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             $notifications->notify(
                 $booking->bookable->mitraProfile->user,
                 'booking_confirmed',

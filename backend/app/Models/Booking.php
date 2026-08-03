@@ -103,6 +103,23 @@ class Booking extends Model
     }
 
     /**
+     * Short type key ('villa', 'glamping', ...) for the polymorphic
+     * bookable — same mapping every booking resource duplicates via its
+     * own match() expression, kept here as the one canonical version for
+     * new code (documents/receipts) to build on.
+     */
+    public function bookableType(): string
+    {
+        return match (true) {
+            $this->bookable instanceof Glamping => 'glamping',
+            $this->bookable instanceof Homestay => 'homestay',
+            $this->bookable instanceof GatheringVenue => 'gathering_venue',
+            $this->bookable instanceof Transport => 'transport',
+            default => 'villa',
+        };
+    }
+
+    /**
      * Model classes that are currently bookable and carry a `mitra_id`
      * pointing at mitra_profiles — used by scopeForMitra to find every
      * booking across a mitra's listings regardless of category.

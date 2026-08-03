@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Mail;
  */
 class NotificationService
 {
-    public function notify(User $user, string $type, string $title, string $message): Notification
+    public function notify(User $user, string $type, string $title, string $message, bool $sendEmail = true): Notification
     {
         $notification = Notification::create([
             'user_id' => $user->id,
@@ -26,7 +26,9 @@ class NotificationService
             'message' => $message,
         ]);
 
-        $this->sendEmail($user, $title, $message);
+        if ($sendEmail) {
+            $this->sendEmail($user, $title, $message);
+        }
 
         return $notification;
     }

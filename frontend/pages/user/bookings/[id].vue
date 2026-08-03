@@ -6,6 +6,7 @@ definePageMeta({ role: 'user' })
 
 const route = useRoute()
 const api = useApi()
+const apiBase = useRuntimeConfig().public.apiBase
 
 const booking = ref<Booking | null>(null)
 const notFound = ref(false)
@@ -176,6 +177,15 @@ onMounted(loadBooking)
           </button>
           <p v-if="payError" class="mt-2 text-sm text-red-600">{{ payError }}</p>
         </template>
+
+        <div v-else class="mt-4 flex gap-3 border-t border-gray-200 pt-4 text-sm">
+          <a :href="`${apiBase}/api/bookings/${booking.id}/voucher`" class="font-medium text-brand-brown underline">
+            Unduh Voucher (PDF)
+          </a>
+          <a :href="`${apiBase}/api/bookings/${booking.id}/receipt`" class="font-medium text-brand-brown underline">
+            Unduh Receipt (PDF)
+          </a>
+        </div>
 
         <p v-if="booking.status === 'dikonfirmasi'" class="mt-4 rounded bg-green-50 p-3 text-sm text-green-800">
           Pembayaran berhasil, booking kamu sudah dikonfirmasi. Sampai jumpa di tanggal check-in!
