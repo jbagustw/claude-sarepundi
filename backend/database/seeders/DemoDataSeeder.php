@@ -414,6 +414,9 @@ class DemoDataSeeder extends Seeder
     {
         return Booking::create(array_merge([
             'booking_code' => 'BK'.strtoupper(Str::random(10)),
+            // None of the demo bookings apply a coupon, so subtotal is
+            // always the same as total_price unless a call site overrides it.
+            'subtotal' => $attributes['total_price'],
         ], $attributes));
     }
 
