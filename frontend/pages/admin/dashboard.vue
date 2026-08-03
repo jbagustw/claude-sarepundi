@@ -65,44 +65,5 @@ onMounted(loadStats)
         <p class="text-xs text-gray-400">{{ stats.bookings.completed }} selesai, {{ stats.bookings.cancelled }} dibatalkan</p>
       </div>
     </div>
-
-    <div class="mt-6 flex flex-wrap gap-3">
-      <NuxtLink to="/admin/mitras" class="btn-primary">
-        Approval Mitra
-      </NuxtLink>
-      <NuxtLink to="/admin/villas" class="btn-primary">
-        Moderasi Villa
-      </NuxtLink>
-      <NuxtLink to="/admin/homestays" class="btn-primary">
-        Moderasi Homestay
-      </NuxtLink>
-      <NuxtLink to="/admin/gathering-venues" class="btn-primary">
-        Moderasi Lokasi Gathering
-      </NuxtLink>
-      <NuxtLink to="/admin/transports" class="btn-primary">
-        Moderasi Transport
-      </NuxtLink>
-      <NuxtLink to="/admin/transactions" class="btn-outline">
-        Monitoring Transaksi
-      </NuxtLink>
-      <NuxtLink to="/admin/users" class="btn-outline">
-        Kelola User & Mitra
-      </NuxtLink>
-      <NuxtLink to="/admin/payouts" class="btn-outline">
-        Payout Mitra
-      </NuxtLink>
-      <NuxtLink to="/admin/articles" class="btn-outline">
-        Kelola Artikel
-      </NuxtLink>
-      <NuxtLink to="/admin/coupons" class="btn-outline">
-        Kelola Kupon
-      </NuxtLink>
-      <NuxtLink to="/admin/banners" class="btn-outline">
-        Kelola Banner Iklan
-      </NuxtLink>
-      <NuxtLink to="/admin/settings" class="btn-outline">
-        Pengaturan Website
-      </NuxtLink>
-    </div>
   </div>
 </template>

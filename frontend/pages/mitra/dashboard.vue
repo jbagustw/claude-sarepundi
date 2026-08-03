@@ -87,32 +87,5 @@ onMounted(loadStats)
         <p class="mt-1 text-xl font-semibold text-gray-900">{{ stats.occupancy_rate }}%</p>
       </div>
     </div>
-
-    <div class="mt-6 flex gap-3">
-      <NuxtLink to="/mitra/villas" class="btn-primary">
-        Kelola Villa
-      </NuxtLink>
-      <NuxtLink to="/mitra/homestays" class="btn-primary">
-        Kelola Homestay
-      </NuxtLink>
-      <NuxtLink to="/mitra/gathering-venues" class="btn-primary">
-        Kelola Lokasi Gathering
-      </NuxtLink>
-      <NuxtLink to="/mitra/transports" class="btn-primary">
-        Kelola Transport
-      </NuxtLink>
-      <NuxtLink to="/mitra/bookings" class="btn-outline">
-        Kelola Booking
-      </NuxtLink>
-      <NuxtLink to="/mitra/payouts" class="btn-outline">
-        Laporan Payout
-      </NuxtLink>
-      <NuxtLink to="/mitra/reviews" class="btn-outline">
-        Ulasan
-      </NuxtLink>
-      <NuxtLink to="/mitra/profile" class="btn-outline">
-        Profil Bisnis
-      </NuxtLink>
-    </div>
   </div>
 </template>
