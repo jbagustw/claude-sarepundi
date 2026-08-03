@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\GatheringVenue;
+use App\Models\Glamping;
 use App\Models\Homestay;
 use App\Models\Transport;
 use Illuminate\Http\Request;
@@ -62,6 +63,7 @@ class BookingResource extends JsonResource
     private function bookableType(): string
     {
         return match (true) {
+            $this->bookable instanceof Glamping => 'glamping',
             $this->bookable instanceof Homestay => 'homestay',
             $this->bookable instanceof GatheringVenue => 'gathering_venue',
             $this->bookable instanceof Transport => 'transport',

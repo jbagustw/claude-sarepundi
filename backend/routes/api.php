@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GatheringVenueModerationController;
+use App\Http\Controllers\Admin\GlampingModerationController;
 use App\Http\Controllers\Admin\HomestayModerationController;
 use App\Http\Controllers\Admin\MitraModerationController;
 use App\Http\Controllers\Admin\PayoutController as AdminPayoutController;
@@ -21,6 +22,8 @@ use App\Http\Controllers\Mitra\DashboardController as MitraDashboardController;
 use App\Http\Controllers\Mitra\GatheringVenueController as MitraGatheringVenueController;
 use App\Http\Controllers\Mitra\GatheringVenueImageController;
 use App\Http\Controllers\Mitra\GatheringVenueSlotController;
+use App\Http\Controllers\Mitra\GlampingController as MitraGlampingController;
+use App\Http\Controllers\Mitra\GlampingImageController;
 use App\Http\Controllers\Mitra\HomestayController as MitraHomestayController;
 use App\Http\Controllers\Mitra\HomestayImageController;
 use App\Http\Controllers\Mitra\PayoutController as MitraPayoutController;
@@ -39,6 +42,9 @@ use App\Http\Controllers\Public\CouponController as PublicCouponController;
 use App\Http\Controllers\Public\GatheringVenueAvailabilityController as PublicGatheringVenueAvailabilityController;
 use App\Http\Controllers\Public\GatheringVenueController as PublicGatheringVenueController;
 use App\Http\Controllers\Public\GatheringVenueReviewController as PublicGatheringVenueReviewController;
+use App\Http\Controllers\Public\GlampingAvailabilityController as PublicGlampingAvailabilityController;
+use App\Http\Controllers\Public\GlampingController as PublicGlampingController;
+use App\Http\Controllers\Public\GlampingReviewController as PublicGlampingReviewController;
 use App\Http\Controllers\Public\HomestayAvailabilityController as PublicHomestayAvailabilityController;
 use App\Http\Controllers\Public\HomestayController as PublicHomestayController;
 use App\Http\Controllers\Public\HomestayReviewController as PublicHomestayReviewController;
@@ -68,6 +74,10 @@ Route::get('/coupons', [PublicCouponController::class, 'index']);
 Route::get('/banners', [PublicBannerController::class, 'index']);
 Route::get('/site-settings', [PublicSiteSettingController::class, 'show']);
 Route::post('/newsletter/subscribe', [PublicNewsletterController::class, 'subscribe']);
+Route::get('/glampings', [PublicGlampingController::class, 'index']);
+Route::get('/glampings/{slug}', [PublicGlampingController::class, 'show']);
+Route::get('/glampings/{slug}/availability', PublicGlampingAvailabilityController::class);
+Route::get('/glampings/{slug}/reviews', [PublicGlampingReviewController::class, 'index']);
 Route::get('/homestays', [PublicHomestayController::class, 'index']);
 Route::get('/homestays/{slug}', [PublicHomestayController::class, 'show']);
 Route::get('/homestays/{slug}/availability', PublicHomestayAvailabilityController::class);
@@ -120,6 +130,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/villas/{villa}/availability', [MitraVillaAvailabilityController::class, 'index']);
         Route::put('/villas/{villa}/availability', [MitraVillaAvailabilityController::class, 'update']);
 
+        Route::apiResource('glampings', MitraGlampingController::class);
+        Route::post('/glampings/{glamping}/submit', [MitraGlampingController::class, 'submit']);
+        Route::post('/glampings/{glamping}/images', [GlampingImageController::class, 'store']);
+        Route::delete('/glampings/{glamping}/images/{image}', [GlampingImageController::class, 'destroy']);
+
         Route::apiResource('homestays', MitraHomestayController::class);
         Route::post('/homestays/{homestay}/submit', [MitraHomestayController::class, 'submit']);
         Route::post('/homestays/{homestay}/images', [HomestayImageController::class, 'store']);
@@ -151,6 +166,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/villas', [VillaModerationController::class, 'index']);
         Route::post('/villas/{villa}/approve', [VillaModerationController::class, 'approve']);
         Route::post('/villas/{villa}/reject', [VillaModerationController::class, 'reject']);
+
+        Route::get('/glampings', [GlampingModerationController::class, 'index']);
+        Route::post('/glampings/{glamping}/approve', [GlampingModerationController::class, 'approve']);
+        Route::post('/glampings/{glamping}/reject', [GlampingModerationController::class, 'reject']);
 
         Route::get('/homestays', [HomestayModerationController::class, 'index']);
         Route::post('/homestays/{homestay}/approve', [HomestayModerationController::class, 'approve']);

@@ -3,6 +3,7 @@ const route = useRoute()
 
 const categories = [
   { to: '/villas', label: 'Villa', icon: 'villa' },
+  { to: '/glampings', label: 'Glamping', icon: 'glamping' },
   { to: '/homestays', label: 'Homestay', icon: 'homestay' },
   { to: '/gathering-venues', label: 'Lokasi Gathering', icon: 'gathering' },
   { to: '/transports', label: 'Transport', icon: 'transport' },
@@ -35,6 +36,22 @@ function isActive(to: string) {
       >
         <path d="M3 10.5 12 3l9 7.5" />
         <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" />
+      </svg>
+      <svg
+        v-else-if="category.icon === 'glamping'"
+        class="h-5 w-5 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 3.5 20 20H4L12 3.5Z" />
+        <path d="M12 3.5 15.5 20" />
+        <path d="M12 3.5 8.5 20" />
+        <path d="M9.5 15h5" />
       </svg>
       <svg
         v-else-if="category.icon === 'homestay'"

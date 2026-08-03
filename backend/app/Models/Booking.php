@@ -50,8 +50,8 @@ class Booking extends Model
     }
 
     /**
-     * The listing being booked — Villa, Homestay, GatheringVenue, or
-     * Transport.
+     * The listing being booked — Villa, Glamping, Homestay, GatheringVenue,
+     * or Transport.
      */
     public function bookable(): MorphTo
     {
@@ -111,7 +111,7 @@ class Booking extends Model
      */
     public static function bookableTypes(): array
     {
-        return [Villa::class, Homestay::class, GatheringVenue::class, Transport::class];
+        return [Villa::class, Glamping::class, Homestay::class, GatheringVenue::class, Transport::class];
     }
 
     /**

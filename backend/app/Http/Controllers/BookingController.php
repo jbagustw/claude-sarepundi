@@ -7,11 +7,13 @@ use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Models\GatheringVenue;
 use App\Models\GatheringVenueSlot;
+use App\Models\Glamping;
 use App\Models\Homestay;
 use App\Models\Transport;
 use App\Models\Villa;
 use App\Services\BookingCancellationService;
 use App\Services\GatheringVenueAvailabilityService;
+use App\Services\GlampingAvailabilityService;
 use App\Services\HomestayAvailabilityService;
 use App\Services\TransportAvailabilityService;
 use App\Services\VillaAvailabilityService;
@@ -44,6 +46,7 @@ class BookingController extends Controller
     public function store(
         StoreBookingRequest $request,
         VillaAvailabilityService $villaService,
+        GlampingAvailabilityService $glampingService,
         HomestayAvailabilityService $homestayService,
         GatheringVenueAvailabilityService $gatheringVenueService,
         TransportAvailabilityService $transportService,
@@ -53,7 +56,16 @@ class BookingController extends Controller
         $withDriver = null;
         $couponCode = $data['coupon_code'] ?? null;
 
-        if ($data['bookable_type'] === 'homestay') {
+        if ($data['bookable_type'] === 'glamping') {
+            $bookable = Glamping::publiclyVisible()->findOrFail($data['bookable_id']);
+            $result = $glampingService->evaluate(
+                $bookable,
+                CarbonImmutable::parse($data['check_in_date']),
+                CarbonImmutable::parse($data['check_out_date']),
+                $data['guest_count'],
+                $couponCode,
+            );
+        } elseif ($data['bookable_type'] === 'homestay') {
             $bookable = Homestay::publiclyVisible()->findOrFail($data['bookable_id']);
             $result = $homestayService->evaluate(
                 $bookable,

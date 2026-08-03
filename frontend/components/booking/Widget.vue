@@ -2,7 +2,7 @@
 import type { AvailabilityResult } from '~/types/booking'
 
 const props = defineProps<{
-  bookableType: 'villa' | 'homestay' | 'transport'
+  bookableType: 'villa' | 'glamping' | 'homestay' | 'transport'
   bookableSlug: string
   bookableId: number
   basePrice: number
@@ -27,6 +27,7 @@ const result = ref<AvailabilityResult | null>(null)
 const errorMessage = ref('')
 
 const resourcePathSegment = computed(() => {
+  if (props.bookableType === 'glamping') return 'glampings'
   if (props.bookableType === 'homestay') return 'homestays'
   if (props.bookableType === 'transport') return 'transports'
   return 'villas'

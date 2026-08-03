@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Mitra;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Glamping;
 use App\Models\Homestay;
 use App\Models\Transport;
 use App\Models\Villa;
@@ -35,6 +36,7 @@ class DashboardController extends Controller
             ->sum('mitra_payout_amount');
 
         $publishedVillaCount = $mitraProfile->villas()->where('status', 'published')->count();
+        $publishedGlampingCount = $mitraProfile->glampings()->where('status', 'published')->count();
         $publishedHomestayCount = $mitraProfile->homestays()->where('status', 'published')->count();
         $publishedTransportCount = $mitraProfile->transports()->where('status', 'published')->count();
 
@@ -43,6 +45,8 @@ class DashboardController extends Controller
             'booking_counts' => $bookingCounts,
             'total_villas' => $mitraProfile->villas()->count(),
             'published_villas' => $publishedVillaCount,
+            'total_glampings' => $mitraProfile->glampings()->count(),
+            'published_glampings' => $publishedGlampingCount,
             'total_homestays' => $mitraProfile->homestays()->count(),
             'published_homestays' => $publishedHomestayCount,
             'total_gathering_venues' => $mitraProfile->gatheringVenues()->count(),
@@ -50,20 +54,20 @@ class DashboardController extends Controller
             'total_transports' => $mitraProfile->transports()->count(),
             'published_transports' => $publishedTransportCount,
             // Occupancy is a nights/days-booked metric, which fits Villa,
-            // Homestay, and Transport (all date-range rentals) but not
-            // gathering venues (per-slot, multiple bookings/day possible).
+            // Glamping, Homestay, and Transport (all date-range rentals) but
+            // not gathering venues (per-slot, multiple bookings/day possible).
             'occupancy_rate' => $this->occupancyRateThisMonth(
                 $mitraProfile,
-                $publishedVillaCount + $publishedHomestayCount + $publishedTransportCount
+                $publishedVillaCount + $publishedGlampingCount + $publishedHomestayCount + $publishedTransportCount
             ),
         ]]);
     }
 
     /**
-     * % of this month's listing-nights (villa + homestay + transport
-     * combined) that are booked (confirmed or beyond), across all of this
-     * mitra's published listings. Nights from bookings that only partially
-     * overlap the month are clipped to it.
+     * % of this month's listing-nights (villa + glamping + homestay +
+     * transport combined) that are booked (confirmed or beyond), across all
+     * of this mitra's published listings. Nights from bookings that only
+     * partially overlap the month are clipped to it.
      */
     private function occupancyRateThisMonth($mitraProfile, int $publishedListingCount): float
     {
@@ -75,7 +79,7 @@ class DashboardController extends Controller
         $monthEnd = now()->endOfMonth();
 
         $bookedNights = Booking::forMitra($mitraProfile)
-            ->whereIn('bookable_type', [Villa::class, Homestay::class, Transport::class])
+            ->whereIn('bookable_type', [Villa::class, Glamping::class, Homestay::class, Transport::class])
             ->whereIn('status', self::OCCUPYING_STATUSES)
             ->where('check_in_date', '<', $monthEnd)
             ->where('check_out_date', '>', $monthStart)
