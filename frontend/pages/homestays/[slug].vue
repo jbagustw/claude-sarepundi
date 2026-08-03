@@ -39,7 +39,7 @@ onMounted(async () => {
           <span>{{ homestay.bathroom_count }} kamar mandi</span>
         </div>
 
-        <p v-if="homestay.description" class="mt-4 whitespace-pre-line text-gray-700">{{ homestay.description }}</p>
+        <div v-if="homestay.description" class="prose prose-sm mt-4 max-w-none text-gray-700" v-html="homestay.description" />
 
         <div v-if="homestay.facilities.length" class="mt-4">
           <h2 class="font-display font-semibold text-gray-900">Fasilitas</h2>

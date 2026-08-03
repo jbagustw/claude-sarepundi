@@ -37,7 +37,7 @@ onMounted(async () => {
           <span>Kapasitas {{ venue.capacity }} orang</span>
         </div>
 
-        <p v-if="venue.description" class="mt-4 whitespace-pre-line text-gray-700">{{ venue.description }}</p>
+        <div v-if="venue.description" class="prose prose-sm mt-4 max-w-none text-gray-700" v-html="venue.description" />
 
         <div v-if="venue.facilities.length" class="mt-4">
           <h2 class="font-display font-semibold text-gray-900">Fasilitas</h2>

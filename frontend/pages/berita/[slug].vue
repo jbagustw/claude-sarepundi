@@ -42,7 +42,7 @@ onMounted(async () => {
         alt=""
       >
 
-      <div class="card mt-6 whitespace-pre-line p-6 text-gray-700">{{ article.content }}</div>
+      <div class="card prose prose-sm sm:prose-base mt-6 max-w-none p-6 text-gray-700" v-html="article.content" />
 
       <div class="mt-6">
         <NuxtLink to="/berita" class="btn-outline">&larr; Kembali ke Berita &amp; Artikel</NuxtLink>

@@ -89,6 +89,21 @@ class VillaModuleTest extends TestCase
         $this->assertDatabaseHas('villas', ['name' => 'Villa Damai Yogyakarta', 'status' => 'draft']);
     }
 
+    public function test_villa_description_is_sanitized_on_create(): void
+    {
+        $mitra = $this->approvedMitra();
+
+        $response = $this->fromFrontend()->actingAs($mitra)->postJson('/api/mitra/villas', $this->villaPayload([
+            'description' => '<p>Villa bagus</p><script>alert(1)</script><img src=x onerror=alert(1)>',
+        ]));
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('villas', [
+            'name' => 'Villa Damai Yogyakarta',
+            'description' => '<p>Villa bagus</p>',
+        ]);
+    }
+
     public function test_pending_mitra_can_still_create_a_draft_villa(): void
     {
         $mitra = $this->pendingMitra();

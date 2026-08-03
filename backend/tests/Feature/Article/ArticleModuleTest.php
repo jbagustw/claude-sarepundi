@@ -74,6 +74,24 @@ class ArticleModuleTest extends TestCase
         $this->assertDatabaseHas('articles', ['title' => 'Tips Packing Ringan', 'status' => 'draft']);
     }
 
+    public function test_article_content_is_sanitized_on_create(): void
+    {
+        $admin = $this->admin();
+
+        $response = $this->fromFrontend()->actingAs($admin)->postJson('/api/admin/articles', [
+            'title' => 'Tips Packing Ringan',
+            'category' => 'Tips Liburan',
+            'excerpt' => 'Biar koper tidak kelebihan bagasi.',
+            'content' => '<p>Isi artikel</p><script>alert(1)</script>',
+        ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('articles', [
+            'title' => 'Tips Packing Ringan',
+            'content' => '<p>Isi artikel</p>',
+        ]);
+    }
+
     public function test_article_slug_is_auto_generated_and_unique(): void
     {
         $admin = $this->admin();

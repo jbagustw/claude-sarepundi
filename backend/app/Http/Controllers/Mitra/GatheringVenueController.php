@@ -7,6 +7,7 @@ use App\Http\Requests\GatheringVenue\StoreGatheringVenueRequest;
 use App\Http\Requests\GatheringVenue\UpdateGatheringVenueRequest;
 use App\Http\Resources\GatheringVenueResource;
 use App\Models\GatheringVenue;
+use App\Services\HtmlSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -29,6 +30,9 @@ class GatheringVenueController extends Controller
     public function store(StoreGatheringVenueRequest $request)
     {
         $data = $request->validated();
+        if (array_key_exists('description', $data)) {
+            $data['description'] = HtmlSanitizer::clean($data['description']);
+        }
 
         $venue = $request->user()->mitraProfile->gatheringVenues()->create([
             ...$data,
@@ -53,6 +57,9 @@ class GatheringVenueController extends Controller
     public function update(UpdateGatheringVenueRequest $request, GatheringVenue $gatheringVenue)
     {
         $data = $request->validated();
+        if (array_key_exists('description', $data)) {
+            $data['description'] = HtmlSanitizer::clean($data['description']);
+        }
 
         $gatheringVenue->update($data);
 

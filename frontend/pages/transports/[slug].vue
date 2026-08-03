@@ -45,7 +45,7 @@ onMounted(async () => {
           <span>Kapasitas {{ transport.capacity }} kursi</span>
         </div>
 
-        <p v-if="transport.description" class="mt-4 whitespace-pre-line text-gray-700">{{ transport.description }}</p>
+        <div v-if="transport.description" class="prose prose-sm mt-4 max-w-none text-gray-700" v-html="transport.description" />
 
         <p class="mt-4 text-sm text-gray-500">Dikelola oleh {{ transport.mitra.business_name }}</p>
 

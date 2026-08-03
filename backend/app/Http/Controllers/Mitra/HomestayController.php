@@ -7,6 +7,7 @@ use App\Http\Requests\Homestay\StoreHomestayRequest;
 use App\Http\Requests\Homestay\UpdateHomestayRequest;
 use App\Http\Resources\HomestayResource;
 use App\Models\Homestay;
+use App\Services\HtmlSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -29,6 +30,9 @@ class HomestayController extends Controller
     public function store(StoreHomestayRequest $request)
     {
         $data = $request->validated();
+        if (array_key_exists('description', $data)) {
+            $data['description'] = HtmlSanitizer::clean($data['description']);
+        }
 
         $homestay = $request->user()->mitraProfile->homestays()->create([
             ...$data,
@@ -53,6 +57,9 @@ class HomestayController extends Controller
     public function update(UpdateHomestayRequest $request, Homestay $homestay)
     {
         $data = $request->validated();
+        if (array_key_exists('description', $data)) {
+            $data['description'] = HtmlSanitizer::clean($data['description']);
+        }
 
         $homestay->update($data);
 

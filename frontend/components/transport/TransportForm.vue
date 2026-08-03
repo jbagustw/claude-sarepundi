@@ -49,11 +49,11 @@ const form = computed({
 
     <div>
       <label class="block text-sm font-medium text-gray-700" for="transport-description">Deskripsi</label>
-      <textarea
+      <RichTextEditor
         id="transport-description"
         v-model="form.description"
-        rows="4"
-        class="field-input mt-1"
+        placeholder="Ceritakan keunggulan kendaraan ini..."
+        class="mt-1"
       />
     </div>
 

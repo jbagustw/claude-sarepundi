@@ -60,13 +60,11 @@ const form = computed({
 
     <div>
       <label class="field-label" for="article-content">Isi Artikel</label>
-      <textarea
+      <RichTextEditor
         id="article-content"
         v-model="form.content"
-        rows="12"
-        required
         placeholder="Tulis isi artikel di sini..."
-        class="field-input mt-1 rounded-2xl"
+        class="mt-1"
       />
       <p v-if="errors.content" class="mt-1 text-sm text-red-600">{{ errors.content[0] }}</p>
     </div>

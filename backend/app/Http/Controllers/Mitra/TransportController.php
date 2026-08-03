@@ -7,6 +7,7 @@ use App\Http\Requests\Transport\StoreTransportRequest;
 use App\Http\Requests\Transport\UpdateTransportRequest;
 use App\Http\Resources\TransportResource;
 use App\Models\Transport;
+use App\Services\HtmlSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -29,6 +30,9 @@ class TransportController extends Controller
     public function store(StoreTransportRequest $request)
     {
         $data = $request->validated();
+        if (array_key_exists('description', $data)) {
+            $data['description'] = HtmlSanitizer::clean($data['description']);
+        }
 
         $transport = $request->user()->mitraProfile->transports()->create([
             ...$data,
@@ -50,7 +54,12 @@ class TransportController extends Controller
 
     public function update(UpdateTransportRequest $request, Transport $transport)
     {
-        $transport->update($request->validated());
+        $data = $request->validated();
+        if (array_key_exists('description', $data)) {
+            $data['description'] = HtmlSanitizer::clean($data['description']);
+        }
+
+        $transport->update($data);
 
         return new TransportResource($transport->load('images'));
     }

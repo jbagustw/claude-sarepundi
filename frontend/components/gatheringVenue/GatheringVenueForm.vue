@@ -44,11 +44,11 @@ function toggleFacility(id: number) {
 
     <div>
       <label class="block text-sm font-medium text-gray-700" for="gathering-description">Deskripsi</label>
-      <textarea
+      <RichTextEditor
         id="gathering-description"
         v-model="form.description"
-        rows="4"
-        class="field-input mt-1"
+        placeholder="Ceritakan keunggulan lokasi ini..."
+        class="mt-1"
       />
       <p v-if="errors.description" class="mt-1 text-sm text-red-600">{{ errors.description[0] }}</p>
     </div>

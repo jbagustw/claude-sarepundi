@@ -7,6 +7,7 @@ use App\Http\Requests\Villa\StoreVillaRequest;
 use App\Http\Requests\Villa\UpdateVillaRequest;
 use App\Http\Resources\VillaResource;
 use App\Models\Villa;
+use App\Services\HtmlSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -29,6 +30,9 @@ class VillaController extends Controller
     public function store(StoreVillaRequest $request)
     {
         $data = $request->validated();
+        if (array_key_exists('description', $data)) {
+            $data['description'] = HtmlSanitizer::clean($data['description']);
+        }
 
         $villa = $request->user()->mitraProfile->villas()->create([
             ...$data,
@@ -53,6 +57,9 @@ class VillaController extends Controller
     public function update(UpdateVillaRequest $request, Villa $villa)
     {
         $data = $request->validated();
+        if (array_key_exists('description', $data)) {
+            $data['description'] = HtmlSanitizer::clean($data['description']);
+        }
 
         $villa->update($data);
 

@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateArticleRequest;
 use App\Http\Requests\Admin\UploadArticleCoverRequest;
 use App\Http\Resources\ArticleResource;
 use App\Models\Article;
+use App\Services\HtmlSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -32,6 +33,7 @@ class ArticleController extends Controller
     public function store(StoreArticleRequest $request)
     {
         $data = $request->validated();
+        $data['content'] = HtmlSanitizer::clean($data['content']);
 
         $article = Article::create([
             ...$data,
@@ -52,7 +54,12 @@ class ArticleController extends Controller
 
     public function update(UpdateArticleRequest $request, Article $article)
     {
-        $article->update($request->validated());
+        $data = $request->validated();
+        if (array_key_exists('content', $data)) {
+            $data['content'] = HtmlSanitizer::clean($data['content']);
+        }
+
+        $article->update($data);
 
         return new ArticleResource($article->load('author'));
     }
