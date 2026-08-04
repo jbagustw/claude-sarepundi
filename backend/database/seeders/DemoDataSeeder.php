@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Apartment;
 use App\Models\Article;
 use App\Models\Banner;
 use App\Models\Booking;
@@ -10,20 +9,17 @@ use App\Models\Coupon;
 use App\Models\Facility;
 use App\Models\GatheringVenue;
 use App\Models\GatheringVenueSlot;
-use App\Models\Glamping;
 use App\Models\Homestay;
 use App\Models\MitraProfile;
 use App\Models\Notification;
-use App\Models\Payment;
 use App\Models\Payout;
 use App\Models\Refund;
 use App\Models\Review;
 use App\Models\Transport;
 use App\Models\User;
 use App\Models\Villa;
+use Database\Seeders\Concerns\DemoSeederHelpers;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -41,10 +37,7 @@ use Illuminate\Support\Str;
  */
 class DemoDataSeeder extends Seeder
 {
-    /** @var array<int, string> raw image bytes downloaded once and reused across listings */
-    private array $imagePool = [];
-
-    private int $poolCursor = 0;
+    use DemoSeederHelpers;
 
     public function run(): void
     {
@@ -52,17 +45,15 @@ class DemoDataSeeder extends Seeder
 
         $admin = User::where('email', 'admin@bookingvilla.test')->first();
 
-        $users = $this->createUsers();
+        $users = $this->demoUsers();
         $mitras = $this->createMitras($admin);
 
         $villas = $this->createVillas($mitras, $admin);
-        $glampings = $this->createGlampings($mitras, $admin);
         $homestays = $this->createHomestays($mitras, $admin);
-        $apartments = $this->createApartments($mitras, $admin);
         $gatheringVenues = $this->createGatheringVenues($mitras, $admin);
         $transports = $this->createTransports($mitras, $admin);
 
-        $bookings = $this->createBookings($users, $villas, $glampings, $homestays, $apartments, $gatheringVenues, $transports);
+        $bookings = $this->createBookings($users, $villas, $homestays, $gatheringVenues, $transports);
 
         $this->createReviews($bookings);
         $this->createPayouts($mitras, $bookings);
@@ -71,84 +62,16 @@ class DemoDataSeeder extends Seeder
         $this->createCoupons();
         $this->createBanners();
 
+        // Glamping and Apartment each own their mitra/listings/bookings —
+        // delegated to standalone seeders (see their docblocks) so they can
+        // also be run individually to top up a server that already has the
+        // rest of this demo dataset (or real data) without touching it.
+        $this->call([GlampingDemoSeeder::class, ApartmentDemoSeeder::class]);
+
         $this->command?->info('Demo data seeded. All demo accounts use password "password".');
     }
 
-    // --- Image pool -----------------------------------------------------
-
-    private function downloadImagePool(): void
-    {
-        foreach (range(1, 16) as $seed) {
-            try {
-                $response = Http::timeout(15)->get("https://picsum.photos/seed/sarepundi{$seed}/1000/700");
-                if ($response->successful()) {
-                    $this->imagePool[] = $response->body();
-                }
-            } catch (\Throwable $e) {
-                // Network unavailable on this server — listings created
-                // without images are still fully functional, just less
-                // visually complete. Not worth failing the whole seed.
-            }
-        }
-
-        if (empty($this->imagePool)) {
-            $this->command?->warn('Tidak bisa mengunduh gambar demo (cek koneksi internet server). Listing akan dibuat tanpa foto.');
-        }
-    }
-
-    private function nextImage(): ?string
-    {
-        if (empty($this->imagePool)) {
-            return null;
-        }
-
-        $image = $this->imagePool[$this->poolCursor % count($this->imagePool)];
-        $this->poolCursor++;
-
-        return $image;
-    }
-
-    private function storeImage(string $directory): ?string
-    {
-        $bytes = $this->nextImage();
-        if ($bytes === null) {
-            return null;
-        }
-
-        $path = $directory.'/'.Str::random(20).'.jpg';
-        Storage::disk('public')->put($path, $bytes);
-
-        return $path;
-    }
-
     // --- Users & mitras ---------------------------------------------------
-
-    /** @return array<int, User> */
-    private function createUsers(): array
-    {
-        $names = [
-            'Dewi Anggraini', 'Budi Santoso', 'Siti Rahma', 'Andi Prasetyo',
-            'Rina Wijaya', 'Fajar Hidayat', 'Maya Kusuma', 'Rizky Ramadhan',
-        ];
-
-        return collect($names)->map(function (string $name, int $index) {
-            $user = User::firstOrCreate(
-                ['email' => 'user'.($index + 1).'@sarepundi.demo'],
-                [
-                    'name' => $name,
-                    'password' => bcrypt('password'),
-                    'phone' => '0812'.rand(10000000, 99999999),
-                    'status' => 'active',
-                    'email_verified_at' => now(),
-                ]
-            );
-            if (! $user->hasRole('user')) {
-                $user->assignRole('user');
-            }
-
-            return $user;
-        })->all();
-    }
 
     /** @return array<string, MitraProfile> keyed by a short handle used elsewhere in this seeder */
     private function createMitras(User $admin): array
@@ -159,8 +82,9 @@ class DemoDataSeeder extends Seeder
             'events' => ['business_name' => 'Grand Events Hall', 'email' => 'mitra3@sarepundi.demo'],
             'transport' => ['business_name' => 'Nusantara Transport', 'email' => 'mitra4@sarepundi.demo'],
             'lombok' => ['business_name' => 'Lombok Paradise Stays', 'email' => 'mitra5@sarepundi.demo'],
-            'jatim' => ['business_name' => 'Kaliwatu Glamping Nusantara', 'email' => 'mitra7-glamping@sarepundi.demo'],
-            'jakarta' => ['business_name' => 'Jakarta Apartment Living', 'email' => 'mitra8-apartment@sarepundi.demo'],
+            // 'jatim' (Glamping) and 'jakarta' (Apartment) mitras are owned
+            // by GlampingDemoSeeder / ApartmentDemoSeeder respectively —
+            // see the call in run().
         ];
 
         $mitras = [];
@@ -260,45 +184,6 @@ class DemoDataSeeder extends Seeder
         return $villas;
     }
 
-    /** @return array<string, Glamping> */
-    private function createGlampings(array $mitras, User $admin): array
-    {
-        $facilityIds = Facility::pluck('id', 'name');
-        $glampings = [];
-
-        $roster = [
-            'batu' => ['name' => 'Kaliwatu Glamping Batu', 'city' => 'Batu', 'price' => 850000, 'status' => 'published'],
-            'bromo' => ['name' => 'Glamping Bromo Savana', 'city' => 'Probolinggo', 'price' => 750000, 'status' => 'published'],
-            'malang' => ['name' => 'Glamping Coban Rondo Malang', 'city' => 'Malang', 'price' => 650000, 'status' => 'published'],
-            'pacet' => ['name' => 'Glamping Pacet Hills', 'city' => 'Mojokerto', 'price' => 700000, 'status' => 'pending_review'],
-        ];
-
-        foreach ($roster as $handle => $info) {
-            $glamping = $mitras['jatim']->glampings()->create([
-                'name' => $info['name'],
-                'slug' => Str::slug($info['name']),
-                'description' => "{$info['name']} menghadirkan pengalaman camping ala hotel di tengah alam {$info['city']}, lengkap dengan tenda dome nyaman dan fasilitas layaknya penginapan bintang.",
-                'address' => "Kawasan Wisata {$info['city']}",
-                'city' => $info['city'],
-                'province' => 'Jawa Timur',
-                'capacity_guest' => rand(2, 6),
-                'bedroom_count' => rand(1, 3),
-                'bathroom_count' => rand(1, 2),
-                'base_price' => $info['price'],
-                'status' => $info['status'],
-                'reviewed_by' => $info['status'] === 'published' ? $admin->id : null,
-                'reviewed_at' => $info['status'] === 'published' ? now()->subDays(10) : null,
-            ]);
-
-            $this->attachFacilities($glamping, $facilityIds);
-            $this->attachImages($glamping, 'glamping-images', 3);
-
-            $glampings[$handle] = $glamping;
-        }
-
-        return $glampings;
-    }
-
     /** @return array<string, Homestay> */
     private function createHomestays(array $mitras, User $admin): array
     {
@@ -337,45 +222,6 @@ class DemoDataSeeder extends Seeder
         }
 
         return $homestays;
-    }
-
-    /** @return array<string, Apartment> */
-    private function createApartments(array $mitras, User $admin): array
-    {
-        $facilityIds = Facility::pluck('id', 'name');
-        $apartments = [];
-
-        $roster = [
-            'kemang' => ['name' => 'Apartemen Kemang Village', 'city' => 'Jakarta', 'price' => 550000, 'status' => 'published'],
-            'sudirman' => ['name' => 'Apartemen Sudirman Suites', 'city' => 'Jakarta', 'price' => 650000, 'status' => 'published'],
-            'gubeng' => ['name' => 'Apartemen Gubeng Residence', 'city' => 'Surabaya', 'price' => 400000, 'status' => 'published'],
-            'dharmahusada' => ['name' => 'Apartemen Dharmahusada Tower', 'city' => 'Surabaya', 'price' => 380000, 'status' => 'pending_review'],
-        ];
-
-        foreach ($roster as $handle => $info) {
-            $apartment = $mitras['jakarta']->apartments()->create([
-                'name' => $info['name'],
-                'slug' => Str::slug($info['name']),
-                'description' => "{$info['name']} adalah unit apartemen yang bisa disewa harian, lengkap dengan fasilitas modern di lokasi strategis {$info['city']}.",
-                'address' => "Jl. {$info['city']} No. ".rand(1, 99),
-                'city' => $info['city'],
-                'province' => $info['city'] === 'Jakarta' ? 'DKI Jakarta' : 'Jawa Timur',
-                'capacity_guest' => rand(2, 4),
-                'bedroom_count' => rand(1, 2),
-                'bathroom_count' => 1,
-                'base_price' => $info['price'],
-                'status' => $info['status'],
-                'reviewed_by' => $info['status'] === 'published' ? $admin->id : null,
-                'reviewed_at' => $info['status'] === 'published' ? now()->subDays(8) : null,
-            ]);
-
-            $this->attachFacilities($apartment, $facilityIds);
-            $this->attachImages($apartment, 'apartment-images', 3);
-
-            $apartments[$handle] = $apartment;
-        }
-
-        return $apartments;
     }
 
     /** @return array<string, GatheringVenue> */
@@ -463,61 +309,10 @@ class DemoDataSeeder extends Seeder
         return $transports;
     }
 
-    private function attachFacilities($listing, $facilityIds): void
-    {
-        $ids = collect($facilityIds)->values()->shuffle()->take(rand(3, 5))->all();
-        $listing->facilities()->syncWithoutDetaching($ids);
-    }
-
-    private function attachImages($listing, string $directory, int $count): void
-    {
-        for ($i = 0; $i < $count; $i++) {
-            $path = $this->storeImage($directory);
-            if ($path === null) {
-                continue;
-            }
-            $listing->images()->create([
-                'image_url' => $path,
-                'is_primary' => $i === 0,
-                'sort_order' => $i,
-            ]);
-        }
-    }
-
     // --- Bookings -----------------------------------------------------
 
-    private function pricing(int $pricePerUnit, int $units): array
-    {
-        $total = $pricePerUnit * $units;
-        $commission = (int) round($total * 0.1);
-
-        return [$total, $commission, $total - $commission];
-    }
-
-    private function makeBooking(array $attributes): Booking
-    {
-        return Booking::create(array_merge([
-            'booking_code' => 'BK'.strtoupper(Str::random(10)),
-            // None of the demo bookings apply a coupon, so subtotal is
-            // always the same as total_price unless a call site overrides it.
-            'subtotal' => $attributes['total_price'],
-        ], $attributes));
-    }
-
-    private function makePayment(Booking $booking, string $status, ?\DateTimeInterface $paidAt = null): Payment
-    {
-        return Payment::create([
-            'booking_id' => $booking->id,
-            'xendit_invoice_id' => 'demo_inv_'.Str::random(12),
-            'invoice_url' => null,
-            'amount' => $booking->total_price,
-            'status' => $status,
-            'paid_at' => $paidAt,
-        ]);
-    }
-
     /** @return array<int, Booking> */
-    private function createBookings(array $users, array $villas, array $glampings, array $homestays, array $apartments, array $gatheringVenues, array $transports): array
+    private function createBookings(array $users, array $villas, array $homestays, array $gatheringVenues, array $transports): array
     {
         $bookings = [];
 
@@ -594,59 +389,6 @@ class DemoDataSeeder extends Seeder
         Refund::create(['booking_id' => $booking->id, 'payment_id' => $payment->id, 'amount' => $refundAmount, 'percentage' => 85, 'reason' => 'user_cancel_confirmed', 'xendit_refund_id' => 'demo_rfd_'.Str::random(10), 'status' => 'succeeded', 'processed_at' => now()->subDay()]);
         $bookings['villa_cancelled_user'] = $booking;
 
-        // --- Glamping bookings (Kaliwatu Glamping Nusantara, Jawa Timur) ---
-        [$total, $commission, $payout] = $this->pricing($glampings['batu']->base_price, 2);
-        $bookings['glamping_pending_payment'] = $this->makeBooking([
-            'user_id' => $users[2]->id, 'bookable_type' => Glamping::class, 'bookable_id' => $glampings['batu']->id,
-            'check_in_date' => now()->addDays(18), 'check_out_date' => now()->addDays(20), 'guest_count' => 2,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'pending_payment',
-        ]);
-
-        [$total, $commission, $payout] = $this->pricing($glampings['batu']->base_price, 2);
-        $booking = $this->makeBooking([
-            'user_id' => $users[6]->id, 'bookable_type' => Glamping::class, 'bookable_id' => $glampings['batu']->id,
-            'check_in_date' => now()->addDays(6), 'check_out_date' => now()->addDays(8), 'guest_count' => 4,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'dikonfirmasi', 'mitra_confirmed_at' => now()->subHours(5),
-        ]);
-        $this->makePayment($booking, 'success', now()->subHours(5));
-        $bookings['glamping_confirmed_recent'] = $booking;
-
-        [$total, $commission, $payout] = $this->pricing($glampings['bromo']->base_price, 1);
-        $booking = $this->makeBooking([
-            'user_id' => $users[7]->id, 'bookable_type' => Glamping::class, 'bookable_id' => $glampings['bromo']->id,
-            'check_in_date' => now()->addDays(4), 'check_out_date' => now()->addDays(5), 'guest_count' => 2,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'dikonfirmasi', 'mitra_confirmed_at' => now()->subDay(),
-        ]);
-        $this->makePayment($booking, 'success', now()->subDays(2));
-        $bookings['glamping_confirmed'] = $booking;
-
-        [$total, $commission, $payout] = $this->pricing($glampings['malang']->base_price, 2);
-        $booking = $this->makeBooking([
-            'user_id' => $users[3]->id, 'bookable_type' => Glamping::class, 'bookable_id' => $glampings['malang']->id,
-            'check_in_date' => now()->subDays(9), 'check_out_date' => now()->subDays(7), 'guest_count' => 3,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'selesai', 'mitra_confirmed_at' => now()->subDays(11),
-        ]);
-        $this->makePayment($booking, 'success', now()->subDays(12));
-        $bookings['glamping_done'] = $booking;
-
-        [$total, $commission, $payout] = $this->pricing($glampings['bromo']->base_price, 2);
-        $refundAmount = (int) round($total * 0.85);
-        $booking = $this->makeBooking([
-            'user_id' => $users[2]->id, 'bookable_type' => Glamping::class, 'bookable_id' => $glampings['bromo']->id,
-            'check_in_date' => now()->addDays(13), 'check_out_date' => now()->addDays(15), 'guest_count' => 2,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'dibatalkan_user', 'mitra_confirmed_at' => now()->subDays(2),
-            'cancellation_reason' => 'user_cancel_confirmed', 'cancelled_at' => now()->subHours(6),
-            'refund_amount' => $refundAmount, 'refund_percentage' => 85,
-        ]);
-        $payment = $this->makePayment($booking, 'refunded', now()->subDays(3));
-        Refund::create(['booking_id' => $booking->id, 'payment_id' => $payment->id, 'amount' => $refundAmount, 'percentage' => 85, 'reason' => 'user_cancel_confirmed', 'xendit_refund_id' => 'demo_rfd_'.Str::random(10), 'status' => 'succeeded', 'processed_at' => now()->subHours(5)]);
-        $bookings['glamping_cancelled_user'] = $booking;
-
         // --- Homestay bookings (Jogja Homestay Nusantara) ---
         [$total, $commission, $payout] = $this->pricing($homestays['malioboro']->base_price, 2);
         $bookings['homestay_pending_payment'] = $this->makeBooking([
@@ -698,59 +440,6 @@ class DemoDataSeeder extends Seeder
         $payment = $this->makePayment($booking, 'refunded', now()->subDays(1));
         Refund::create(['booking_id' => $booking->id, 'payment_id' => $payment->id, 'amount' => $refundAmount, 'percentage' => 85, 'reason' => 'user_cancel_confirmed', 'xendit_refund_id' => 'demo_rfd_'.Str::random(10), 'status' => 'succeeded', 'processed_at' => now()->subHours(2)]);
         $bookings['homestay_cancelled_user'] = $booking;
-
-        // --- Apartment bookings (Jakarta Apartment Living) ---
-        [$total, $commission, $payout] = $this->pricing($apartments['kemang']->base_price, 2);
-        $bookings['apartment_pending_payment'] = $this->makeBooking([
-            'user_id' => $users[3]->id, 'bookable_type' => Apartment::class, 'bookable_id' => $apartments['kemang']->id,
-            'check_in_date' => now()->addDays(16), 'check_out_date' => now()->addDays(18), 'guest_count' => 2,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'pending_payment',
-        ]);
-
-        [$total, $commission, $payout] = $this->pricing($apartments['kemang']->base_price, 3);
-        $booking = $this->makeBooking([
-            'user_id' => $users[7]->id, 'bookable_type' => Apartment::class, 'bookable_id' => $apartments['kemang']->id,
-            'check_in_date' => now()->addDays(5), 'check_out_date' => now()->addDays(8), 'guest_count' => 3,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'dikonfirmasi', 'mitra_confirmed_at' => now()->subHours(3),
-        ]);
-        $this->makePayment($booking, 'success', now()->subHours(3));
-        $bookings['apartment_confirmed_recent'] = $booking;
-
-        [$total, $commission, $payout] = $this->pricing($apartments['sudirman']->base_price, 2);
-        $booking = $this->makeBooking([
-            'user_id' => $users[0]->id, 'bookable_type' => Apartment::class, 'bookable_id' => $apartments['sudirman']->id,
-            'check_in_date' => now()->addDays(3), 'check_out_date' => now()->addDays(5), 'guest_count' => 2,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'dikonfirmasi', 'mitra_confirmed_at' => now()->subDay(),
-        ]);
-        $this->makePayment($booking, 'success', now()->subDays(2));
-        $bookings['apartment_confirmed'] = $booking;
-
-        [$total, $commission, $payout] = $this->pricing($apartments['gubeng']->base_price, 2);
-        $booking = $this->makeBooking([
-            'user_id' => $users[5]->id, 'bookable_type' => Apartment::class, 'bookable_id' => $apartments['gubeng']->id,
-            'check_in_date' => now()->subDays(8), 'check_out_date' => now()->subDays(6), 'guest_count' => 2,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'selesai', 'mitra_confirmed_at' => now()->subDays(10),
-        ]);
-        $this->makePayment($booking, 'success', now()->subDays(11));
-        $bookings['apartment_done'] = $booking;
-
-        [$total, $commission, $payout] = $this->pricing($apartments['sudirman']->base_price, 2);
-        $refundAmount = (int) round($total * 0.85);
-        $booking = $this->makeBooking([
-            'user_id' => $users[7]->id, 'bookable_type' => Apartment::class, 'bookable_id' => $apartments['sudirman']->id,
-            'check_in_date' => now()->addDays(12), 'check_out_date' => now()->addDays(14), 'guest_count' => 2,
-            'total_price' => $total, 'commission_amount' => $commission, 'mitra_payout_amount' => $payout,
-            'status' => 'dibatalkan_user', 'mitra_confirmed_at' => now()->subDays(1),
-            'cancellation_reason' => 'user_cancel_confirmed', 'cancelled_at' => now()->subHours(4),
-            'refund_amount' => $refundAmount, 'refund_percentage' => 85,
-        ]);
-        $payment = $this->makePayment($booking, 'refunded', now()->subDays(2));
-        Refund::create(['booking_id' => $booking->id, 'payment_id' => $payment->id, 'amount' => $refundAmount, 'percentage' => 85, 'reason' => 'user_cancel_confirmed', 'xendit_refund_id' => 'demo_rfd_'.Str::random(10), 'status' => 'succeeded', 'processed_at' => now()->subHours(3)]);
-        $bookings['apartment_cancelled_user'] = $booking;
 
         // --- Gathering venue bookings (slot-based) ---
         $morningSlot = $gatheringVenues['ballroom']->slots()->where('name', 'Sesi Pagi')->first();
@@ -868,9 +557,7 @@ class DemoDataSeeder extends Seeder
         $reviewed = [
             'villa_done_1' => ['rating' => 5, 'comment' => 'Villa sangat bersih dan pemandangan sunset-nya luar biasa! Pasti balik lagi.', 'reply' => 'Terima kasih banyak sudah menginap bersama kami!'],
             'villa_done_2' => ['rating' => 4, 'comment' => 'Nyaman dan tenang, cocok untuk healing. Hanya wifi agak lambat.', 'reply' => null],
-            'glamping_done' => ['rating' => 5, 'comment' => 'Serasa camping tapi tidurnya empuk seperti di hotel, pemandangan alamnya juara!', 'reply' => 'Terima kasih sudah camping bareng kami, ditunggu kunjungan berikutnya!'],
             'homestay_done' => ['rating' => 5, 'comment' => 'Homestay-nya homey banget, tuan rumah ramah dan lokasinya strategis.', 'reply' => 'Senang kamu betah, ditunggu kunjungan berikutnya ya!'],
-            'apartment_done' => ['rating' => 4, 'comment' => 'Unitnya bersih dan lokasinya strategis dekat pusat kota, cocok untuk sewa harian.', 'reply' => 'Terima kasih atas ulasannya, sampai jumpa lagi!'],
             'gathering_done' => ['rating' => 4, 'comment' => 'Ruangannya representatif untuk meeting, fasilitas lengkap.', 'reply' => null],
             'transport_done' => ['rating' => 5, 'comment' => 'Mobil bersih, sopir tepat waktu dan sangat membantu selama perjalanan.', 'reply' => 'Terima kasih atas kepercayaannya!'],
         ];
@@ -894,9 +581,7 @@ class DemoDataSeeder extends Seeder
     {
         $groups = [
             'bali' => ['villa_done_1', 'villa_done_2'],
-            'jatim' => ['glamping_done'],
             'jogja' => ['homestay_done'],
-            'jakarta' => ['apartment_done'],
             'events' => ['gathering_done'],
             'transport' => ['transport_done'],
         ];
