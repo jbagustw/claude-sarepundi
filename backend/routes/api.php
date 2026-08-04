@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ApartmentModerationController;
 use App\Http\Controllers\Admin\ArticleController as AdminArticleController;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
@@ -18,6 +19,8 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingDocumentController;
 use App\Http\Controllers\FacilityController;
+use App\Http\Controllers\Mitra\ApartmentController as MitraApartmentController;
+use App\Http\Controllers\Mitra\ApartmentImageController;
 use App\Http\Controllers\Mitra\BookingController as MitraBookingController;
 use App\Http\Controllers\Mitra\DashboardController as MitraDashboardController;
 use App\Http\Controllers\Mitra\GatheringVenueController as MitraGatheringVenueController;
@@ -37,6 +40,9 @@ use App\Http\Controllers\Mitra\VillaController as MitraVillaController;
 use App\Http\Controllers\Mitra\VillaImageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Public\ApartmentAvailabilityController as PublicApartmentAvailabilityController;
+use App\Http\Controllers\Public\ApartmentController as PublicApartmentController;
+use App\Http\Controllers\Public\ApartmentReviewController as PublicApartmentReviewController;
 use App\Http\Controllers\Public\ArticleController as PublicArticleController;
 use App\Http\Controllers\Public\BannerController as PublicBannerController;
 use App\Http\Controllers\Public\CouponController as PublicCouponController;
@@ -83,6 +89,10 @@ Route::get('/homestays', [PublicHomestayController::class, 'index']);
 Route::get('/homestays/{slug}', [PublicHomestayController::class, 'show']);
 Route::get('/homestays/{slug}/availability', PublicHomestayAvailabilityController::class);
 Route::get('/homestays/{slug}/reviews', [PublicHomestayReviewController::class, 'index']);
+Route::get('/apartments', [PublicApartmentController::class, 'index']);
+Route::get('/apartments/{slug}', [PublicApartmentController::class, 'show']);
+Route::get('/apartments/{slug}/availability', PublicApartmentAvailabilityController::class);
+Route::get('/apartments/{slug}/reviews', [PublicApartmentReviewController::class, 'index']);
 Route::get('/gathering-venues', [PublicGatheringVenueController::class, 'index']);
 Route::get('/gathering-venues/{slug}', [PublicGatheringVenueController::class, 'show']);
 Route::get('/gathering-venues/{slug}/availability', PublicGatheringVenueAvailabilityController::class);
@@ -147,6 +157,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::post('/homestays/{homestay}/images', [HomestayImageController::class, 'store']);
         Route::delete('/homestays/{homestay}/images/{image}', [HomestayImageController::class, 'destroy']);
 
+        Route::apiResource('apartments', MitraApartmentController::class);
+        Route::post('/apartments/{apartment}/submit', [MitraApartmentController::class, 'submit']);
+        Route::post('/apartments/{apartment}/images', [ApartmentImageController::class, 'store']);
+        Route::delete('/apartments/{apartment}/images/{image}', [ApartmentImageController::class, 'destroy']);
+
         Route::apiResource('gathering-venues', MitraGatheringVenueController::class)
             ->parameters(['gathering-venues' => 'gatheringVenue']);
         Route::post('/gathering-venues/{gatheringVenue}/submit', [MitraGatheringVenueController::class, 'submit']);
@@ -181,6 +196,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/homestays', [HomestayModerationController::class, 'index']);
         Route::post('/homestays/{homestay}/approve', [HomestayModerationController::class, 'approve']);
         Route::post('/homestays/{homestay}/reject', [HomestayModerationController::class, 'reject']);
+
+        Route::get('/apartments', [ApartmentModerationController::class, 'index']);
+        Route::post('/apartments/{apartment}/approve', [ApartmentModerationController::class, 'approve']);
+        Route::post('/apartments/{apartment}/reject', [ApartmentModerationController::class, 'reject']);
 
         Route::get('/gathering-venues', [GatheringVenueModerationController::class, 'index']);
         Route::post('/gathering-venues/{gatheringVenue}/approve', [GatheringVenueModerationController::class, 'approve']);

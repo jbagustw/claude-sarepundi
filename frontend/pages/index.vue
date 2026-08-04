@@ -5,6 +5,7 @@ import type { Coupon } from '~/types/coupon'
 import type { Facility, Villa } from '~/types/villa'
 import type { Glamping } from '~/types/glamping'
 import type { Homestay } from '~/types/homestay'
+import type { Apartment } from '~/types/apartment'
 
 const authStore = useAuthStore()
 const api = useApi()
@@ -13,12 +14,13 @@ const router = useRouter()
 const { data: siteSettings } = await useSiteSettings()
 const heroImageUrl = computed(() => siteSettings.value?.hero_image_url || '/images/hero-banner.jpg')
 
-type CategoryKey = 'villa' | 'glamping' | 'homestay' | 'gathering_venue' | 'transport'
+type CategoryKey = 'villa' | 'glamping' | 'homestay' | 'apartment' | 'gathering_venue' | 'transport'
 
 const categoryTabs: { key: CategoryKey; label: string; path: string; countLabel: string; countParam: 'guests' | 'capacity' }[] = [
   { key: 'villa', label: 'Villa', path: '/villas', countLabel: 'Jumlah Tamu', countParam: 'guests' },
   { key: 'glamping', label: 'Glamping', path: '/glampings', countLabel: 'Jumlah Tamu', countParam: 'guests' },
   { key: 'homestay', label: 'Homestay', path: '/homestays', countLabel: 'Jumlah Tamu', countParam: 'guests' },
+  { key: 'apartment', label: 'Apartment', path: '/apartments', countLabel: 'Jumlah Tamu', countParam: 'guests' },
   { key: 'gathering_venue', label: 'Lokasi Gathering', path: '/gathering-venues', countLabel: 'Kapasitas', countParam: 'capacity' },
   { key: 'transport', label: 'Transport', path: '/transports', countLabel: 'Kapasitas', countParam: 'capacity' },
 ]
@@ -30,7 +32,7 @@ const destination = ref('')
 const guestCount = ref('')
 
 interface FeaturedListing {
-  type: 'villa' | 'glamping' | 'homestay'
+  type: 'villa' | 'glamping' | 'homestay' | 'apartment'
   id: number
   name: string
   slug: string
@@ -53,7 +55,7 @@ const copiedCode = ref('')
 const whyChooseUs = [
   {
     title: 'Beragam Pilihan',
-    description: 'Villa, glamping, homestay, lokasi gathering, hingga transport — semua ada dalam satu platform.',
+    description: 'Villa, glamping, homestay, apartment, lokasi gathering, hingga transport — semua ada dalam satu platform.',
     icon: 'variety',
   },
   {
@@ -169,12 +171,27 @@ const displayedListings = computed(() =>
     : allListings.value.slice(0, 6)
 )
 
+const LISTING_TYPE_PATHS: Record<FeaturedListing['type'], string> = {
+  villa: 'villas',
+  glamping: 'glampings',
+  homestay: 'homestays',
+  apartment: 'apartments',
+}
+
+const LISTING_TYPE_LABELS: Record<FeaturedListing['type'], string> = {
+  villa: 'Villa',
+  glamping: 'Glamping',
+  homestay: 'Homestay',
+  apartment: 'Apartment',
+}
+
 async function loadHomeData() {
   loading.value = true
-  const [villasRes, glampingsRes, homestaysRes, facilitiesRes, articlesRes, couponsRes, bannersRes] = await Promise.all([
+  const [villasRes, glampingsRes, homestaysRes, apartmentsRes, facilitiesRes, articlesRes, couponsRes, bannersRes] = await Promise.all([
     api<{ data: Villa[] }>('/api/villas'),
     api<{ data: Glamping[] }>('/api/glampings'),
     api<{ data: Homestay[] }>('/api/homestays'),
+    api<{ data: Apartment[] }>('/api/apartments'),
     api<{ data: Facility[] }>('/api/facilities'),
     api<{ data: Article[] }>('/api/articles'),
     api<{ data: Coupon[] }>('/api/coupons'),
@@ -214,7 +231,18 @@ async function loadHomeData() {
     reviews_avg_rating: homestay.reviews_avg_rating,
     reviews_count: homestay.reviews_count,
   }))
-  allListings.value = [...villaListings, ...glampingListings, ...homestayListings]
+  const apartmentListings: FeaturedListing[] = apartmentsRes.data.map(apartment => ({
+    type: 'apartment',
+    id: apartment.id,
+    name: apartment.name,
+    slug: apartment.slug,
+    city: apartment.city,
+    base_price: apartment.base_price,
+    image: apartment.images[0]?.url ?? null,
+    reviews_avg_rating: apartment.reviews_avg_rating,
+    reviews_count: apartment.reviews_count,
+  }))
+  allListings.value = [...villaListings, ...glampingListings, ...homestayListings, ...apartmentListings]
 
   facilities.value = facilitiesRes.data
   articles.value = articlesRes.data.slice(0, 3)
@@ -245,7 +273,7 @@ onMounted(loadHomeData)
           Pilihan Utama untuk Jelajahi Nusantara
         </h1>
         <p class="mx-auto mt-3 max-w-xl text-sm text-white/80 sm:text-base">
-          Villa, glamping, homestay, lokasi gathering, dan transport — temukan yang terbaik untuk liburan atau acaramu selanjutnya.
+          Villa, glamping, homestay, apartment, lokasi gathering, dan transport — temukan yang terbaik untuk liburan atau acaramu selanjutnya.
         </p>
 
         <template v-if="!authStore.isAuthenticated">
@@ -342,7 +370,7 @@ onMounted(loadHomeData)
       </div>
     </section>
 
-    <!-- Featured listing (Villa + Glamping + Homestay) -->
+    <!-- Featured listing (Villa + Glamping + Homestay + Apartment) -->
     <section class="mx-auto mt-12 max-w-6xl px-4">
       <h2 class="font-display text-xl font-bold text-gray-900">Temukan Penginapan Sesuai Keinginan Anda</h2>
 
@@ -369,14 +397,14 @@ onMounted(loadHomeData)
 
       <p v-if="loading" class="mt-6 text-gray-600">Memuat listing...</p>
       <p v-else-if="displayedListings.length === 0" class="mt-6 text-gray-600">
-        {{ selectedCity ? `Belum ada villa, glamping, atau homestay di ${selectedCity}.` : 'Belum ada villa, glamping, atau homestay yang dipublikasikan.' }}
+        {{ selectedCity ? `Belum ada villa, glamping, homestay, atau apartment di ${selectedCity}.` : 'Belum ada villa, glamping, homestay, atau apartment yang dipublikasikan.' }}
       </p>
 
       <div v-else class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink
           v-for="listing in displayedListings"
           :key="`${listing.type}-${listing.id}`"
-          :to="`/${listing.type === 'homestay' ? 'homestays' : listing.type === 'glamping' ? 'glampings' : 'villas'}/${listing.slug}`"
+          :to="`/${LISTING_TYPE_PATHS[listing.type]}/${listing.slug}`"
           class="card block overflow-hidden transition hover:shadow-md"
         >
           <div class="relative">
@@ -390,7 +418,7 @@ onMounted(loadHomeData)
               Belum ada foto
             </div>
             <span class="badge absolute left-2 top-2 bg-white/90 text-brand-brown-dark">
-              {{ listing.type === 'homestay' ? 'Homestay' : listing.type === 'glamping' ? 'Glamping' : 'Villa' }}
+              {{ LISTING_TYPE_LABELS[listing.type] }}
             </span>
             <span class="badge absolute right-2 top-2 bg-black/60 text-white">{{ formatRupiah(listing.base_price) }}</span>
           </div>
@@ -404,10 +432,11 @@ onMounted(loadHomeData)
         </NuxtLink>
       </div>
 
-      <div class="mt-6 flex justify-center gap-3">
+      <div class="mt-6 flex flex-wrap justify-center gap-3">
         <NuxtLink to="/villas" class="btn-outline">Lihat Semua Villa</NuxtLink>
         <NuxtLink to="/glampings" class="btn-outline">Lihat Semua Glamping</NuxtLink>
         <NuxtLink to="/homestays" class="btn-outline">Lihat Semua Homestay</NuxtLink>
+        <NuxtLink to="/apartments" class="btn-outline">Lihat Semua Apartment</NuxtLink>
       </div>
     </section>
 

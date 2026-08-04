@@ -82,7 +82,7 @@ function onReviewSubmitted(review: Review) {
 const bookablePath = computed(() => {
   if (!booking.value) return ''
   const segments: Record<string, string> = {
-    homestay: 'homestays', glamping: 'glampings', gathering_venue: 'gathering-venues', transport: 'transports', villa: 'villas',
+    homestay: 'homestays', glamping: 'glampings', apartment: 'apartments', gathering_venue: 'gathering-venues', transport: 'transports', villa: 'villas',
   }
   return `/${segments[booking.value.bookable.type]}/${booking.value.bookable.slug}`
 })

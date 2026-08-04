@@ -8,7 +8,7 @@ export interface Review {
     name: string
   }
   reviewable: {
-    type: 'villa' | 'glamping' | 'homestay' | 'gathering_venue' | 'transport'
+    type: 'villa' | 'glamping' | 'homestay' | 'apartment' | 'gathering_venue' | 'transport'
     id: number
     name: string
   }

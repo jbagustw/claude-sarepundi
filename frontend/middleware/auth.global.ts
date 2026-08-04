@@ -1,7 +1,7 @@
 import type { UserRole } from '~/types/auth'
 
 const PUBLIC_ROUTES = ['/', '/login', '/register', '/daftar-mitra', '/jadi-mitra']
-const PUBLIC_PREFIXES = ['/villas', '/glampings', '/homestays', '/gathering-venues', '/transports', '/berita']
+const PUBLIC_PREFIXES = ['/villas', '/glampings', '/homestays', '/apartments', '/gathering-venues', '/transports', '/berita']
 
 export default defineNuxtRouteMiddleware((to) => {
   const authStore = useAuthStore()

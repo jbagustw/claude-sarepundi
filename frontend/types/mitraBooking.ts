@@ -14,7 +14,7 @@ export interface MitraBooking {
   mitra_confirmation_deadline: string | null
   cancellation_reason: string | null
   bookable: {
-    type: 'villa' | 'glamping' | 'homestay' | 'gathering_venue' | 'transport'
+    type: 'villa' | 'glamping' | 'homestay' | 'apartment' | 'gathering_venue' | 'transport'
     id: number
     name: string
   }

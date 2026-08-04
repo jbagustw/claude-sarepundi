@@ -41,6 +41,7 @@ class BookingDocumentService
                 'transport' => 'Transport',
                 'glamping' => 'Glamping',
                 'homestay' => 'Homestay',
+                'apartment' => 'Apartment',
                 default => 'Villa',
             },
         ];

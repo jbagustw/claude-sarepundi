@@ -33,7 +33,7 @@ export interface Booking {
     paid_at: string | null
   } | null
   bookable: {
-    type: 'villa' | 'glamping' | 'homestay' | 'gathering_venue' | 'transport'
+    type: 'villa' | 'glamping' | 'homestay' | 'apartment' | 'gathering_venue' | 'transport'
     id: number
     name: string
     slug: string

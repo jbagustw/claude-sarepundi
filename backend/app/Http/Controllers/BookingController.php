@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Resources\BookingResource;
+use App\Models\Apartment;
 use App\Models\Booking;
 use App\Models\GatheringVenue;
 use App\Models\GatheringVenueSlot;
@@ -11,6 +12,7 @@ use App\Models\Glamping;
 use App\Models\Homestay;
 use App\Models\Transport;
 use App\Models\Villa;
+use App\Services\ApartmentAvailabilityService;
 use App\Services\BookingCancellationService;
 use App\Services\GatheringVenueAvailabilityService;
 use App\Services\GlampingAvailabilityService;
@@ -48,6 +50,7 @@ class BookingController extends Controller
         VillaAvailabilityService $villaService,
         GlampingAvailabilityService $glampingService,
         HomestayAvailabilityService $homestayService,
+        ApartmentAvailabilityService $apartmentService,
         GatheringVenueAvailabilityService $gatheringVenueService,
         TransportAvailabilityService $transportService,
     ) {
@@ -68,6 +71,15 @@ class BookingController extends Controller
         } elseif ($data['bookable_type'] === 'homestay') {
             $bookable = Homestay::publiclyVisible()->findOrFail($data['bookable_id']);
             $result = $homestayService->evaluate(
+                $bookable,
+                CarbonImmutable::parse($data['check_in_date']),
+                CarbonImmutable::parse($data['check_out_date']),
+                $data['guest_count'],
+                $couponCode,
+            );
+        } elseif ($data['bookable_type'] === 'apartment') {
+            $bookable = Apartment::publiclyVisible()->findOrFail($data['bookable_id']);
+            $result = $apartmentService->evaluate(
                 $bookable,
                 CarbonImmutable::parse($data['check_in_date']),
                 CarbonImmutable::parse($data['check_out_date']),

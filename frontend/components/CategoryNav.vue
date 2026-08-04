@@ -5,6 +5,7 @@ const categories = [
   { to: '/villas', label: 'Villa', icon: 'villa' },
   { to: '/glampings', label: 'Glamping', icon: 'glamping' },
   { to: '/homestays', label: 'Homestay', icon: 'homestay' },
+  { to: '/apartments', label: 'Apartment', icon: 'apartment' },
   { to: '/gathering-venues', label: 'Lokasi Gathering', icon: 'gathering' },
   { to: '/transports', label: 'Transport', icon: 'transport' },
 ] as const
@@ -68,6 +69,21 @@ function isActive(to: string) {
         <path d="M3 21h18" />
         <path d="M9.5 21v-5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v5" />
         <path d="M9.5 10.5h.01M14.5 10.5h.01" />
+      </svg>
+      <svg
+        v-else-if="category.icon === 'apartment'"
+        class="h-5 w-5 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="6" y="2.5" width="12" height="19" rx="1" />
+        <path d="M9 6.5h1.4M13.6 6.5H15M9 10.2h1.4M13.6 10.2H15M9 13.9h1.4M13.6 13.9H15" />
+        <path d="M10.2 21.5v-4a1.8 1.8 0 0 1 3.6 0v4" />
       </svg>
       <svg
         v-else-if="category.icon === 'gathering'"

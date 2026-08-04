@@ -20,13 +20,14 @@ class StoreBookingRequest extends FormRequest
         $table = match ($this->input('bookable_type')) {
             'glamping' => 'glampings',
             'homestay' => 'homestays',
+            'apartment' => 'apartments',
             'gathering_venue' => 'gathering_venues',
             'transport' => 'transports',
             default => 'villas',
         };
 
         $rules = [
-            'bookable_type' => ['required', 'string', Rule::in(['villa', 'glamping', 'homestay', 'gathering_venue', 'transport'])],
+            'bookable_type' => ['required', 'string', Rule::in(['villa', 'glamping', 'homestay', 'apartment', 'gathering_venue', 'transport'])],
             'bookable_id' => ['required', 'integer', Rule::exists($table, 'id')],
             'check_in_date' => ['required', 'date', 'after_or_equal:today'],
             'guest_count' => ['required', 'integer', 'min:1'],
