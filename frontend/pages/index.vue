@@ -21,7 +21,7 @@ const categoryTabs: { key: CategoryKey; label: string; path: string; countLabel:
   { key: 'glamping', label: 'Glamping', path: '/glampings', countLabel: 'Jumlah Tamu', countParam: 'guests' },
   { key: 'homestay', label: 'Homestay', path: '/homestays', countLabel: 'Jumlah Tamu', countParam: 'guests' },
   { key: 'apartment', label: 'Apartment', path: '/apartments', countLabel: 'Jumlah Tamu', countParam: 'guests' },
-  { key: 'gathering_venue', label: 'Lokasi Gathering', path: '/gathering-venues', countLabel: 'Kapasitas', countParam: 'capacity' },
+  { key: 'gathering_venue', label: 'Gathering Venue', path: '/gathering-venues', countLabel: 'Kapasitas', countParam: 'capacity' },
   { key: 'transport', label: 'Transport', path: '/transports', countLabel: 'Kapasitas', countParam: 'capacity' },
 ]
 
@@ -55,7 +55,7 @@ const copiedCode = ref('')
 const whyChooseUs = [
   {
     title: 'Beragam Pilihan',
-    description: 'Villa, glamping, homestay, apartment, lokasi gathering, hingga transport — semua ada dalam satu platform.',
+    description: 'Villa, glamping, homestay, apartment, gathering venue, hingga transport — semua ada dalam satu platform.',
     icon: 'variety',
   },
   {
@@ -273,7 +273,7 @@ onMounted(loadHomeData)
           Pilihan Utama untuk Jelajahi Nusantara
         </h1>
         <p class="mx-auto mt-3 max-w-xl text-sm text-white/80 sm:text-base">
-          Villa, glamping, homestay, apartment, lokasi gathering, dan transport — temukan yang terbaik untuk liburan atau acaramu selanjutnya.
+          Villa, glamping, homestay, apartment, gathering venue, dan transport — temukan yang terbaik untuk liburan atau acaramu selanjutnya.
         </p>
 
         <template v-if="!authStore.isAuthenticated">

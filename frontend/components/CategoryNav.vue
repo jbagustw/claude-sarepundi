@@ -6,7 +6,7 @@ const categories = [
   { to: '/glampings', label: 'Glamping', icon: 'glamping' },
   { to: '/homestays', label: 'Homestay', icon: 'homestay' },
   { to: '/apartments', label: 'Apartment', icon: 'apartment' },
-  { to: '/gathering-venues', label: 'Lokasi Gathering', icon: 'gathering' },
+  { to: '/gathering-venues', label: 'Gathering Venue', icon: 'gathering' },
   { to: '/transports', label: 'Transport', icon: 'transport' },
 ] as const
 

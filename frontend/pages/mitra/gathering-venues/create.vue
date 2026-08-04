@@ -38,7 +38,7 @@ async function handleSubmit() {
     router.push(`/mitra/gathering-venues/${response.data.id}/edit`)
   } catch (error: any) {
     if (error?.data?.errors) errors.value = error.data.errors
-    else alert('Gagal membuat lokasi gathering.')
+    else alert('Gagal membuat gathering venue.')
   } finally {
     submitting.value = false
   }
@@ -49,7 +49,7 @@ onMounted(loadFacilities)
 
 <template>
   <div class="mx-auto max-w-2xl">
-    <h1 class="font-display text-2xl font-bold text-gray-900">Tambah Lokasi Gathering</h1>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Tambah Gathering Venue</h1>
     <p class="mt-1 text-sm text-gray-600">
       Lokasi baru akan tersimpan sebagai draft. Tambahkan foto dan slot waktu, lalu kirim untuk direview admin.
     </p>

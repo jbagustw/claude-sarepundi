@@ -44,8 +44,8 @@ onMounted(loadPending)
 
 <template>
   <div>
-    <h1 class="font-display text-2xl font-bold text-gray-900">Moderasi Lokasi Gathering</h1>
-    <p class="mt-1 text-sm text-gray-600">Lokasi gathering yang menunggu review sebelum dipublikasikan.</p>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Moderasi Gathering Venue</h1>
+    <p class="mt-1 text-sm text-gray-600">Gathering venue yang menunggu review sebelum dipublikasikan.</p>
 
     <p v-if="loading" class="mt-6 text-gray-600">Memuat...</p>
     <p v-else-if="venues.length === 0" class="mt-6 text-gray-600">Tidak ada lokasi yang menunggu review.</p>

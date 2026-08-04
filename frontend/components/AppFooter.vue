@@ -22,7 +22,7 @@ const { data: siteSettings } = await useSiteSettings()
           </template>
         </NuxtLink>
         <p class="mt-3 text-sm text-gray-300">
-          Platform booking villa, glamping, homestay, apartment, lokasi gathering, dan transport terpercaya di Indonesia.
+          Platform booking villa, glamping, homestay, apartment, gathering venue, dan transport terpercaya di Indonesia.
         </p>
       </div>
       <div>
@@ -33,7 +33,7 @@ const { data: siteSettings } = await useSiteSettings()
           <li><NuxtLink to="/glampings" class="hover:text-white">Cari Glamping</NuxtLink></li>
           <li><NuxtLink to="/homestays" class="hover:text-white">Cari Homestay</NuxtLink></li>
           <li><NuxtLink to="/apartments" class="hover:text-white">Cari Apartment</NuxtLink></li>
-          <li><NuxtLink to="/gathering-venues" class="hover:text-white">Cari Lokasi Gathering</NuxtLink></li>
+          <li><NuxtLink to="/gathering-venues" class="hover:text-white">Cari Gathering Venue</NuxtLink></li>
           <li><NuxtLink to="/transports" class="hover:text-white">Cari Transport</NuxtLink></li>
           <li><NuxtLink to="/berita" class="hover:text-white">Berita dan Artikel</NuxtLink></li>
           <li><NuxtLink to="/jadi-mitra" class="hover:text-white">Daftar Sebagai Mitra</NuxtLink></li>

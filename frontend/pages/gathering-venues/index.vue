@@ -53,7 +53,7 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1 class="font-display text-2xl font-bold text-gray-900">Cari Lokasi Gathering</h1>
+    <h1 class="font-display text-2xl font-bold text-gray-900">Cari Gathering Venue</h1>
 
     <form class="card mt-4 grid gap-3 p-4 sm:grid-cols-3" @submit.prevent="search">
       <input v-model="filters.q" type="text" placeholder="Cari nama lokasi" class="field-input">

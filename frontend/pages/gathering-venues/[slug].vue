@@ -19,7 +19,7 @@ onMounted(async () => {
 
 <template>
   <div>
-    <p v-if="notFound" class="text-gray-600">Lokasi gathering tidak ditemukan.</p>
+    <p v-if="notFound" class="text-gray-600">Gathering venue tidak ditemukan.</p>
 
     <div v-else-if="venue" class="grid gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2">

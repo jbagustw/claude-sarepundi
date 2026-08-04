@@ -107,7 +107,7 @@ onMounted(loadData)
 
     <template v-else-if="venue">
       <div class="flex items-center justify-between">
-        <h1 class="font-display text-2xl font-bold text-gray-900">Edit Lokasi Gathering</h1>
+        <h1 class="font-display text-2xl font-bold text-gray-900">Edit Gathering Venue</h1>
         <button
           v-if="venue.status === 'draft' || venue.status === 'rejected'"
           class="rounded-full bg-green-700 px-4 py-2 text-sm text-white hover:bg-green-800"

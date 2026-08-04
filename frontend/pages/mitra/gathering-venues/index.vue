@@ -30,7 +30,7 @@ async function loadVenues() {
     const response = await api<{ data: GatheringVenue[] }>('/api/mitra/gathering-venues')
     venues.value = response.data
   } catch {
-    errorMessage.value = 'Gagal memuat daftar lokasi gathering.'
+    errorMessage.value = 'Gagal memuat daftar gathering venue.'
   } finally {
     loading.value = false
   }
@@ -62,16 +62,16 @@ onMounted(loadVenues)
 <template>
   <div>
     <div class="flex items-center justify-between">
-      <h1 class="font-display text-2xl font-bold text-gray-900">Lokasi Gathering Saya</h1>
+      <h1 class="font-display text-2xl font-bold text-gray-900">Gathering Venue Saya</h1>
       <NuxtLink to="/mitra/gathering-venues/create" class="btn-primary">
-        + Tambah Lokasi
+        + Tambah Gathering Venue
       </NuxtLink>
     </div>
 
     <p v-if="loading" class="mt-6 text-gray-600">Memuat...</p>
     <p v-else-if="errorMessage" class="mt-6 text-red-600">{{ errorMessage }}</p>
     <p v-else-if="venues.length === 0" class="mt-6 text-gray-600">
-      Belum ada lokasi gathering. Klik "Tambah Lokasi" untuk mulai.
+      Belum ada gathering venue. Klik "Tambah Gathering Venue" untuk mulai.
     </p>
 
     <div v-else class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
