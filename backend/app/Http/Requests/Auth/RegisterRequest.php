@@ -25,6 +25,11 @@ class RegisterRequest extends FormRequest
             'role' => ['required', Rule::in(['user', 'mitra'])],
             'business_name' => ['nullable', 'required_if:role,mitra', 'string', 'max:255'],
             'business_address' => ['nullable', 'string'],
+            // Sent by non-browser clients (mobile app) that want a Sanctum
+            // personal access token back instead of relying on the SPA's
+            // cookie session — see AuthController::register(). Web ignores
+            // the token in the response, so this is safe to omit for web.
+            'device_name' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

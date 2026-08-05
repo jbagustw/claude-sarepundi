@@ -31,6 +31,25 @@ class AuthTest extends TestCase
         return $this->withHeaders(['Origin' => 'http://localhost:3000']);
     }
 
+    /**
+     * Sanctum's guard (Illuminate\Auth\RequestGuard) caches the user it
+     * resolves on first use, and that guard instance is itself cached by
+     * AuthManager — both live on the container, which a feature test does
+     * NOT rebuild between sequential $this->postJson()/getJson() calls in
+     * the same test method (only real separate HTTP requests would get a
+     * fresh container). So a test that authenticates with a token, revokes
+     * it, then makes another authenticated call to prove it's revoked has
+     * to force that cache to drop first — otherwise it's asserting against
+     * a stale in-memory guard, not the database. Verified this isn't
+     * hiding a real bug by hitting the running dev server with plain curl
+     * (real separate processes): revocation there takes effect immediately
+     * without this workaround.
+     */
+    private function forgetAuthGuards(): void
+    {
+        $this->app->make('auth')->forgetGuards();
+    }
+
     public function test_user_can_register_with_user_role(): void
     {
         $response = $this->fromFrontend()->postJson('/api/register', [
@@ -213,5 +232,153 @@ class AuthTest extends TestCase
 
         $this->fromFrontend()->actingAs($user)->getJson('/api/mitra/ping')->assertOk();
         $this->fromFrontend()->actingAs($user)->getJson('/api/admin/ping')->assertStatus(403);
+    }
+
+    // --- Mobile (Sanctum bearer token) auth ---
+    //
+    // No `fromFrontend()` here on purpose: a request without an Origin
+    // matching SANCTUM_STATEFUL_DOMAINS is exactly what a native mobile
+    // HTTP client looks like — EnsureFrontendRequestsAreStateful won't
+    // start a cookie session for it, so AuthController must fall back to
+    // issuing a Sanctum personal access token instead.
+
+    public function test_mobile_client_receives_bearer_token_on_register(): void
+    {
+        $response = $this->postJson('/api/register', [
+            'name' => 'Mobile User',
+            'email' => 'mobile-register@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => 'user',
+            'device_name' => 'iPhone 15 Pro',
+        ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.email', 'mobile-register@example.com');
+        $this->assertIsString($response->json('token'));
+        $this->assertStringContainsString('|', $response->json('token'));
+
+        $user = User::where('email', 'mobile-register@example.com')->first();
+        $this->assertDatabaseHas('personal_access_tokens', [
+            'tokenable_id' => $user->id,
+            'name' => 'iPhone 15 Pro',
+        ]);
+    }
+
+    public function test_mobile_client_receives_bearer_token_on_login(): void
+    {
+        $user = User::factory()->create(['password' => bcrypt('password123')]);
+        $user->assignRole('user');
+
+        $response = $this->postJson('/api/login', [
+            'email' => $user->email,
+            'password' => 'password123',
+            'device_name' => 'Pixel 9',
+        ]);
+
+        $response->assertOk();
+        $this->assertIsString($response->json('token'));
+        $this->assertDatabaseHas('personal_access_tokens', [
+            'tokenable_id' => $user->id,
+            'name' => 'Pixel 9',
+        ]);
+    }
+
+    public function test_login_without_device_name_still_issues_a_token_for_mobile(): void
+    {
+        $user = User::factory()->create(['password' => bcrypt('password123')]);
+        $user->assignRole('user');
+
+        $response = $this->postJson('/api/login', [
+            'email' => $user->email,
+            'password' => 'password123',
+        ]);
+
+        $response->assertOk();
+        $this->assertIsString($response->json('token'));
+    }
+
+    public function test_web_client_does_not_receive_a_bearer_token(): void
+    {
+        $user = User::factory()->create(['password' => bcrypt('password123')]);
+        $user->assignRole('user');
+
+        $response = $this->fromFrontend()->postJson('/api/login', [
+            'email' => $user->email,
+            'password' => 'password123',
+        ]);
+
+        $response->assertOk();
+        $this->assertArrayNotHasKey('token', $response->json());
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_bearer_token_authenticates_subsequent_requests_without_a_session(): void
+    {
+        $registerResponse = $this->postJson('/api/register', [
+            'name' => 'Mobile User',
+            'email' => 'mobile-auth@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => 'user',
+            'device_name' => 'iPhone 15 Pro',
+        ]);
+        $token = $registerResponse->json('token');
+
+        // No actingAs()/session cookie at all — only the bearer token.
+        $response = $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/me');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.email', 'mobile-auth@example.com');
+    }
+
+    public function test_request_without_any_token_or_session_is_unauthenticated(): void
+    {
+        $this->getJson('/api/me')->assertStatus(401);
+    }
+
+    public function test_logout_revokes_the_bearer_token_used(): void
+    {
+        $registerResponse = $this->postJson('/api/register', [
+            'name' => 'Mobile User',
+            'email' => 'mobile-logout@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => 'user',
+            'device_name' => 'iPhone 15 Pro',
+        ]);
+        $token = $registerResponse->json('token');
+
+        $this->withHeader('Authorization', "Bearer {$token}")->postJson('/api/logout')->assertOk();
+        $this->forgetAuthGuards();
+
+        // The exact same token must no longer work.
+        $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/me')->assertStatus(401);
+
+        $user = User::where('email', 'mobile-logout@example.com')->first();
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertNotNull($user);
+    }
+
+    public function test_logging_out_one_device_token_does_not_revoke_another_devices_token(): void
+    {
+        $user = User::factory()->create(['password' => bcrypt('password123')]);
+        $user->assignRole('user');
+
+        $tokenA = $this->postJson('/api/login', [
+            'email' => $user->email, 'password' => 'password123', 'device_name' => 'Device A',
+        ])->json('token');
+        $this->forgetAuthGuards();
+        $tokenB = $this->postJson('/api/login', [
+            'email' => $user->email, 'password' => 'password123', 'device_name' => 'Device B',
+        ])->json('token');
+        $this->forgetAuthGuards();
+
+        $this->withHeader('Authorization', "Bearer {$tokenA}")->postJson('/api/logout')->assertOk();
+        $this->forgetAuthGuards();
+
+        $this->withHeader('Authorization', "Bearer {$tokenA}")->getJson('/api/me')->assertStatus(401);
+        $this->forgetAuthGuards();
+        $this->withHeader('Authorization', "Bearer {$tokenB}")->getJson('/api/me')->assertOk();
     }
 }

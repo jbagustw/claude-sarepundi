@@ -110,6 +110,37 @@ class PaymentModuleTest extends TestCase
         ]);
     }
 
+    public function test_web_pay_request_sends_frontend_web_redirect_urls_to_xendit(): void
+    {
+        $this->fakeXenditInvoiceSuccess();
+        $user = $this->regularUser();
+        $booking = $this->pendingPaymentBooking($user);
+
+        $this->fromFrontend()->actingAs($user)->postJson("/api/bookings/{$booking->id}/pay")->assertCreated();
+
+        Http::assertSent(function ($request) use ($booking) {
+            return $request['success_redirect_url'] === "http://localhost:3000/user/bookings/{$booking->id}?payment=success"
+                && $request['failure_redirect_url'] === "http://localhost:3000/user/bookings/{$booking->id}?payment=failed";
+        });
+    }
+
+    public function test_mobile_pay_request_sends_app_deep_link_redirect_urls_to_xendit(): void
+    {
+        $this->fakeXenditInvoiceSuccess();
+        config(['app.mobile_app_scheme' => 'sarepundi']);
+        $user = $this->regularUser();
+        $booking = $this->pendingPaymentBooking($user);
+
+        $this->actingAs($user)
+            ->postJson("/api/bookings/{$booking->id}/pay", ['platform' => 'mobile'])
+            ->assertCreated();
+
+        Http::assertSent(function ($request) use ($booking) {
+            return $request['success_redirect_url'] === "sarepundi://booking/{$booking->id}?payment=success"
+                && $request['failure_redirect_url'] === "sarepundi://booking/{$booking->id}?payment=failed";
+        });
+    }
+
     public function test_repeated_pay_request_reuses_existing_pending_invoice(): void
     {
         $this->fakeXenditInvoiceSuccess();

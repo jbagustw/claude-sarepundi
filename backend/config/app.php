@@ -136,4 +136,19 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Mobile App URL Scheme
+    |--------------------------------------------------------------------------
+    |
+    | Custom URL scheme the Flutter app registers on Android/iOS so Xendit's
+    | invoice success/failure redirect can land back inside the app instead
+    | of the Nuxt web frontend — see PaymentController::store()'s `platform`
+    | param. Must match whatever scheme the mobile app actually registers;
+    | this is only the backend's half of that contract.
+    |
+    */
+
+    'mobile_app_scheme' => env('MOBILE_APP_SCHEME', 'sarepundi'),
+
 ];

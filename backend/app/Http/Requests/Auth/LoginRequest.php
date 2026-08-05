@@ -19,6 +19,8 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
+            // See RegisterRequest::rules() — same purpose, mobile-only.
+            'device_name' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

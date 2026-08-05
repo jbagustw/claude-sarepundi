@@ -16,52 +16,95 @@
 
 ## 0. Untuk Developer Mobile (Flutter) — baca ini dulu
 
-### ⚠️ PERLU KONFIRMASI — Autentikasi API ini BUKAN token-based
+> **Update 2026-08-05**: dua penghambat arsitektur terbesar untuk mobile
+> (auth token-based, redirect pembayaran) sudah diperbaiki di backend —
+> lihat dua sub-bagian pertama di bawah. Yang masih PERLU KONFIRMASI:
+> Google Sign-In native untuk mobile (belum dikerjakan, lihat sub-bagian
+> ketiga) dan hal-hal lain yang memang berupa keputusan produk, bukan
+> keterbatasan teknis.
 
-Backend ini pakai **Laravel Sanctum mode SPA (session cookie + CSRF)**, bukan
-Sanctum Personal Access Token (bearer token). Bukti dari kode:
+### ✅ Auth sekarang mendukung Bearer token (Sanctum Personal Access Token)
 
-- `bootstrap/app.php` memanggil `$middleware->statefulApi()`.
-- `AuthController::login()`/`register()` memakai `Auth::attempt()` +
-  `$request->session()->regenerate()` — pola sesi berbasis cookie.
-- Tidak ada satupun pemanggilan `createToken()`/`PersonalAccessToken` atau
-  pemeriksaan header `Authorization: Bearer` di seluruh `app/` — sudah dicek
-  dengan grep menyeluruh, hasilnya nihil.
-- `config/cors.php` & `config/sanctum.php` dikonfigurasi untuk domain frontend
-  web (`FRONTEND_URLS`, `SANCTUM_STATEFUL_DOMAINS`), bukan untuk klien mobile.
+Backend tetap memakai Sanctum SPA cookie-mode untuk web (tidak berubah, tidak
+ada breaking change untuk frontend Nuxt), tapi `AuthController` sekarang
+**otomatis** mengeluarkan Bearer token untuk klien non-browser — cukup jangan
+kirim header `Origin`/`Referer` yang cocok dengan `SANCTUM_STATEFUL_DOMAINS`
+(sebuah HTTP client native seperti Dio di Flutter memang secara alami tidak
+mengirim header ini, jadi tidak perlu konfigurasi apapun di sisi mobile untuk
+"memicu" mode token — itu otomatis terjadi).
 
-**Konsekuensi**: Flutter tidak bisa langsung `POST /api/login` lalu simpan
-`access_token` seperti API REST pada umumnya. Supaya app mobile bisa login,
-salah satu dari ini harus terjadi lebih dulu (belum ada di kode, jadi ini
-keputusan yang perlu diambil tim sebelum development mobile jalan):
+**Alur mobile:**
 
-1. **Backend menambahkan Sanctum token auth** — endpoint baru yang
-   mengembalikan `plainTextToken` setelah login, dipakai lewat header
-   `Authorization: Bearer <token>` untuk semua request berikutnya. Ini pola
-   paling umum untuk REST API + mobile.
-2. Flutter mengimplementasikan **cookie jar** (mis. paket `dio_cookie_manager`)
-   dan mengulang alur SPA: `GET /sanctum/csrf-cookie` → simpan cookie
-   `XSRF-TOKEN` & session → kirim ulang di setiap request. Rapuh untuk mobile
-   (background refresh, logout otomatis OS, dll) dan bukan pola yang lazim.
+1. `POST /api/register` atau `POST /api/login`, sertakan `device_name`
+   (opsional tapi disarankan, mis. `"iPhone 15 Pro"` — dipakai sebagai nama
+   token, memudahkan user melihat/mencabut token per perangkat nanti).
+2. Response memiliki field tambahan `token` di level atas (sejajar dengan
+   `data`, bukan di dalamnya):
+   ```json
+   {
+     "data": { "id": 20, "name": "...", "email": "...", "role": "user", ... },
+     "token": "1|GDTgJ3aMBe1Cf859qLzFrVP4aOC9TcdO3Hw70qSabf9f414b"
+   }
+   ```
+3. Simpan `token` (mis. di secure storage), kirim di setiap request
+   berikutnya: header `Authorization: Bearer <token>`.
+4. `POST /api/logout` dengan header itu mencabut **hanya token tsb** — token
+   dari perangkat/sesi lain milik user yang sama tetap aktif (logout per
+   device, bukan logout massal).
 
-Dokumen ini menulis endpoint apa adanya (sesuai kode), tapi soal strategi auth
-mobile **harus diputuskan dulu** sebelum implementasi Flutter dimulai.
-
-### ⚠️ PERLU KONFIRMASI — Redirect sukses/gagal pembayaran mengarah ke web, bukan deep link
-
-`PaymentController::store()` mengirim `success_redirect_url` &
-`failure_redirect_url` ke Xendit dalam bentuk URL **frontend web** (Nuxt):
+Contoh nyata (hasil `curl` ke server lokal menjalankan kode saat ini):
 ```
-{FRONTEND_URL}/user/bookings/{id}?payment=success
-{FRONTEND_URL}/user/bookings/{id}?payment=failed
-```
-Kalau mobile app membuka `invoice_url` di WebView/in-app browser, setelah bayar
-Xendit akan redirect ke halaman web itu, **bukan** otomatis kembali ke app.
-Perlu diputuskan: apakah backend perlu param/endpoint terpisah untuk
-menghasilkan deep-link (`sarepundi://booking/{id}?payment=success`), atau
-mobile app mendeteksi pola URL tsb di WebView dan menutup sendiri.
+POST /api/login {"email":"...","password":"...","device_name":"iPhone 15 Pro"}
+→ {"data": {...}, "token": "2|RfmPdIT6fqfEgZEgKRw3K0QIahqd1sOnuIyHXoTu61261d3f"}
 
-### ⚠️ PERLU KONFIRMASI — Login Google hanya untuk web
+GET /api/me  (Authorization: Bearer 2|RfmPdI...)
+→ {"data": {"id": 20, "email": "...", ...}}   — 200 OK
+
+GET /api/me  (tanpa header Authorization)
+→ {"message": "Unauthenticated."}             — 401
+```
+
+Request web (dari Nuxt, dengan `Origin` yang cocok) **tidak** mendapat field
+`token` — perilakunya persis seperti sebelumnya (cookie session + CSRF), tidak
+ada perubahan untuk frontend web.
+
+Endpoint yang tidak terlihat "auth" tapi sebenarnya perlu diperhatikan:
+`GET /api/me`, `POST /api/logout`, dan **semua** endpoint di bawah middleware
+`auth:sanctum` (semua endpoint booking user/mitra/admin) sudah otomatis
+menerima Bearer token tanpa perubahan apapun di route/controller-nya — Sanctum
+memang didesain mendukung kedua mode auth (cookie & token) lewat satu guard
+yang sama, jadi tidak ada endpoint booking yang perlu "versi mobile" terpisah.
+
+### ✅ Redirect pembayaran sekarang bisa deep link ke app
+
+`POST /api/bookings/{id}/pay` sekarang menerima body opsional:
+```json
+{ "platform": "mobile" }
+```
+Kalau dikirim (atau default `"web"` kalau tidak dikirim/tidak ada body sama
+sekali — tidak ada breaking change untuk web), URL sukses/gagal yang dikirim
+ke Xendit berubah dari URL frontend web menjadi deep link:
+```
+sarepundi://booking/{id}?payment=success
+sarepundi://booking/{id}?payment=failed
+```
+Skema `sarepundi://` dikonfigurasi di `config('app.mobile_app_scheme')` (env
+`MOBILE_APP_SCHEME`, default `sarepundi`) — **app Flutter WAJIB
+mendaftarkan skema URL custom yang SAMA PERSIS** di Android
+(`intent-filter`) dan iOS (`CFBundleURLTypes`) supaya OS mengarahkan kontrol
+kembali ke app begitu WebView/in-app browser menavigasi ke URL ini setelah
+pembayaran selesai di halaman Xendit.
+
+⚠️ **PERLU KONFIRMASI — satu batasan yang tersisa**: kalau invoice `pending`
+untuk booking yang sama sudah pernah dibuat (mis. request pertama pakai
+`platform: web`, lalu retry pakai `platform: mobile`), endpoint ini
+mengembalikan `invoice_url` yang **sama persis** dengan yang pertama kali
+dibuat — redirect URL Xendit tidak bisa diubah setelah invoice dibuat. Kasus
+ini jarang terjadi (butuh 2 platform berbeda memanggil endpoint yang sama
+untuk booking yang sama sebelum salah satu selesai bayar) tapi belum
+ditangani secara eksplisit.
+
+### ⚠️ PERLU KONFIRMASI — Login Google hanya untuk web (belum dikerjakan)
 
 `SocialAuthController` (di `routes/web.php`, bukan `routes/api.php`) adalah
 alur redirect browser klasik (redirect ke Google → callback → set session
@@ -262,25 +305,14 @@ Field `bookable.type` di **response** Booking sama persis dengan kunci di atas
 (match expression di `BookingResource`/`AdminBookingResource`/
 `MitraBookingResource`, ketiganya identik).
 
-⚠️ **PERLU KONFIRMASI / kemungkinan bug ditemukan saat riset**:
-`ReviewResource` (`GET .../reviews`) punya `match()` terpisah untuk
-`reviewable.type` yang **belum diupdate** untuk 2 kategori terbaru:
-
-```php
-// app/Http/Resources/ReviewResource.php
-'type' => match (true) {
-    $this->reviewable instanceof Homestay => 'homestay',
-    $this->reviewable instanceof GatheringVenue => 'gathering_venue',
-    $this->reviewable instanceof Transport => 'transport',
-    default => 'villa',   // <- Glamping & Apartment jatuh ke sini!
-},
-```
-
-Review milik booking Glamping atau Apartment akan tampil dengan
-`reviewable.type: "villa"` yang salah. Ini murni soal label kategori di objek
-`reviewable` dalam response review — tidak mempengaruhi data lain. Perlu
-diperbaiki di backend sebelum mobile mengandalkan field ini untuk kategori
-Glamping/Apartment.
+✅ **Bug diperbaiki (2026-08-05)**: `ReviewResource` (`GET .../reviews`) tadinya
+punya `match()` terpisah dari `BookingResource` untuk `reviewable.type` yang
+belum mencantumkan Glamping/Apartment (jatuh ke default `'villa'` yang salah).
+Sudah diperbaiki — sekarang mencakup keenam kategori, sama seperti
+`bookable.type` di Booking. Ada test regresi khusus untuk ini
+(`ReviewModuleTest::test_review_for_a_glamping_booking_reports_glamping_as_reviewable_type`
+dan versi Apartment-nya) supaya tidak kebobolan lagi kalau ada kategori baru
+ditambahkan lagi ke depannya.
 
 ---
 
@@ -290,12 +322,21 @@ Glamping/Apartment.
 
 | Method | Path | Auth | Keterangan |
 |---|---|---|---|
-| POST | `/api/register` | Guest | Body: `name, email, phone?, password, password_confirmation, role (user\|mitra), business_name? (required jika role=mitra), business_address?` |
-| POST | `/api/login` | Guest | Body: `email, password` |
-| POST | `/api/logout` | Sesi aktif | — |
-| GET | `/api/me` | Sesi aktif | User yang sedang login |
+| POST | `/api/register` | Guest | Body: `name, email, phone?, password, password_confirmation, role (user\|mitra), business_name? (required jika role=mitra), business_address?, device_name?` |
+| POST | `/api/login` | Guest | Body: `email, password, device_name?` |
+| POST | `/api/logout` | Sesi aktif / Bearer token | Sesi cookie: invalidate session. Bearer token: revoke token itu saja (device lain tetap login) |
+| GET | `/api/me` | Sesi aktif / Bearer token | User yang sedang login |
 
-Response `UserResource` (register/login/me):
+`device_name` (opsional, string bebas mis. `"iPhone 15 Pro"`) hanya relevan
+untuk klien mobile — lihat [bagian 0](#0-untuk-developer-mobile-flutter--baca-ini-dulu).
+Kalau request datang dari domain web yang terdaftar di
+`SANCTUM_STATEFUL_DOMAINS` (dikenali dari header `Origin`/`Referer`), backend
+otomatis pakai cookie session seperti biasa dan `device_name` diabaikan.
+Kalau tidak (klien mobile), backend mengeluarkan **Bearer token** dan
+mengabaikan mekanisme cookie/CSRF sepenuhnya.
+
+Response `UserResource` (register/login/me) — field `token` HANYA muncul
+untuk klien mobile (non-stateful), tidak pernah muncul untuk web:
 ```json
 {
   "data": {
@@ -307,7 +348,8 @@ Response `UserResource` (register/login/me):
     "status": "active",
     "role": "user",
     "mitra_profile": null
-  }
+  },
+  "token": "2|RfmPdIT6fqfEgZEgKRw3K0QIahqd1sOnuIyHXoTu61261d3f"
 }
 ```
 
@@ -449,13 +491,28 @@ availability).
 
 #### 5.3.2 `POST /api/bookings/{id}/pay`
 
-Tidak ada body. Response `201`:
+Body opsional:
+```json
+{ "platform": "mobile" }
+```
+`platform`: `"web"` (default kalau field ini tidak dikirim sama sekali — jadi
+tidak wajib, aman untuk klien lama) atau `"mobile"`. Menentukan URL redirect
+sukses/gagal yang dikirim ke Xendit:
+
+| `platform` | success/failure redirect URL |
+|---|---|
+| `web` (default) | `{FRONTEND_URL}/user/bookings/{id}?payment=success` / `...=failed` |
+| `mobile` | `sarepundi://booking/{id}?payment=success` / `...=failed` (skema dari `MOBILE_APP_SCHEME`, app Flutter wajib mendaftarkan skema ini di Android/iOS) |
+
+Response `201`:
 ```json
 { "data": { "invoice_url": "https://checkout-staging.xendit.co/web/inv_xxx" } }
 ```
 Kalau dipanggil ulang untuk booking yang sudah punya invoice `pending`,
 response `200` (bukan `201`) dengan `invoice_url` yang sama (tidak membuat
-invoice baru). Kalau `booking.status !== 'pending_payment'`: `422` —
+invoice baru, dan `platform` yang dikirim di pemanggilan kedua ini **diabaikan**
+— redirect URL sudah terkunci ke apa pun yang dipakai saat invoice pertama
+kali dibuat). Kalau `booking.status !== 'pending_payment'`: `422` —
 `{"message": "Booking ini tidak sedang menunggu pembayaran."}`.
 
 #### 5.3.3 `GET /api/bookings/{id}` — contoh response nyata

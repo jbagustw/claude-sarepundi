@@ -2,7 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Apartment;
 use App\Models\GatheringVenue;
+use App\Models\Glamping;
 use App\Models\Homestay;
 use App\Models\Transport;
 use Illuminate\Http\Request;
@@ -26,7 +28,9 @@ class ReviewResource extends JsonResource
             ],
             'reviewable' => [
                 'type' => match (true) {
+                    $this->reviewable instanceof Glamping => 'glamping',
                     $this->reviewable instanceof Homestay => 'homestay',
+                    $this->reviewable instanceof Apartment => 'apartment',
                     $this->reviewable instanceof GatheringVenue => 'gathering_venue',
                     $this->reviewable instanceof Transport => 'transport',
                     default => 'villa',

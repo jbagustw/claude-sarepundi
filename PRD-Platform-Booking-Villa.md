@@ -1,8 +1,46 @@
-# PRD: Platform Booking Villa/Penginapan
+# PRD: Sarepundi — Platform Booking Villa, Glamping, Homestay, Apartment, Lokasi Gathering & Transport
+
+> **Versi ini menggantikan seluruhnya versi PRD sebelumnya.** Ditulis
+> berdasarkan pembacaan langsung kode backend & frontend aktual per
+> **2026-08-05**, bukan berdasarkan rencana awal — banyak keputusan bisnis
+> berubah sejak draft pertama (lihat [Riwayat Perubahan](#riwayat-perubahan-dari-versi-sebelumnya)
+> di bagian akhir dokumen). Kalau ada bagian kode yang ambigu atau
+> sepertinya belum lengkap, ditandai eksplisit **⚠️ PERLU KONFIRMASI** —
+> jangan dianggap pasti.
+>
+> Untuk detail teknis modul booking (endpoint, request/response JSON, status
+> enum) dan narasi alur langkah-demi-langkah, dokumen ini **tidak
+> mengulang** isinya — rujuk ke:
+> - [`API_CONTRACT.md`](./API_CONTRACT.md) — kontrak API lengkap, ditulis
+>   untuk kebutuhan integrasi mobile Flutter.
+> - [`BOOKING_FLOW.md`](./BOOKING_FLOW.md) — narasi alur booking end-to-end
+>   dalam Bahasa Indonesia.
+
+---
 
 ## 1. Ringkasan Produk
 
-Platform web app untuk pemesanan villa/penginapan yang menghubungkan pencari villa (user), pemilik/pengelola villa (mitra), dan admin platform. Model bisnis: marketplace dengan komisi 10% per transaksi ke platform.
+Sarepundi adalah marketplace booking online yang mempertemukan pencari
+akomodasi/layanan (**user**) dengan pemilik/pengelola properti atau layanan
+(**mitra**), dikelola oleh **admin** platform. Model bisnis: komisi per
+transaksi (default 10%, bisa disesuaikan per mitra oleh admin — lihat bagian
+5).
+
+Berbeda dari draft awal yang hanya mencakup Villa, produk saat ini menjual
+**6 kategori listing**:
+
+| Kategori | Pola booking | Catatan |
+|---|---|---|
+| **Villa** | Per malam, kalender harga custom per tanggal | Kategori pertama, satu-satunya dengan override harga per tanggal & minimum stay |
+| **Glamping** | Per malam, harga flat | Ditambahkan belakangan — permintaan investor, target pasar Jawa Timur (Batu, Bromo, Malang, dll), unit "tenda" dengan fasilitas ala hotel |
+| **Homestay** | Per malam, harga flat | |
+| **Apartment** | Per malam, harga flat | Ditambahkan belakangan — sewa harian unit apartemen |
+| **Lokasi Gathering (Gathering Venue)** | Per slot waktu per hari, bukan per malam | Untuk acara/meeting, harga per slot sudah ditentukan mitra |
+| **Transport** | Per hari, dengan opsi "lepas kunci" atau "dengan sopir" | Sebagian kendaraan hanya menyediakan salah satu opsi |
+
+Urutan tampil di navigasi (frontend web & konsisten dipakai di seluruh
+dashboard): **Villa → Glamping → Homestay → Apartment → Gathering Venue →
+Transport**.
 
 ---
 
@@ -10,184 +48,327 @@ Platform web app untuk pemesanan villa/penginapan yang menghubungkan pencari vil
 
 | Role | Deskripsi |
 |---|---|
-| **User** | Pencari & pemesan villa. Bisa browsing, booking, bayar, review. |
-| **Mitra** | Pemilik/pengelola villa. Mendaftarkan properti, atur harga & ketersediaan, konfirmasi booking masuk. |
-| **Admin** | Pengelola platform. Approve mitra & listing, monitor transaksi, kelola komisi, CS, laporan. |
+| **User** | Pencari & pemesan. Browsing, booking, bayar, cancel (dengan aturan refund), review. |
+| **Mitra** | Pemilik/pengelola listing. Mendaftarkan properti/layanan di salah satu (atau lebih) dari 6 kategori, atur harga & ketersediaan. **Tidak pernah** menerima/menolak booking satu per satu — lihat bagian 4.2. |
+| **Admin** | Approve mitra & listing baru, monitor transaksi, kelola komisi per mitra, kelola payout, kelola konten (artikel/banner/kupon), kelola user. |
+
+Role disimpan via **Spatie Permission** (satu role per akun: `user`, `mitra`,
+atau `admin`), bukan kolom `role` langsung di tabel `users`.
 
 ---
 
 ## 3. Fitur per Role
 
 ### 3.1 User
-- Registrasi/login (email, Google OAuth opsional)
-- Pencarian villa: lokasi, tanggal check-in/out, jumlah tamu, budget
-- Filter: fasilitas (kolam renang, AC, wifi, dapur, dll), tipe properti, rating
-- Halaman detail villa: galeri foto, deskripsi, fasilitas, peraturan, kalender ketersediaan, harga per malam
-- Booking flow: pilih tanggal → cek ketersediaan → isi data tamu → pembayaran → **menunggu konfirmasi mitra**
-- Metode pembayaran: transfer VA, e-wallet, kartu kredit (via Xendit)
-- Riwayat booking & status (pending_payment, menunggu_konfirmasi, dikonfirmasi, ditolak, selesai, dibatalkan)
-- Cancel booking (refund 100% jika masih `menunggu_konfirmasi`, atau sesuai kebijakan H-2/85% jika sudah `dikonfirmasi`)
-- Beri review & rating setelah check-out
-- Wishlist/simpan villa favorit
-- Notifikasi (email/WA/in-app): konfirmasi pembayaran, status konfirmasi mitra, reminder H-1, dll
+
+- Registrasi (email/password) atau **login Google** (redirect OAuth, hanya
+  jalur web SPA — lihat catatan mobile di bagian 6).
+- Pencarian per kategori: kota, tanggal/kapasitas, rentang harga, fasilitas.
+- Halaman detail: galeri foto, deskripsi (rich text), fasilitas, rating &
+  ulasan, kalender ketersediaan (khusus Villa) atau flat availability check
+  (kategori lain).
+- Booking flow: pilih tanggal/slot → cek ketersediaan & harga real-time →
+  (opsional) masukkan kode kupon → buat booking (`pending_payment`) → bayar
+  via Xendit → **otomatis terkonfirmasi** begitu pembayaran sukses (tanpa
+  approval mitra).
+- Metode pembayaran: apa pun yang didukung Xendit Invoice API (VA bank,
+  e-wallet, kartu kredit, dll — dipilih user di halaman Xendit, bukan di
+  Sarepundi).
+- Riwayat booking & status: `pending_payment → dikonfirmasi → checked_in →
+  selesai`, dengan cabang `dibatalkan_user`.
+- Cancel booking (hanya saat `dikonfirmasi`): refund 85% jika ≥ H-2 sebelum
+  check-in, 0% jika kurang dari itu.
+- Setelah pembayaran sukses: menerima email berisi 2 PDF — **Voucher**
+  (ditunjukkan ke mitra saat check-in) dan **Receipt** (bukti bayar) — juga
+  bisa diunduh ulang kapan saja dari halaman detail booking.
+- Beri rating (1–5) & ulasan setelah booking `selesai` (satu kali per
+  booking, mitra bisa membalas).
+- Notifikasi in-app + email untuk: pembayaran sukses, booking dikonfirmasi,
+  reminder H-1 check-in, booking selesai (ajakan review), booking
+  dibatalkan.
+- Berlangganan newsletter, baca artikel/berita, lihat kupon aktif & banner
+  promo di homepage.
+- ⚠️ **Tidak ada** fitur wishlist/simpan listing favorit meski disebut di
+  draft awal — belum dibangun sama sekali di backend maupun frontend.
 
 ### 3.2 Mitra
-- Registrasi mitra (perlu approval admin) — upload dokumen legalitas
-- Kelola profil bisnis (termasuk data rekening untuk payout)
-- CRUD listing villa: nama, deskripsi, alamat, foto (multi-upload), fasilitas, kapasitas, jumlah kamar
-- Atur harga: harga dasar, harga weekend/high season, minimum stay
-- Kalender ketersediaan (block-out tanggal, sinkronisasi manual)
-- **Konfirmasi manual booking masuk**: terima atau tolak booking yang sudah dibayar user, dalam batas waktu **24 jam** sebelum otomatis dibatalkan & direfund penuh ke user
-- Dashboard: pendapatan (setelah potong komisi 10%), jumlah booking, occupancy rate
-- Laporan payout (pencairan dana dari platform)
-- Balas review dari user
+
+- Registrasi sekaligus pilih role `mitra` saat daftar, isi nama bisnis —
+  akun berstatus `pending` sampai admin approve.
+- Kelola profil bisnis (nama, alamat, data rekening bank untuk payout).
+- CRUD listing di kategori manapun yang relevan (satu mitra bisa punya
+  listing di lebih dari satu kategori sekaligus) — nama, deskripsi (rich
+  text editor), alamat, foto multi-upload, fasilitas, kapasitas, harga
+  dasar. Listing baru berstatus `draft`, mitra kirim untuk direview
+  (`pending_review`), admin approve (`published`) atau reject (`rejected`
+  + alasan).
+- Villa (khusus, satu-satunya kategori dengan ini): kalender ketersediaan —
+  block-out tanggal, harga custom per tanggal, minimum stay per tanggal.
+- Lokasi Gathering (khusus): kelola slot waktu (nama sesi, jam mulai/selesai,
+  harga) per venue, bukan kalender tanggal.
+- **Tidak ada** langkah "terima/tolak booking" — lihat bagian 4.2. Peran
+  mitra terhadap booking murni pasif: begitu jadwal/listing terposting
+  tersedia, booking yang berhasil dibayar otomatis mengikat mitra.
+- Dashboard: ringkasan pendapatan (setelah potong komisi), jumlah booking
+  per status, occupancy rate, jumlah listing per kategori (draft/published).
+- Riwayat booking di semua listingnya (read-only, lintas kategori).
+- Laporan payout (riwayat pencairan dana dari platform, status
+  pending/completed/failed).
+- Balas ulasan dari user.
 
 ### 3.3 Admin
-- Approve/reject pendaftaran mitra
-- Approve/reject listing villa baru (moderasi konten & foto)
-- Kelola user & mitra (suspend, verifikasi)
-- Monitoring semua transaksi & status pembayaran (via Xendit dashboard/webhook log)
-- Kelola komisi platform (default 10%, bisa di-override per mitra bila diperlukan)
-- Kelola payout ke mitra
-- Laporan & analytics (revenue, growth, top villa, dll)
-- Kelola konten CMS (banner promo, artikel, FAQ)
-- Handling komplain/dispute, termasuk booking yang tidak dikonfirmasi mitra tepat waktu
-- Kelola kategori/fasilitas master data
+
+- Approve/reject pendaftaran mitra baru.
+- Approve/reject listing baru, per kategori (6 halaman moderasi terpisah di
+  dashboard, semuanya pola yang sama: lihat detail + foto → setujui/tolak
+  dengan alasan).
+- Kelola user & mitra: suspend/aktifkan akun (efeknya langsung — sesi yang
+  sedang aktif pun ter-block seketika berkat middleware
+  `EnsureUserIsActive`).
+- **Monitoring Transaksi**: tabel semua booking lintas kategori, filter
+  status & pencarian bebas (kode booking/nama listing/nama-email user),
+  termasuk link unduh Voucher & Receipt PDF per baris untuk keperluan
+  verifikasi.
+- Kelola komisi: default 10% platform-wide, admin bisa override per mitra
+  (`PATCH /api/admin/mitras/{id}/commission`) — berlaku untuk seluruh
+  booking baru mitra tsb ke depannya (nilai lama tidak dihitung ulang).
+- Kelola payout: jalankan payout manual kapan saja, atau otomatis
+  terjadwal tanggal 1 & 15 tiap bulan (jam 02:00) — sudah final,
+  bukan draft.
+- Kelola konten: artikel/berita (CRUD + cover image + publish/unpublish),
+  kupon (kode, tipe diskon persen/nominal, masa berlaku, aktif/nonaktif),
+  banner iklan homepage (gambar + link + urutan tampil).
+- Pengaturan situs: logo, favicon, gambar hero homepage, link media sosial
+  (Instagram/Facebook/TikTok).
 
 ---
 
 ## 4. Alur Bisnis Kunci
 
-### 4.1 Alur Booking (dengan Konfirmasi Manual Mitra)
-```
-User cari villa → pilih tanggal → cek ketersediaan (real-time)
-→ isi data pemesan → bayar via Xendit (VA/e-wallet/kartu)
-→ [Xendit webhook: payment success] → status booking: "menunggu_konfirmasi"
-→ notifikasi ke mitra: ada booking baru menunggu konfirmasi
-→ Mitra konfirmasi dalam batas waktu (misal 24 jam):
-   ├─ DITERIMA → status: "dikonfirmasi" → notifikasi ke user
-   └─ DITOLAK / timeout tidak direspon → status: "dibatalkan_mitra"
-       → auto refund 100% ke user via Xendit → notifikasi ke user
-→ H-1: reminder → check-in → check-out → status: "selesai"
-→ dana masuk saldo mitra (dikurangi komisi 10%)
-→ user bisa beri review
-```
+### 4.1 Alur Booking
 
-### 4.2 Alur Pembatalan oleh User (Kebijakan Refund)
+Lihat [`BOOKING_FLOW.md`](./BOOKING_FLOW.md) untuk narasi lengkap
+langkah-demi-langkah. Ringkasan satu paragraf: user pilih listing & tanggal
+→ cek ketersediaan real-time → buat booking (`pending_payment`) → bayar via
+Xendit → webhook Xendit sukses → booking **otomatis** `dikonfirmasi` → H-1
+reminder → tanggal check-in/check-out lewat → otomatis `checked_in` lalu
+`selesai` (job terjadwal harian) → user bisa review, mitra masuk antrean
+payout.
 
-Ada dua skenario tergantung status booking saat user mengajukan cancel:
+### 4.2 Konfirmasi Booking — TIDAK ADA approval manual mitra
 
-**A. Booking masih "menunggu_konfirmasi" (mitra belum putuskan)**
-```
-User request cancel → status booking masih "menunggu_konfirmasi"
-→ refund 100% dari total pembayaran (belum ada komitmen dari mitra)
-→ update status booking: "dibatalkan_user"
-→ notifikasi ke mitra (booking dibatalkan sebelum sempat dikonfirmasi) & user
-```
+**Perubahan kebijakan bisnis paling signifikan sejak draft awal.** Mitra
+**tidak pernah** approve/tolak booking satu per satu. Peran mitra hanya
+menyediakan jadwal ketersediaan di awal (kalender Villa, slot Lokasi
+Gathering, atau sekadar mempublikasikan listing untuk kategori flat-price
+lainnya) — begitu itu terposting sebagai tersedia, itu adalah komitmen
+mitra. Mitra tidak bisa menolak atau membatalkan booking yang sudah dibayar.
 
-**B. Booking sudah "dikonfirmasi" oleh mitra**
-```
-User request cancel → status booking sudah "dikonfirmasi"
-→ Sistem cek selisih hari ke check_in_date:
-   ├─ Cancel ≥ H-2 (2 hari atau lebih sebelum check-in) → refund 85% dari total pembayaran
-   └─ Cancel < H-2 (kurang dari 2 hari) → tidak ada refund (0%)
-→ Proses refund via Xendit (jika berlaku) → update status booking: "dibatalkan_user"
-→ update ketersediaan kalender villa (tanggal dibuka kembali)
-→ notifikasi ke mitra & user
-```
-> Catatan: pembatalan oleh **mitra** (menolak/tidak merespon dalam 24 jam) selalu refund 100% ke user karena bukan kesalahan user — beda status (`dibatalkan_mitra`) dari pembatalan oleh user (`dibatalkan_user`).
+Konsekuensi teknis: tidak ada lagi status `menunggu_konfirmasi`/
+`dibatalkan_mitra` yang diproduksi kode, tidak ada batas waktu 24 jam, tidak
+ada job terjadwal untuk auto-cancel akibat mitra tidak merespon (command
+untuk itu sudah dihapus total dari kode). Nilai enum lama itu masih ada di
+skema database untuk kompatibilitas data lama, tapi kode aplikasi tidak
+pernah lagi memproduksinya.
 
-### 4.3 Alur Payout ke Mitra (Otomatis via Xendit Disbursement)
-```
-Booking selesai (check-out, status "selesai")
-→ dana booking (90% dari total, setelah potong komisi 10%) masuk saldo mitra
-→ payout otomatis terjadwal (misal tiap tanggal 1 & 15) mengumpulkan semua saldo tertunda
-→ sistem panggil Xendit Disbursement API → transfer ke rekening mitra
-→ catat sebagai payout (status: pending/completed/failed), simpan xendit_disbursement_id
-→ jika gagal (saldo Xendit kurang, rekening invalid, dll) → notifikasi ke admin untuk ditindaklanjuti manual
-```
+### 4.3 Kebijakan Cancellation & Refund (oleh User)
 
----
+Satu-satunya pihak yang bisa membatalkan adalah **user**, dan hanya selagi
+booking berstatus `dikonfirmasi`:
 
-## 5. Skema Database (Draft Awal)
+| Selisih hari ke `check_in_date` saat cancel | Refund |
+|---|---|
+| ≥ 2 hari (H-2 atau lebih) | **85%** dari `total_price` |
+| < 2 hari | **0%** |
 
-### Tabel Utama
+Refund 0% tidak memicu panggilan API Xendit sama sekali (tidak ada yang
+perlu dikembalikan). Kalau panggilan refund ke Xendit gagal, pembatalan
+booking tetap diproses (tidak diblok) — dicatat sebagai refund berstatus
+`failed` untuk ditindaklanjuti admin secara manual.
 
-**users**
-- id, name, email, phone, password, role (user/mitra/admin), avatar, email_verified_at, status (active/suspended), created_at
+⚠️ **PERLU KONFIRMASI**: tidak ada mekanisme apapun untuk membatalkan atau
+membersihkan booking yang tersangkut di status `pending_payment` selamanya
+(user tidak jadi bayar, tidak ada auto-cancel, tidak ada tombol cancel untuk
+status ini). Perlu didiskusikan apakah ini kekurangan yang perlu ditambal
+atau memang belum jadi prioritas.
 
-**mitra_profiles**
-- id, user_id (FK), business_name, business_address, legal_document_url, bank_account, bank_name, status (pending/approved/rejected), approved_by, approved_at
+### 4.4 Sistem Kupon/Diskon
 
-**villas**
-- id, mitra_id (FK), name, slug, description, address, city, province, latitude, longitude, capacity_guest, bedroom_count, bathroom_count, base_price, status (draft/pending_review/published/rejected/inactive), created_at
+Tidak ada di draft awal — fitur baru. Admin membuat kupon (kode unik, tipe
+diskon persentase atau nominal tetap, tanggal berlaku, status aktif). User
+memasukkan kode saat cek ketersediaan atau saat membuat booking. Diskon
+dihitung dari `subtotal`, di-cap supaya tidak melebihi subtotal (`total_price`
+tidak pernah negatif). Komisi platform dihitung dari `total_price`
+**setelah** diskon — platform yang menanggung "biaya" promosi, bagian mitra
+tidak terpengaruh oleh kupon.
 
-**villa_images**
-- id, villa_id (FK), image_url, is_primary, sort_order
+### 4.5 Voucher & Receipt PDF Otomatis
 
-**facilities** (master data)
-- id, name, icon, category
+Fitur baru, tidak ada di draft awal. Setiap booking yang berhasil dibayar
+otomatis menghasilkan 2 dokumen PDF terpisah:
 
-**villa_facilities** (pivot)
-- villa_id (FK), facility_id (FK)
+- **Voucher** — detail listing, tanggal, nama tamu; ditunjukkan ke mitra
+  saat check-in/serah terima.
+- **Receipt** — rincian harga & bukti pembayaran resmi.
 
-**villa_availability**
-- id, villa_id (FK), date, is_available, custom_price (nullable, override base_price), min_stay
+Dikirim via email (dengan lampiran) begitu pembayaran sukses, dan bisa
+diunduh ulang kapan saja dari dashboard (endpoint tersedia untuk user
+pemilik booking, mitra pemilik listing terkait, dan admin).
 
-**bookings**
-- id, booking_code, user_id (FK), villa_id (FK), check_in_date, check_out_date, guest_count, total_price, commission_amount (10% dari total_price), mitra_payout_amount (90% dari total_price), status (pending_payment / menunggu_konfirmasi / dikonfirmasi / dibatalkan_mitra / dibatalkan_user / checked_in / selesai), mitra_confirmed_at, mitra_confirmation_deadline (created_at + 24 jam), cancellation_reason (user_cancel_pending / user_cancel_confirmed / mitra_reject / mitra_timeout), cancelled_at, refund_amount, refund_percentage, created_at
+### 4.6 Payout ke Mitra
 
-**payments**
-- id, booking_id (FK), payment_method, xendit_invoice_id, xendit_payment_id, amount, status (pending/success/failed/refunded/partial_refunded), paid_at
-
-**refunds**
-- id, booking_id (FK), payment_id (FK), amount, percentage, reason (user_cancel/mitra_reject/mitra_timeout), xendit_refund_id, status, processed_at
-
-**payouts**
-- id, mitra_id (FK), amount, period_start, period_end, xendit_disbursement_id, status (pending/completed/failed), processed_at
-
-**reviews**
-- id, booking_id (FK), user_id (FK), villa_id (FK), rating, comment, mitra_reply, created_at
-
-**notifications**
-- id, user_id (FK), type, title, message, is_read, created_at
-
-**cms_contents**
-- id, type (banner/faq/article), title, content, image_url, is_active, sort_order
+Trigger: booking berstatus `selesai` (setelah check-out) dan belum pernah
+masuk batch payout manapun. Dijalankan **otomatis tiap tanggal 1 & 15, jam
+02:00** (sudah final — draft awal masih menulis "misal tanggal 1 & 15",
+sekarang benar-benar dikonfigurasi di scheduler), mengumpulkan semua booking
+`selesai` milik satu mitra **lintas 6 kategori sekaligus** jadi satu
+pencairan via Xendit Disbursement API. Bisa juga dipicu manual oleh admin.
+Kegagalan pencairan (rekening invalid, saldo platform kurang, dll) tidak
+dibiarkan gagal senyap — tercatat sebagai payout berstatus `failed`, terlihat
+di dashboard admin untuk di-retry manual.
 
 ---
 
-## 6. Stack Teknis (Final)
+## 5. Komisi Platform
+
+- Default **10%** dari `total_price` (setelah diskon kupon) untuk setiap
+  booking, disimpan sebagai `commission_amount` saat booking dibuat (tidak
+  pernah dihitung ulang di tempat lain, termasuk saat payout).
+- **90%** (`mitra_payout_amount`) menjadi hak mitra.
+- Admin **bisa override** persentase ini per mitra (`mitra_profiles.commission_rate`,
+  nullable — `null` berarti pakai default 10%). Ini beda dari asumsi draft
+  awal bahwa komisi selalu flat 10%/90% untuk semua mitra.
+
+---
+
+## 6. Auth & Mobile
+
+Dijelaskan detail di [`API_CONTRACT.md` bagian 0](./API_CONTRACT.md#0-untuk-developer-mobile-flutter--baca-ini-dulu).
+Ringkasan:
+
+- Backend memakai **Laravel Sanctum mode hybrid**: cookie session + CSRF
+  untuk frontend web (Nuxt SPA), **Bearer token** (Sanctum Personal Access
+  Token) untuk klien lain (mobile app) — otomatis terpilih berdasarkan
+  apakah request datang dari domain yang terdaftar di
+  `SANCTUM_STATEFUL_DOMAINS`, tidak perlu konfigurasi tambahan di sisi
+  mobile.
+- `POST /api/bookings/{id}/pay` menerima parameter `platform` (`web`
+  default, atau `mobile`) untuk mengarahkan redirect sukses/gagal
+  pembayaran Xendit ke deep link app (`sarepundi://...`) alih-alih halaman
+  web.
+- ⚠️ **PERLU KONFIRMASI/belum dikerjakan**: Login Google untuk mobile.
+  Implementasi saat ini (`SocialAuthController`) murni alur redirect
+  browser untuk web — belum ada endpoint untuk menukar Google ID Token
+  (hasil native Google Sign-In di Android/iOS) dengan token Sarepundi.
+  Perlu sesi pengerjaan terpisah kalau dibutuhkan.
+
+---
+
+## 7. Skema Database (ringkasan tabel inti)
+
+Tabel-tabel utama saat ini (jauh lebih banyak dari draft awal yang hanya
+menyebut `villas`):
+
+**Identitas & mitra**: `users` (kolom `provider`/`provider_id` untuk Google
+OAuth, `status` active/suspended), `mitra_profiles` (termasuk
+`commission_rate` nullable), `personal_access_tokens` (Sanctum, untuk auth
+mobile).
+
+**Listing per kategori** (pola identik untuk tiap kategori — tabel utama +
+`_images` + `_facilities` pivot): `villas` (+ `villa_availability` untuk
+kalender custom — satu-satunya kategori dengan ini), `glampings`,
+`homestays`, `apartments`, `gathering_venues` (+ `gathering_venue_slots`,
+bukan availability per tanggal), `transports`. Semua listing merujuk
+`mitra_profiles` via `mitra_id`, dan ke `facilities` (master data fasilitas
+bersama) via pivot masing-masing.
+
+**Transaksi**: `bookings` (polimorfik — `bookable_type` + `bookable_id`
+merujuk salah satu dari 6 tabel listing di atas; kolom kunci: `subtotal`,
+`discount_amount`, `total_price`, `commission_amount`, `mitra_payout_amount`,
+`status`, `coupon_id`, `gathering_venue_slot_id` nullable, `transport_with_driver`
+nullable, field cancellation/refund), `payments`, `refunds`, `payouts`.
+
+**Interaksi & konten**: `reviews` (polimorfik, `reviewable_type` +
+`reviewable_id`), `notifications`, `coupons`, `banners`, `articles`,
+`newsletter_subscribers`, `site_settings` (single-row).
+
+Detail kolom lengkap tabel `bookings`/`payments`/`refunds`/`payouts` ada di
+[`API_CONTRACT.md` bagian 7](./API_CONTRACT.md#7-ringkasan-field-booking-semua-field-yang-bisa-muncul).
+
+---
+
+## 8. Stack Teknis (Final)
 
 | Layer | Pilihan |
 |---|---|
-| Frontend | Nuxt 3 (Vue) + Tailwind CSS |
-| Backend API | **Laravel** — auth (Sanctum), role management (Spatie Permission), queue job untuk notifikasi & auto-cancel timeout |
+| Frontend | Nuxt 3 + Tailwind CSS. Layout dashboard (admin/mitra/user) pakai sidebar kiri, konten kanan — satu layout, dipilih otomatis berdasarkan prefix URL. |
+| Backend API | Laravel 13. Auth: Sanctum (hybrid cookie session + Bearer token, lihat bagian 6). Role: Spatie Permission. |
 | Database | MySQL |
-| Payment Gateway | **Xendit** — Invoice API (pembayaran), Disbursement API (payout ke mitra), Refund API (webhook untuk konfirmasi status) |
-| File Storage | Local/S3-compatible (foto villa & dokumen mitra) |
-| Notifikasi | Email (SMTP) + WhatsApp API (opsional, misal Fonnte/Wablas) via n8n |
-| Scheduled Job | Laravel Scheduler untuk auto-cancel booking yang tidak dikonfirmasi mitra dalam batas waktu |
-| Deployment | VPS |
+| Payment Gateway | Xendit — Invoice API (pembayaran), Refund API, Disbursement API (payout mitra). Semua interaksi dibungkus `XenditService`, tidak pernah dipanggil langsung dari controller. |
+| File Storage | Local / S3-compatible |
+| Scheduled Job | Laravel Scheduler: `bookings:advance-completed-stays` (harian, transisi `dikonfirmasi→checked_in→selesai`), `payouts:run` (tanggal 1 & 15 jam 02:00), `bookings:send-checkin-reminders` (harian jam 09:00) |
+| Notifikasi | In-app (tabel `notifications`) + Email (SMTP, `Mail::raw` untuk notifikasi umum; `Mail\BookingPaymentConfirmed` khusus untuk voucher/receipt dengan lampiran PDF). WhatsApp API **tidak diimplementasikan** (sempat disebut opsional di draft awal). |
+| Dokumen PDF | `barryvdh/laravel-dompdf`, dibungkus `BookingDocumentService` (satu sumber untuk endpoint download maupun lampiran email). |
+| Deployment | Ubuntu server, nginx, PM2 (Nuxt), PHP-FPM (Laravel) |
 
 ---
 
-## 7. Urutan Pengerjaan (Milestone)
+## 9. Hal yang Belum Lengkap / PERLU KONFIRMASI
 
-1. **Setup & Auth** — project skeleton Laravel + Nuxt, role-based login (user/mitra/admin)
-2. **Modul Villa** — CRUD listing untuk mitra, moderasi admin, browsing publik untuk user
-3. **Modul Booking & Ketersediaan** — kalender, cek konflik tanggal, booking flow sampai status "menunggu_konfirmasi"
-4. **Integrasi Xendit** — payment (Invoice API) sandbox dulu, lalu live; webhook handler
-5. **Modul Konfirmasi Mitra** — accept/reject, scheduled job untuk auto-cancel timeout + auto refund 100%
-6. **Modul Cancellation & Refund oleh User** — hitung H-2 & 85%, integrasi Xendit Refund API
-7. **Dashboard Admin** — approval, monitoring, komisi, payout
-8. **Dashboard Mitra** — laporan pendapatan, kelola booking
-9. **Payout ke Mitra** — via Xendit Disbursement atau manual, dengan pencatatan
-10. **Review & Notifikasi**
-11. **Polish UI** sesuai Figma, per halaman, responsive check
+Daftar celah yang ditemukan saat audit kode ini, supaya tidak jadi asumsi
+tersembunyi buat siapa pun yang mengerjakan modul berikutnya:
+
+- ⚠️ **Admin dashboard stats** (`GET /api/admin/stats`) hanya menghitung
+  data kategori **Villa** untuk breakdown per-kategori (`villas.total`,
+  `villas.published`, dst) — 5 kategori lain tidak muncul di ringkasan
+  dashboard admin, meski data booking `bookings.*` sudah menghitung lintas
+  semua kategori dengan benar. Kemungkinan besar tertinggal saat kategori
+  baru ditambahkan satu-satu.
+- ⚠️ Booking `pending_payment` yang tidak pernah dibayar tidak punya jalan
+  keluar otomatis (lihat bagian 4.3).
+- ⚠️ Login Google untuk mobile belum ada endpoint-nya (lihat bagian 6).
+- ⚠️ Tidak ada fitur wishlist meski sempat direncanakan di draft awal.
+- ⚠️ `ReviewController` mengirim notifikasi ke mitra dengan judul hardcoded
+  "Review baru untuk **villa** kamu" terlepas dari kategori listing yang
+  sebenarnya direview (Glamping/Homestay/dll) — teks judul notifikasi,
+  bukan data, jadi dampaknya kosmetik saja.
+- ⚠️ Redirect URL pembayaran mobile (`platform=mobile`) tidak berlaku
+  retroaktif untuk invoice `pending` yang sudah dibuat lebih dulu dengan
+  `platform=web` (atau sebaliknya) — lihat catatan di
+  [`API_CONTRACT.md` bagian 0](./API_CONTRACT.md).
 
 ---
 
-## 8. Catatan untuk Claude Code
+## 10. Alur Kerja dengan Claude Code
 
-Ringkasan dokumen ini + konvensi coding proyek ada di `CLAUDE.md` di root repo — pastikan file itu selalu jadi rujukan pertama di setiap sesi kerja dengan Claude Code.
+Tidak berubah dari sebelumnya — lihat `CLAUDE.md` di root repo untuk
+konvensi coding, dan kerjakan satu modul per sesi.
+
+---
+
+## Riwayat Perubahan dari Versi Sebelumnya
+
+Ringkasan poin-poin paling signifikan yang berubah dari draft PRD pertama
+(dokumen ini menggantikannya sepenuhnya):
+
+1. **Konfirmasi booking oleh mitra dihapus total** — draft awal
+   mendeskripsikan mitra harus terima/tolak booking dalam 24 jam dengan
+   auto-cancel + refund 100% kalau timeout. Digantikan konfirmasi otomatis
+   begitu pembayaran sukses (lihat bagian 4.2).
+2. **Kebijakan refund disederhanakan** — dari 2 skenario (100% sebelum
+   konfirmasi mitra, 85%/0% sesudahnya) menjadi 1 skenario saja: 85% jika
+   ≥ H-2, 0% jika kurang (lihat bagian 4.3).
+3. **Kategori listing dari 1 (Villa) jadi 6** — Glamping, Homestay,
+   Apartment, Lokasi Gathering, dan Transport ditambahkan belakangan,
+   masing-masing dengan pola booking sedikit berbeda (lihat bagian 1).
+4. **Sistem kupon/diskon** ditambahkan — tidak ada di draft awal (bagian
+   4.4).
+5. **Voucher & Receipt PDF otomatis** ditambahkan — tidak ada di draft awal
+   (bagian 4.5).
+6. **Komisi platform bisa berbeda per mitra** — draft awal mengasumsikan
+   flat 10%/90% untuk semua (bagian 5).
+7. **Jadwal payout tanggal 1 & 15 sudah final**, bukan lagi draft/asumsi
+   (bagian 4.6).
+8. **Auth mendukung mobile (Bearer token) sejak 2026-08-05** — sebelumnya
+   backend murni SPA cookie-session, tidak bisa dipakai app native tanpa
+   penyesuaian (bagian 6).

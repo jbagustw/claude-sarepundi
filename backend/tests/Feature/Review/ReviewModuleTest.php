@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Review;
 
+use App\Models\Apartment;
 use App\Models\Booking;
+use App\Models\Glamping;
 use App\Models\MitraProfile;
 use App\Models\Review;
 use App\Models\User;
@@ -191,6 +193,61 @@ class ReviewModuleTest extends TestCase
         $response->assertOk();
         $response->assertJsonCount(1, 'data');
         $response->assertJsonFragment(['reviewable' => ['type' => 'villa', 'id' => $villa->id, 'name' => $villa->name]]);
+    }
+
+    // --- Regression: ReviewResource::reviewable.type must be correct for
+    // every bookable category, not just villa/homestay/gathering_venue/
+    // transport — Glamping and Apartment were missing from the match()
+    // and silently fell through to the 'villa' default.
+
+    public function test_review_for_a_glamping_booking_reports_glamping_as_reviewable_type(): void
+    {
+        $user = $this->regularUser();
+        $mitra = User::factory()->create();
+        $mitra->assignRole('mitra');
+        MitraProfile::create(['user_id' => $mitra->id, 'business_name' => 'Glamping Co', 'status' => 'approved']);
+        $glamping = $mitra->mitraProfile->glampings()->create([
+            'name' => 'Glamping Bukit', 'slug' => 'glamping-bukit-'.uniqid(), 'city' => 'Malang',
+            'capacity_guest' => 4, 'base_price' => 500000, 'status' => 'published',
+        ]);
+        $booking = Booking::create([
+            'booking_code' => 'BK'.uniqid(), 'user_id' => $user->id,
+            'bookable_type' => Glamping::class, 'bookable_id' => $glamping->id,
+            'check_in_date' => now()->subDays(10)->format('Y-m-d'), 'check_out_date' => now()->subDays(7)->format('Y-m-d'),
+            'guest_count' => 2, 'subtotal' => 1500000, 'total_price' => 1500000,
+            'commission_amount' => 150000, 'mitra_payout_amount' => 1350000, 'status' => 'selesai',
+        ]);
+
+        $response = $this->fromFrontend()->actingAs($user)
+            ->postJson("/api/bookings/{$booking->id}/review", ['rating' => 5]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.reviewable.type', 'glamping');
+    }
+
+    public function test_review_for_an_apartment_booking_reports_apartment_as_reviewable_type(): void
+    {
+        $user = $this->regularUser();
+        $mitra = User::factory()->create();
+        $mitra->assignRole('mitra');
+        MitraProfile::create(['user_id' => $mitra->id, 'business_name' => 'Apartment Co', 'status' => 'approved']);
+        $apartment = $mitra->mitraProfile->apartments()->create([
+            'name' => 'Apartemen Kemang', 'slug' => 'apartemen-kemang-'.uniqid(), 'city' => 'Jakarta',
+            'capacity_guest' => 2, 'base_price' => 400000, 'status' => 'published',
+        ]);
+        $booking = Booking::create([
+            'booking_code' => 'BK'.uniqid(), 'user_id' => $user->id,
+            'bookable_type' => Apartment::class, 'bookable_id' => $apartment->id,
+            'check_in_date' => now()->subDays(10)->format('Y-m-d'), 'check_out_date' => now()->subDays(7)->format('Y-m-d'),
+            'guest_count' => 2, 'subtotal' => 1200000, 'total_price' => 1200000,
+            'commission_amount' => 120000, 'mitra_payout_amount' => 1080000, 'status' => 'selesai',
+        ]);
+
+        $response = $this->fromFrontend()->actingAs($user)
+            ->postJson("/api/bookings/{$booking->id}/review", ['rating' => 4]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.reviewable.type', 'apartment');
     }
 
     public function test_mitra_can_reply_to_a_review_on_their_own_villa(): void
